@@ -1,0 +1,37 @@
+src/
+├── adapters/
+│   ├── database/
+│   │   ├── mongo/
+│   │   │   ├── mongo.module.ts          # Módulo de MongoDB
+│   │   │   ├── mongo.service.ts         # Servicio de MongoDB
+│   │   │   └── product.schema.ts        # Esquema de Producto para MongoDB
+│   │   └── index.ts                     # Indexador para adaptadores de base de datos
+├── application/
+│   ├── dtos/                            # DTOs (Data Transfer Objects)
+│   │   └── create-product.dto.ts        # DTO para crear un producto
+│   ├── products/                        # Módulo de productos
+│   │   ├── product.controller.ts        # Controlador de productos
+│   │   ├── product.service.ts           # Servicio de productos
+│   │   └── index.ts                     # Indexador del módulo de productos
+├── domain/
+│   ├── models/                          # Modelos de dominio
+│   │   └── product.model.ts             # Modelo de Producto
+│   └── repositories/                    # Repositorios de dominio
+│       └── product.repository.interface.ts  # Interfaz de repositorio de Producto
+├── infrastructure/
+│   └── logger.middleware.ts             # Middleware para logging de solicitudes HTTP
+├── main.ts                              # Archivo de inicio de la aplicación
+└── app.module.ts                        # Módulo principal de la aplicación
+
+
+
+Descripción de Archivos y Directorios
+adapters/: Directorio que contiene los adaptadores para diferentes tipos de bases de datos. Cada subdirectorio (como mongo/, mysql/, etc.) representa un adaptador específico para ese tipo de base de datos.
+
+application/: Capa de aplicación que contiene los servicios de aplicación y los DTOs (Data Transfer Objects). Los servicios de aplicación implementan la lógica de negocio de alto nivel y utilizan los repositorios de dominio para interactuar con la capa de persistencia.
+
+domain/: Capa de dominio que contiene los modelos de dominio y los repositorios de dominio. Los modelos de dominio representan las entidades principales de negocio, mientras que los repositorios definen las interfaces para la persistencia de datos.
+
+infrastructure/: Capa de infraestructura que contiene configuraciones adicionales como middleware, servicios de infraestructura (por ejemplo, logging), etc.
+
+main.ts: Archivo de inicio de la aplicación que configura y levanta la aplicación NestJS.
