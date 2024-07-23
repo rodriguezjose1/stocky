@@ -15,7 +15,7 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
 
   app.setGlobalPrefix('/api');
-  await app.listen(process.env.NODE_ENV || 8080);
+  await app.listen(process.env.PORT || 8080);
 
   console.log(`Application is running on: ${await app.getUrl()}`);
 }
