@@ -1,5 +1,7 @@
 // application/use-cases/create-purchase.use-case.ts
-import { Injectable, Inject } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PurchaseCreatedEvent } from 'src/async-events/events/purchase.events';
 import {
   Purchase,
   PurchaseDetail,
@@ -7,10 +9,11 @@ import {
 import { PurchaseRepositoryPort } from '../../domain/ports/purchase-repository.port';
 
 @Injectable()
-export class CreatePurchaseUseCase {
+export class PurchasesUseCase {
   constructor(
     @Inject('PurchaseRepositoryPort')
     private purchaseRepository: PurchaseRepositoryPort,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async createPurchase(purchaseData: {
@@ -30,10 +33,21 @@ export class CreatePurchaseUseCase {
       ),
     );
 
-    return this.purchaseRepository.create(purchase);
+    const savedPurchase = await this.purchaseRepository.create(purchase);
+
+    this.eventEmitter.emit(
+      'stock.created',
+      new PurchaseCreatedEvent(savedPurchase.id),
+    );
+
+    return savedPurchase;
   }
 
   async findAll(): Promise<Purchase[]> {
     return this.purchaseRepository.findAll();
+  }
+
+  async findById(id: string): Promise<Purchase | null> {
+    return this.purchaseRepository.findById(id);
   }
 }

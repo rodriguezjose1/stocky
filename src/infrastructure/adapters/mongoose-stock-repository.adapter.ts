@@ -36,13 +36,6 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
     return updatedStock ? this.mapToEntity(updatedStock) : null;
   }
 
-  async incrementStock(id: string, quantity: number): Promise<Stock | null> {
-    const updatedStock = await this.stockModel
-      .findByIdAndUpdate(id, { $inc: { quantity } }, { new: true })
-      .exec();
-    return updatedStock ? this.mapToEntity(updatedStock) : null;
-  }
-
   async getByProductId(productId: string): Promise<Stock | null> {
     const stock = await this.stockModel
       .findOne({ product_id: productId })
@@ -53,6 +46,20 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
   async delete(id: string): Promise<boolean> {
     const result = await this.stockModel.deleteOne({ _id: id }).exec();
     return result.deletedCount === 1;
+  }
+
+  async incrementStock(id: string, quantity: number): Promise<Stock | null> {
+    const updatedStock = await this.stockModel
+      .findByIdAndUpdate(id, { $inc: { quantity } }, { new: true })
+      .exec();
+    return updatedStock ? this.mapToEntity(updatedStock) : null;
+  }
+
+  async decrementStock(id: string, quantity: number): Promise<Stock | null> {
+    const updatedStock = await this.stockModel
+      .findByIdAndUpdate(id, { $inc: { quantity: -quantity } }, { new: true })
+      .exec();
+    return updatedStock ? this.mapToEntity(updatedStock) : null;
   }
 
   private mapToEntity(stockModel: StockModel): Stock {

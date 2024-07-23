@@ -1,6 +1,6 @@
 // purchase.module.ts
 import { Module } from '@nestjs/common';
-import { CreatePurchaseUseCase } from './application/use-cases/purchase.use-cases';
+import { PurchasesUseCase } from './application/use-cases/purchase.use-cases';
 import { MongoosePurchaseRepositoryAdapter } from './infrastructure/adapters/mongoose-purchase-repository.adapter';
 import { PurchaseController } from './interfaces/http/purchase.controller';
 
@@ -10,8 +10,9 @@ import { PurchaseController } from './interfaces/http/purchase.controller';
       provide: 'PurchaseRepositoryPort',
       useClass: MongoosePurchaseRepositoryAdapter,
     },
-    CreatePurchaseUseCase,
+    PurchasesUseCase,
   ],
   controllers: [PurchaseController],
+  exports: [PurchasesUseCase],
 })
 export class PurchaseModule {}

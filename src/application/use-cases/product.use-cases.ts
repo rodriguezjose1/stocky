@@ -2,12 +2,15 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Product } from '../../domain/entities/product.entity';
 import { ProductRepositoryPort } from '../../domain/ports/product-repository.port';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ProductCreatedEvent } from 'src/async-events/events/product.events';
 
 @Injectable()
 export class ProductUseCases {
   constructor(
     @Inject('ProductRepositoryPort')
     private productRepository: ProductRepositoryPort,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async getAllProducts(): Promise<Product[]> {
@@ -19,7 +22,13 @@ export class ProductUseCases {
   }
 
   async createProduct(product: Product): Promise<Product> {
-    return this.productRepository.create(product);
+    const createdProduct = await this.productRepository.create(product);
+    this.eventEmitter.emit(
+      'product.created',
+      new ProductCreatedEvent(createdProduct.id),
+    );
+
+    return createdProduct;
   }
 
   async updateProduct(

@@ -4,5 +4,5 @@ import { Purchase } from '../entities/purchase.entity';
 export interface PurchaseRepositoryPort {
   create(purchase: Purchase): Promise<Purchase>;
   findAll(): Promise<Purchase[]>;
-  // Otros métodos según sea necesario...
+  findById(id: string): Promise<Purchase | null>;
 }

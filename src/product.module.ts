@@ -13,5 +13,6 @@ import { ProductController } from './interfaces/http/product.controller';
     ProductUseCases,
   ],
   controllers: [ProductController],
+  exports: [ProductUseCases],
 })
 export class ProductModule {}

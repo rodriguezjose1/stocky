@@ -32,6 +32,11 @@ export class MongoosePurchaseRepositoryAdapter
     return purchases.map((purchase) => this.mapToDomain(purchase));
   }
 
+  async findById(id: string): Promise<Purchase | null> {
+    const purchase = await this.purchaseModel.findById(id).exec();
+    return purchase ? this.mapToDomain(purchase) : null;
+  }
+
   private mapToDomain(purchaseModel: PurchaseModel): Purchase {
     return new Purchase(
       purchaseModel._id.toString(),

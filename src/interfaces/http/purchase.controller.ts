@@ -1,10 +1,10 @@
 // interfaces/http/purchase.controller.ts
 import { Controller, Post, Body, Get } from '@nestjs/common';
-import { CreatePurchaseUseCase } from '../../application/use-cases/purchase.use-cases';
+import { PurchasesUseCase } from '../../application/use-cases/purchase.use-cases';
 
 @Controller('purchases')
 export class PurchaseController {
-  constructor(private purchaseUseCases: CreatePurchaseUseCase) {}
+  constructor(private purchaseUseCases: PurchasesUseCase) {}
 
   @Post()
   async createPurchase(

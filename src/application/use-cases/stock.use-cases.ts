@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { StockCreatedEvent } from 'src/async-events/events/stock.events';
+import { SaleDetail } from 'src/domain/entities/sale.entity';
+import { InsufficientStockException } from 'src/domain/exceptions/insufficient-stock.exception';
 import { Stock } from '../../domain/entities/stock.entity';
 import { StockRepositoryPort } from '../../domain/ports/stock-repository.port';
 
@@ -9,7 +9,6 @@ export class StockUseCases {
   constructor(
     @Inject('StockRepositoryPort')
     private stockRepository: StockRepositoryPort,
-    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async getAllStocks(): Promise<Stock[]> {
@@ -23,11 +22,6 @@ export class StockUseCases {
   async createStock(stock: Stock): Promise<Stock> {
     const createdStock = await this.stockRepository.create(stock);
 
-    this.eventEmitter.emit(
-      'stock.created',
-      new StockCreatedEvent(createdStock.id),
-    );
-
     return createdStock;
   }
 
@@ -39,10 +33,35 @@ export class StockUseCases {
     return this.stockRepository.delete(id);
   }
 
-  async updateProductStock(productId, quantity) {
+  async incrementStock(productId, { quantity }) {
     const stock = await this.stockRepository.getByProductId(productId);
     if (stock) {
       await this.stockRepository.incrementStock(stock.id, quantity);
+    }
+  }
+
+  async decrementStock(productId, { quantity }) {
+    const stock = await this.stockRepository.getByProductId(productId);
+    if (stock) {
+      await this.stockRepository.decrementStock(stock.id, quantity);
+    }
+  }
+
+  public async checkStock(details: SaleDetail[]): Promise<void> {
+    for (const detail of details) {
+      const stock = await this.stockRepository.getByProductId(
+        detail.product_id,
+      );
+      if (!stock) {
+        throw new Error(`Product with id ${detail.product_id} not found`);
+      }
+      if (stock.quantity < detail.quantity) {
+        throw new InsufficientStockException(
+          detail.product_id,
+          detail.quantity,
+          stock.quantity,
+        );
+      }
     }
   }
 }
