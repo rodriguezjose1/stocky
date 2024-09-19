@@ -5,9 +5,9 @@ import { Connection, Model } from 'mongoose';
 import {
   Purchase,
   PurchaseDetail,
-} from '../../domain/entities/purchase.entity';
-import { PurchaseRepositoryPort } from '../../domain/ports/purchase-repository.port';
-import { PurchaseModel, PurchaseSchema } from '../models/purchase.model';
+} from '../../../domain/entities/purchase.entity';
+import { PurchaseRepositoryPort } from '../../../domain/ports/purchase-repository.port';
+import { PurchaseModel, PurchaseSchema } from '../../models/purchase.model';
 
 @Injectable()
 export class MongoosePurchaseRepositoryAdapter

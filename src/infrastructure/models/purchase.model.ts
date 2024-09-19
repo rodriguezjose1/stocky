@@ -17,7 +17,7 @@ class PurchaseDetailSchema {
 const PurchaseDetailSchemaFactory =
   SchemaFactory.createForClass(PurchaseDetailSchema);
 
-@Schema({ collection: 'purchases' })
+@Schema({ collection: 'purchases', timestamps: true })
 export class PurchaseModel extends Document {
   @Prop({ required: true })
   date: Date;

@@ -2,9 +2,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection, Model } from 'mongoose';
-import { Product } from '../../domain/entities/product.entity';
-import { ProductRepositoryPort } from '../../domain/ports/product-repository.port';
-import { ProductModel, ProductSchema } from '../models/product.model';
+import { Product } from '../../../domain/entities/product.entity';
+import { ProductRepositoryPort } from '../../../domain/ports/product-repository.port';
+import { ProductModel, ProductSchema } from '../../models/product.model';
 
 @Injectable()
 export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {

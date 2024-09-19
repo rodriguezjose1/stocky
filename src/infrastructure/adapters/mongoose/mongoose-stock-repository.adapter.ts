@@ -2,9 +2,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection, Model } from 'mongoose';
-import { Stock } from '../../domain/entities/stock.entity';
-import { StockRepositoryPort } from '../../domain/ports/stock-repository.port';
-import { StockModel, StockSchema } from '../models/stock.model';
+import { Stock } from '../../../domain/entities/stock.entity';
+import { StockRepositoryPort } from '../../../domain/ports/stock-repository.port';
+import { StockModel, StockSchema } from '../../models/stock.model';
 
 @Injectable()
 export class MongooseStockRepositoryAdapter implements StockRepositoryPort {

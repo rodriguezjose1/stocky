@@ -2,9 +2,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection, Model } from 'mongoose';
-import { Sale, SaleDetail } from '../../domain/entities/sale.entity';
-import { SaleRepositoryPort } from '../../domain/ports/sale-repository.port';
-import { SaleModel, SaleSchema } from '../models/sale.model';
+import { Sale, SaleDetail } from '../../../domain/entities/sale.entity';
+import { SaleRepositoryPort } from '../../../domain/ports/sale-repository.port';
+import { SaleModel, SaleSchema } from '../../models/sale.model';
 
 @Injectable()
 export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
