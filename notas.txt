@@ -1,0 +1,45 @@
+articulo
+descripcion
+marca
+pcosto
+pventa
+ganancia
+
+articulo distintos
+depende la marca distintos colores
+
+vendedora
+sube al grupo la foto articulo talles colores
+no especifica talle 90 negro blanco azul
+vendedor pregunta talles colores
+
+linea hombre / niño / pijamas
+linea senora tiro corto universal
+conjunto
+vedetina
+colales
+
+
+articulo | precio al publico - 20% revendedor (total - costo) ganancia
+precio costo le pone 115% para que la venta le de 5%
+
+total semanal
+no tiene tanto stock
+mandame si tenes este conjunto
+separa stock para la vendedora
+le pide minimo 5 productos
+lo llevo a la direccion
+suben a las redes
+no aburra la visual de quien esta viendo
+por semana trae productos distintos
+
+no te mandan la lista de precios
+si un producto aumento lo sabe ahi nomas
+una vez que levantaron el pedido el precio queda
+
+sume 3 conjuntos mas
+si a la vendedora no le interesa no lo va a ofrecer
+
+vende y decime que te pidieron
+separe 4 articulos
+te doy 3 dias y consigue la plata del cliente

@@ -13,6 +13,7 @@ import { UserModule } from './modules/user.module';
 import { AuthModule } from './infrastructure/auth/auth.module';
 import { LoginModule } from './modules/login.module';
 import { RoleModule } from './modules/role.module';
+import { CategoryModule } from './modules/category.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { RoleModule } from './modules/role.module';
     UserModule,
     LoginModule,
     RoleModule,
+    CategoryModule,
   ],
 })
 export class AppModule implements NestModule {

@@ -1,7 +1,7 @@
 // infrastructure/adapters/mongoose-product-repository.adapter.ts
 import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
-import { Connection, Model } from 'mongoose';
+import { Connection, Model, Types } from 'mongoose';
 import { Product } from '../../../domain/entities/product.entity';
 import { ProductRepositoryPort } from '../../../domain/ports/product-repository.port';
 import { ProductModel, ProductSchema } from '../../models/product.model';
@@ -45,16 +45,34 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
     return new Product(
       productModel._id.toString(),
       productModel.name,
+      productModel.code,
       productModel.description,
-      productModel.price,
+      productModel.brand,
+      productModel.categories?.map((category) => category.toString()) || [],
+      productModel.quantity,
+      productModel.size,
+      productModel.costPrice,
+      productModel.resellerPrice,
+      productModel.publicPrice,
+      productModel.images,
     );
   }
 
   private mapToModel(product: Partial<Product>): Partial<ProductModel> {
     return {
       name: product.name,
+      code: product.code,
       description: product.description,
-      price: product.price,
+      brand: product.brand,
+      categories: product.categories.map(
+        (category) => new Types.ObjectId(category),
+      ),
+      quantity: product.quantity,
+      size: product.size,
+      costPrice: product.costPrice,
+      publicPrice: product.publicPrice,
+      resellerPrice: product.resellerPrice,
+      images: product.images,
     };
   }
 }
