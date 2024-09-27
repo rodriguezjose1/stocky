@@ -17,7 +17,7 @@ export class ProductModel extends Document {
   brand: string;
 
   // todo: make table
-  @Prop({ required: true, type: SchemaTypes.ObjectId, ref: 'Category' })
+  @Prop({ required: true, type: [SchemaTypes.ObjectId], ref: 'Category' })
   categories: Types.ObjectId[];
 
   @Prop({ required: true, type: String })
