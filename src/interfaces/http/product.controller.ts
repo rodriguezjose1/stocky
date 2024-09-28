@@ -7,20 +7,26 @@ import {
   Delete,
   Param,
   Body,
+  Query,
 } from '@nestjs/common';
 import { ProductUseCases } from '../../application/use-cases/product.use-cases';
-import { Product } from '../../domain/entities/product.entity';
+import {
+  ReqGetProductsDto,
+  Product,
+} from '../../domain/entities/product.entity';
 
 @Controller('products')
 export class ProductController {
   constructor(private productUseCases: ProductUseCases) {}
 
   @Get()
-  async getAllProducts() {
-    const products = await this.productUseCases.getAllProducts();
+  async getAllProducts(@Query() query: ReqGetProductsDto) {
+    const { products, total } =
+      await this.productUseCases.getAllProducts(query);
 
     return {
       products,
+      total,
     };
   }
 

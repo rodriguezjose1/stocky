@@ -2,7 +2,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection, Model, Types } from 'mongoose';
-import { Product } from '../../../domain/entities/product.entity';
+import {
+  Product,
+  ReqGetProductsDto,
+  ResGetProductsDto,
+} from '../../../domain/entities/product.entity';
 import { ProductRepositoryPort } from '../../../domain/ports/product-repository.port';
 import { ProductModel, ProductSchema } from '../../models/product.model';
 
@@ -13,9 +17,21 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
     this.productModel = this.connection.model(ProductModel.name, ProductSchema);
   }
 
-  async findAll(): Promise<Product[]> {
-    const products = await this.productModel.find().exec();
-    return products.map((product) => this.mapToEntity(product));
+  async findAll({
+    page,
+    limit,
+  }: ReqGetProductsDto): Promise<ResGetProductsDto> {
+    const offset = (page - 1) * limit;
+    const products = await this.productModel
+      .find()
+      .limit(limit)
+      .skip(offset)
+      .exec();
+    const total = await this.productModel.countDocuments().exec();
+    return {
+      products: products.map((product) => this.mapToEntity(product)),
+      total,
+    };
   }
 
   async findById(id: string): Promise<Product | null> {

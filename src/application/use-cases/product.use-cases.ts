@@ -1,7 +1,10 @@
 // application/use-cases/product-use-cases.ts
 import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Product } from '../../domain/entities/product.entity';
+import {
+  Product,
+  ResGetProductsDto,
+} from '../../domain/entities/product.entity';
 import { ProductRepositoryPort } from '../../domain/ports/product-repository.port';
 
 @Injectable()
@@ -12,8 +15,8 @@ export class ProductUseCases {
     private eventEmitter: EventEmitter2,
   ) {}
 
-  async getAllProducts(): Promise<Product[]> {
-    return this.productRepository.findAll();
+  async getAllProducts(query): Promise<ResGetProductsDto> {
+    return this.productRepository.findAll(query);
   }
 
   async getProductById(id: string): Promise<Product | null> {
