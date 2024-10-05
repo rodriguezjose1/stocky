@@ -1,15 +1,7 @@
 // interfaces/http/stock.controller.ts
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Param,
-  Body,
-} from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
 import { StockUseCases } from '../../application/use-cases/stock.use-cases';
-import { Stock } from '../../domain/entities/stock.entity';
+import { Stock, UpdateStockDto } from '../../domain/entities/stock.entity';
 
 @Controller('stock')
 export class StockController {
@@ -34,7 +26,7 @@ export class StockController {
   }
 
   @Post()
-  async createStock(@Body() stock: Stock) {
+  async createStock(@Body() stock: UpdateStockDto) {
     const newStock = await this.stockUseCases.createStock(stock);
 
     return {

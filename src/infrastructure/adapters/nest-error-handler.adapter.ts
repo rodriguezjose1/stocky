@@ -12,18 +12,12 @@ export class NestErrorHandlerAdapter implements ErrorHandlerPort {
 
     for (const [ErrorType, mapping] of errorMap) {
       if (error instanceof ErrorType) {
-        const message =
-          typeof mapping.message === 'function'
-            ? mapping.message(error)
-            : mapping.message;
+        const message = typeof mapping.message === 'function' ? mapping.message(error) : mapping.message;
         throw new HttpException(message, mapping.status);
       }
     }
 
     // Si no se encuentra un mapeo específico, usar el mapeo por defecto
-    throw new HttpException(
-      defaultErrorMapping.message,
-      defaultErrorMapping.status,
-    );
+    throw new HttpException(defaultErrorMapping.message, defaultErrorMapping.status);
   }
 }

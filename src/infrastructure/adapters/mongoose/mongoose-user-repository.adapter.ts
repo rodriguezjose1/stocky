@@ -30,19 +30,12 @@ export class MongooseUserRepositoryAdapter implements UserRepositoryPort {
   }
 
   async findByEmailAuth(email: string): Promise<User | null> {
-    const user = await this.userModel
-      .findOne({ email })
-      .select('+password')
-      .populate({ path: 'roles' })
-      .exec();
+    const user = await this.userModel.findOne({ email }).select('+password').populate({ path: 'roles' }).exec();
     return user ? this.mapToDomain(user) : null;
   }
 
   async findByIdAuth(id: string): Promise<User | null> {
-    const user = await this.userModel
-      .findById(id)
-      .populate({ path: 'roles' })
-      .exec();
+    const user = await this.userModel.findById(id).populate({ path: 'roles' }).exec();
     return user ? this.mapToDomain(user) : null;
   }
 
@@ -52,9 +45,7 @@ export class MongooseUserRepositoryAdapter implements UserRepositoryPort {
   }
 
   async update(id: string, user: Partial<User>): Promise<User | null> {
-    const updatedUser = await this.userModel
-      .findByIdAndUpdate(id, user, { new: true })
-      .exec();
+    const updatedUser = await this.userModel.findByIdAndUpdate(id, user, { new: true }).exec();
     return updatedUser ? this.mapToDomain(updatedUser) : null;
   }
 

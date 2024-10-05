@@ -14,6 +14,9 @@ import { RoleModule } from './modules/role.module';
 import { SaleModule } from './modules/sale.module';
 import { StockModule } from './modules/stock.module';
 import { UserModule } from './modules/user.module';
+import { AttributeTypeModule } from './modules/attribute-type.module';
+import { VariantModule } from './modules/variant.module';
+import { ProductVariantModule } from './modules/product-variant.module';
 
 @Module({
   imports: [
@@ -31,6 +34,9 @@ import { UserModule } from './modules/user.module';
     LoginModule,
     RoleModule,
     CategoryModule,
+    VariantModule,
+    ProductVariantModule,
+    AttributeTypeModule,
   ],
 })
 export class AppModule implements NestModule {

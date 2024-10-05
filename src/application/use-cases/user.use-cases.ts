@@ -6,7 +6,6 @@ import { UserRepositoryPort } from '../../domain/ports/user-repository.port';
 
 @Injectable()
 export class UserUseCases {
-  private saltRounds = 10;
   constructor(
     @Inject('UserRepositoryPort')
     private userRepository: UserRepositoryPort,

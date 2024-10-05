@@ -1,19 +1,7 @@
 // interfaces/http/product.controller.ts
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Param,
-  Body,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, Query } from '@nestjs/common';
 import { ProductUseCases } from '../../application/use-cases/product.use-cases';
-import {
-  ReqGetProductsDto,
-  Product,
-} from '../../domain/entities/product.entity';
+import { ReqGetProductsDto, Product } from '../../domain/entities/product.entity';
 
 @Controller('products')
 export class ProductController {
@@ -21,8 +9,7 @@ export class ProductController {
 
   @Get()
   async getAllProducts(@Query() query: ReqGetProductsDto) {
-    const { products, total } =
-      await this.productUseCases.getAllProducts(query);
+    const { products, total } = await this.productUseCases.getAllProducts(query);
 
     return {
       products,
@@ -49,10 +36,7 @@ export class ProductController {
   }
 
   @Put(':id')
-  async updateProduct(
-    @Param('id') id: string,
-    @Body() product: Partial<Product>,
-  ) {
+  async updateProduct(@Param('id') id: string, @Body() product: Partial<Product>) {
     return this.productUseCases.updateProduct(id, product);
   }
 

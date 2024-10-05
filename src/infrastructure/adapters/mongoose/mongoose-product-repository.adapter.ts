@@ -2,11 +2,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection, Model, Types } from 'mongoose';
-import {
-  Product,
-  ReqGetProductsDto,
-  ResGetProductsDto,
-} from '../../../domain/entities/product.entity';
+import { Product, ReqGetProductsDto, ResGetProductsDto } from '../../../domain/entities/product.entity';
 import { ProductRepositoryPort } from '../../../domain/ports/product-repository.port';
 import { ProductModel, ProductSchema } from '../../models/product.model';
 
@@ -17,16 +13,9 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
     this.productModel = this.connection.model(ProductModel.name, ProductSchema);
   }
 
-  async findAll({
-    page,
-    limit,
-  }: ReqGetProductsDto): Promise<ResGetProductsDto> {
+  async findAll({ page, limit }: ReqGetProductsDto): Promise<ResGetProductsDto> {
     const offset = (page - 1) * limit;
-    const products = await this.productModel
-      .find()
-      .limit(limit)
-      .skip(offset)
-      .exec();
+    const products = await this.productModel.find().limit(limit).skip(offset).exec();
     const total = await this.productModel.countDocuments().exec();
     return {
       products: products.map((product) => this.mapToEntity(product)),
@@ -46,9 +35,7 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
   }
 
   async update(id: string, product: Partial<Product>): Promise<Product | null> {
-    const updatedProduct = await this.productModel
-      .findByIdAndUpdate(id, this.mapToModel(product), { new: true })
-      .exec();
+    const updatedProduct = await this.productModel.findByIdAndUpdate(id, this.mapToModel(product), { new: true }).exec();
     return updatedProduct ? this.mapToEntity(updatedProduct) : null;
   }
 
@@ -80,9 +67,7 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
       code: product.code,
       description: product.description,
       brand: product.brand,
-      categories: product.categories.map(
-        (category) => new Types.ObjectId(category),
-      ),
+      categories: product.categories.map((category) => new Types.ObjectId(category)),
       quantity: product.quantity,
       size: product.size,
       costPrice: product.costPrice,

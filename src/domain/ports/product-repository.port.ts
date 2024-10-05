@@ -1,9 +1,5 @@
 // domain/ports/product-repository.port.ts
-import {
-  Product,
-  ReqGetProductsDto,
-  ResGetProductsDto,
-} from '../entities/product.entity';
+import { Product, ReqGetProductsDto, ResGetProductsDto } from '../entities/product.entity';
 
 export interface ProductRepositoryPort {
   findAll(query: ReqGetProductsDto): Promise<ResGetProductsDto>;

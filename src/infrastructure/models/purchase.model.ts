@@ -14,8 +14,7 @@ class PurchaseDetailSchema {
   unit_price: number;
 }
 
-const PurchaseDetailSchemaFactory =
-  SchemaFactory.createForClass(PurchaseDetailSchema);
+const PurchaseDetailSchemaFactory = SchemaFactory.createForClass(PurchaseDetailSchema);
 
 @Schema({ collection: 'purchases', timestamps: true })
 export class PurchaseModel extends Document {

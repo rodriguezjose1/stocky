@@ -2,10 +2,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PurchaseCreatedEvent } from 'src/async-events/events/purchase.events';
-import {
-  Purchase,
-  PurchaseDetail,
-} from '../../domain/entities/purchase.entity';
+import { Purchase, PurchaseDetail } from '../../domain/entities/purchase.entity';
 import { PurchaseRepositoryPort } from '../../domain/ports/purchase-repository.port';
 
 @Injectable()
@@ -16,29 +13,16 @@ export class PurchasesUseCase {
     private eventEmitter: EventEmitter2,
   ) {}
 
-  async createPurchase(purchaseData: {
-    date: string;
-    details: { product_id: string; quantity: number; unit_price: number }[];
-  }): Promise<Purchase> {
+  async createPurchase(purchaseData: { date: string; details: { product_id: string; quantity: number; unit_price: number }[] }): Promise<Purchase> {
     const purchase = new Purchase(
       undefined, // El ID se generará en la base de datos
       new Date(purchaseData.date),
-      purchaseData.details.map(
-        (detail) =>
-          new PurchaseDetail(
-            detail.product_id,
-            detail.quantity,
-            detail.unit_price,
-          ),
-      ),
+      purchaseData.details.map((detail) => new PurchaseDetail(detail.product_id, detail.quantity, detail.unit_price)),
     );
 
     const savedPurchase = await this.purchaseRepository.create(purchase);
 
-    this.eventEmitter.emit(
-      'stock.created',
-      new PurchaseCreatedEvent(savedPurchase.id),
-    );
+    this.eventEmitter.emit('stock.created', new PurchaseCreatedEvent(savedPurchase.id));
 
     return savedPurchase;
   }

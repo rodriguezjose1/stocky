@@ -27,10 +27,12 @@ export class ProductListener {
       return;
     }
 
-    await this.stockUseCases.createStock({
-      id: undefined,
-      product_id: event.productId,
-      quantity: 0,
-    });
+    // await this.stockUseCases.createStock({
+    //   id: undefined,
+    //   product_id: event.productId,
+    //   quantity: product.quantity,
+    //   cost_price: product.costPrice,
+    //   date: new Date(),
+    // });
   }
 }

@@ -30,9 +30,7 @@ export class MongooseRoleRepositoryAdapter implements RoleRepositoryPort {
   }
 
   async update(id: string, role: Partial<Role>): Promise<Role | null> {
-    const updatedRole = await this.roleModel
-      .findByIdAndUpdate(id, this.mapToModel(role), { new: true })
-      .exec();
+    const updatedRole = await this.roleModel.findByIdAndUpdate(id, this.mapToModel(role), { new: true }).exec();
     return updatedRole ? this.mapToEntity(updatedRole) : null;
   }
 
@@ -42,12 +40,7 @@ export class MongooseRoleRepositoryAdapter implements RoleRepositoryPort {
   }
 
   private mapToEntity(roleModel: RoleModel): Role {
-    return new Role(
-      roleModel._id.toString(),
-      roleModel.name,
-      roleModel.description,
-      roleModel.permissions,
-    );
+    return new Role(roleModel._id.toString(), roleModel.name, roleModel.description, roleModel.permissions);
   }
 
   private mapToModel(role: Partial<Role>): Partial<RoleModel> {

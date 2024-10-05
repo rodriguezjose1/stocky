@@ -1,10 +1,7 @@
 // application/use-cases/product-use-cases.ts
 import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import {
-  Product,
-  ResGetProductsDto,
-} from '../../domain/entities/product.entity';
+import { Product, ResGetProductsDto } from '../../domain/entities/product.entity';
 import { ProductRepositoryPort } from '../../domain/ports/product-repository.port';
 
 @Injectable()
@@ -33,10 +30,7 @@ export class ProductUseCases {
     return createdProduct;
   }
 
-  async updateProduct(
-    id: string,
-    product: Partial<Product>,
-  ): Promise<Product | null> {
+  async updateProduct(id: string, product: Partial<Product>): Promise<Product | null> {
     return this.productRepository.update(id, product);
   }
 

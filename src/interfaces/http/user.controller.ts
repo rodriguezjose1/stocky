@@ -1,14 +1,5 @@
 // interfaces/http/user.controller.ts
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Param,
-  Body,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { UserUseCases } from '../../application/use-cases/user.use-cases';
 import { User } from '../../domain/entities/user.entity';
 import { JwtAuthGuard } from 'src/infrastructure/auth/guards/jwt-auth.guard';

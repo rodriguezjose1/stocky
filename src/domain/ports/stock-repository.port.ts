@@ -10,4 +10,5 @@ export interface StockRepositoryPort {
   getByProductId(productId: string): Promise<Stock | null>;
   incrementStock(id: string, quantity: number): Promise<Stock | null>;
   decrementStock(id: string, quantity: number): Promise<Stock | null>;
+  getStockByVariantId(variantId: string): Promise<Stock | null>;
 }

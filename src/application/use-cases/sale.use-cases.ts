@@ -5,10 +5,7 @@ import { SaleRepositoryPort } from '../../domain/ports/sale-repository.port';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SaleCreatedEvent } from 'src/async-events/events/sale.events';
 import { StockUseCases } from './stock.use-cases';
-import {
-  ERROR_HANDLER_PORT,
-  ErrorHandlerPort,
-} from 'src/domain/ports/error-handler.port';
+import { ERROR_HANDLER_PORT, ErrorHandlerPort } from 'src/domain/ports/error-handler.port';
 
 @Injectable()
 export class SalesUseCase {
@@ -27,22 +24,12 @@ export class SalesUseCase {
       const sale = new Sale(
         undefined,
         new Date(saleData.date),
-        saleData.details.map(
-          (detail) =>
-            new SaleDetail(
-              detail.product_id,
-              detail.quantity,
-              detail.unit_price,
-            ),
-        ),
+        saleData.details.map((detail) => new SaleDetail(detail.product_id, detail.quantity, detail.unit_price)),
       );
 
       const createdSale = await this.saleRepository.create(sale);
 
-      this.eventEmitter.emit(
-        'sale.created',
-        new SaleCreatedEvent(createdSale.id),
-      );
+      this.eventEmitter.emit('sale.created', new SaleCreatedEvent(createdSale.id));
 
       return createdSale;
     } catch (error) {

@@ -5,14 +5,9 @@ import { CategoryRepositoryPort } from '../../../domain/ports/category-repositor
 import { CategoryModel, CategorySchema } from '../../models/category.model';
 
 @Injectable()
-export class MongooseCategoryRepositoryAdapter
-  implements CategoryRepositoryPort
-{
+export class MongooseCategoryRepositoryAdapter implements CategoryRepositoryPort {
   private categoryModel = Model<any>;
   constructor(@InjectConnection() private connection: Connection) {
-    this.categoryModel = this.connection.model(
-      CategoryModel.name,
-      CategorySchema,
-    );
+    this.categoryModel = this.connection.model(CategoryModel.name, CategorySchema);
   }
 }

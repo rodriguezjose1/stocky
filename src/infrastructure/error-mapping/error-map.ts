@@ -7,13 +7,9 @@ export interface ErrorMapping {
   message: string | ((error: Error) => string);
 }
 
-export const errorMap: Map<new (...args: any[]) => Error, ErrorMapping> =
-  new Map([
-    [
-      InsufficientStockException,
-      { status: HttpStatus.BAD_REQUEST, message: (error) => error.message },
-    ],
-  ]);
+export const errorMap: Map<new (...args: any[]) => Error, ErrorMapping> = new Map([
+  [InsufficientStockException, { status: HttpStatus.BAD_REQUEST, message: (error) => error.message }],
+]);
 
 export const defaultErrorMapping: ErrorMapping = {
   status: HttpStatus.INTERNAL_SERVER_ERROR,

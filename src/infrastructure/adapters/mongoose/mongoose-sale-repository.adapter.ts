@@ -35,9 +35,7 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
   }
 
   async update(id: string, sale: Partial<Sale>): Promise<Sale | null> {
-    const updatedSale = await this.saleModel
-      .findByIdAndUpdate(id, sale, { new: true })
-      .exec();
+    const updatedSale = await this.saleModel.findByIdAndUpdate(id, sale, { new: true }).exec();
     return updatedSale ? this.mapToDomain(updatedSale) : null;
   }
 
@@ -45,14 +43,7 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
     return new Sale(
       saleModel._id.toString(),
       saleModel.date,
-      saleModel.details.map(
-        (detail) =>
-          new SaleDetail(
-            detail.product_id.toString(),
-            detail.quantity,
-            detail.unit_price,
-          ),
-      ),
+      saleModel.details.map((detail) => new SaleDetail(detail.product_id.toString(), detail.quantity, detail.unit_price)),
     );
   }
 }
