@@ -53,7 +53,17 @@ export class SalesUseCase {
 
   async updateSale(id: string, sale: Partial<Sale>): Promise<Sale | null> {
     const updatedSale = await this.saleRepository.update(id, sale);
-    if (updatedSale) this.eventEmitter.emit('sale.updated', new SaleUpdatedEvent(updatedSale.id));
+
+    if (updatedSale && sale.status) this.handleSaleStatusChange(sale.status, updatedSale.id);
+
     return updatedSale;
+  }
+
+  private handleSaleStatusChange(newStatus: SaleStatus, saleId: string): void {
+    const isNewStatusValid = newStatus !== SaleStatus.PENDING;
+
+    if (isNewStatusValid) {
+      this.eventEmitter.emit('sale.updated.status', new SaleUpdatedEvent(saleId));
+    }
   }
 }

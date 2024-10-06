@@ -30,9 +30,9 @@ export class SaleListener {
     }
   }
 
-  @OnEvent('sale.updated')
-  async handleSaleUpdated(event: SaleUpdatedEvent) {
-    console.log('Sale updated:', event.saleId);
+  @OnEvent('sale.updated.status')
+  async handleSaleUpdatedStatus(event: SaleUpdatedEvent) {
+    console.log('Sale updated status:', event.saleId);
     const sale = await this.saleUseCases.findById(event.saleId);
 
     if (!sale) {
