@@ -1,9 +1,9 @@
 // application/use-cases/create-sale.use-case.ts
 import { Inject, Injectable } from '@nestjs/common';
-import { Sale, SaleDetail } from 'src/domain/entities/sale.entity';
+import { Sale, SaleDetail, SaleStatus } from 'src/domain/entities/sale.entity';
 import { SaleRepositoryPort } from '../../domain/ports/sale-repository.port';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { SaleCreatedEvent } from 'src/async-events/events/sale.events';
+import { SaleCreatedEvent, SaleUpdatedEvent } from 'src/async-events/events/sale.events';
 import { StockUseCases } from './stock.use-cases';
 import { ERROR_HANDLER_PORT, ErrorHandlerPort } from 'src/domain/ports/error-handler.port';
 
@@ -22,9 +22,10 @@ export class SalesUseCase {
       await this.stockUseCases.checkStock(saleData.details);
 
       const sale = new Sale(
-        undefined,
+        null,
         new Date(saleData.date),
-        saleData.details.map((detail) => new SaleDetail(detail.product_id, detail.quantity, detail.unit_price)),
+        SaleStatus.PENDING,
+        saleData.details.map((detail) => new SaleDetail(detail.product_id, detail.variant_id, detail.quantity, detail.unit_price)),
       );
 
       const createdSale = await this.saleRepository.create(sale);
@@ -33,6 +34,7 @@ export class SalesUseCase {
 
       return createdSale;
     } catch (error) {
+      console.log(error);
       throw this.errorHandler.handleError(error);
     }
   }
@@ -50,6 +52,8 @@ export class SalesUseCase {
   }
 
   async updateSale(id: string, sale: Partial<Sale>): Promise<Sale | null> {
-    return this.saleRepository.update(id, sale);
+    const updatedSale = await this.saleRepository.update(id, sale);
+    if (updatedSale) this.eventEmitter.emit('sale.updated', new SaleUpdatedEvent(updatedSale.id));
+    return updatedSale;
   }
 }

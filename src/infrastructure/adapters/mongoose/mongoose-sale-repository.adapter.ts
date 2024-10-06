@@ -43,7 +43,8 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
     return new Sale(
       saleModel._id.toString(),
       saleModel.date,
-      saleModel.details.map((detail) => new SaleDetail(detail.product_id.toString(), detail.quantity, detail.unit_price)),
+      saleModel.status,
+      saleModel.details.map((detail) => new SaleDetail(detail.product_id.toString(), detail.variant_id.toString(), detail.quantity, detail.unit_price)),
     );
   }
 }
