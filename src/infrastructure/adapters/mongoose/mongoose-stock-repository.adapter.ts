@@ -27,7 +27,7 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
       {
         $lookup: {
           from: 'products',
-          localField: 'variant.product_id',
+          localField: 'product',
           foreignField: '_id',
           as: 'product',
         },
@@ -100,12 +100,11 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
   private mapToEntity(stockModel: StockModel): Stock {
     return new Stock(
       stockModel._id.toString(),
-      stockModel.product_id.toString(),
+      stockModel.product.toString(),
       stockModel.variant_id.toString(),
       stockModel.quantity,
       stockModel.cost_price,
       stockModel.date,
-      { name: stockModel.product.name },
       stockModel.productVariant.map((variant) => ({
         attribute_type: variant.attribute_type,
         attribute_value: variant.attribute_value,
@@ -115,7 +114,7 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
 
   private mapToModel(stock: Partial<Stock>): Partial<StockModel> {
     return {
-      product_id: new Types.ObjectId(stock.productId),
+      product: new Types.ObjectId(stock.product),
       variant_id: new Types.ObjectId(stock.variantId),
       cost_price: stock.costPrice,
       quantity: stock.quantity,

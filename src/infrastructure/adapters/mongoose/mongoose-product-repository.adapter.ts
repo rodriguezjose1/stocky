@@ -1,8 +1,8 @@
 // infrastructure/adapters/mongoose-product-repository.adapter.ts
 import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
-import { Connection, Model, Types } from 'mongoose';
-import { Product, ReqGetProductsDto, ResGetProductsDto } from '../../../domain/entities/product.entity';
+import { Connection, Model } from 'mongoose';
+import { GetProduct, Product, ReqGetProductsDto, ResGetProductsDto } from '../../../domain/entities/product.entity';
 import { ProductRepositoryPort } from '../../../domain/ports/product-repository.port';
 import { ProductModel, ProductSchema } from '../../models/product.model';
 
@@ -29,13 +29,13 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
   }
 
   async create(product: Product): Promise<Product> {
-    const newProduct = new this.productModel(this.mapToModel(product));
+    const newProduct = new this.productModel(product);
     const savedProduct = await newProduct.save();
     return this.mapToEntity(savedProduct);
   }
 
   async update(id: string, product: Partial<Product>): Promise<Product | null> {
-    const updatedProduct = await this.productModel.findByIdAndUpdate(id, this.mapToModel(product), { new: true }).exec();
+    const updatedProduct = await this.productModel.findByIdAndUpdate(id, product, { new: true }).exec();
     return updatedProduct ? this.mapToEntity(updatedProduct) : null;
   }
 
@@ -45,35 +45,15 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
   }
 
   private mapToEntity(productModel: ProductModel): Product {
-    return new Product(
+    return new GetProduct(
       productModel._id.toString(),
       productModel.name,
-      productModel.code,
       productModel.description,
-      productModel.brand,
+      productModel.code,
       productModel.categories?.map((category) => category.toString()) || [],
-      productModel.quantity,
-      productModel.size,
-      productModel.costPrice,
-      productModel.resellerPrice,
-      productModel.publicPrice,
-      productModel.images,
+      productModel.attributes,
+      productModel.pictures,
+      productModel.prices,
     );
-  }
-
-  private mapToModel(product: Partial<Product>): Partial<ProductModel> {
-    return {
-      name: product.name,
-      code: product.code,
-      description: product.description,
-      brand: product.brand,
-      categories: product.categories.map((category) => new Types.ObjectId(category)),
-      quantity: product.quantity,
-      size: product.size,
-      costPrice: product.costPrice,
-      publicPrice: product.publicPrice,
-      resellerPrice: product.resellerPrice,
-      images: product.images,
-    };
   }
 }

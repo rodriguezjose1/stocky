@@ -6,17 +6,17 @@ import { AuthModule } from './infrastructure/auth/auth.module';
 import { DatabaseModule } from './infrastructure/database/database.module';
 import { LoggerMiddleware } from './infrastructure/logging/logger.middleware';
 import { LoggerModule } from './infrastructure/logging/logger.module';
+import { AttributeTypeModule } from './modules/attribute-type.module';
 import { CategoryModule } from './modules/category.module';
 import { LoginModule } from './modules/login.module';
+import { ProductVariantModule } from './modules/product-variant.module';
 import { ProductModule } from './modules/product.module';
 import { PurchaseModule } from './modules/purchase.module';
 import { RoleModule } from './modules/role.module';
 import { SaleModule } from './modules/sale.module';
 import { StockModule } from './modules/stock.module';
 import { UserModule } from './modules/user.module';
-import { AttributeTypeModule } from './modules/attribute-type.module';
 import { VariantModule } from './modules/variant.module';
-import { ProductVariantModule } from './modules/product-variant.module';
 
 @Module({
   imports: [

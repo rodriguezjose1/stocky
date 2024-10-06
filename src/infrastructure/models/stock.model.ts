@@ -4,7 +4,7 @@ import { Document, SchemaTypes, Types } from 'mongoose';
 @Schema({ collection: 'stock', timestamps: true })
 export class StockModel extends Document {
   @Prop({ type: SchemaTypes.ObjectId, required: true, ref: 'ProductModel' })
-  product_id: Types.ObjectId;
+  product: Types.ObjectId;
 
   @Prop({ type: SchemaTypes.ObjectId, required: true, ref: 'VariantModel' })
   variant_id: Types.ObjectId;
@@ -19,7 +19,6 @@ export class StockModel extends Document {
   date: Date;
 
   productVariant: any;
-  product: any;
 }
 
 export const StockSchema = SchemaFactory.createForClass(StockModel);

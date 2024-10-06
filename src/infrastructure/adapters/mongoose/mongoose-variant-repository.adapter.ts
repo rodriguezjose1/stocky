@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
-import { Connection, Model } from 'mongoose';
+import { Connection, Model, Types } from 'mongoose';
 import { VariantRepositoryPort } from '../../../domain/ports/variant-repository.port';
 import { VariantModel, VariantSchema } from '../../models/variant.model';
 import { Variant } from 'src/domain/entities/variant.entity';
@@ -23,7 +23,7 @@ export class MongooseVariantRepositoryAdapter implements VariantRepositoryPort {
   }
 
   async create(variant: Variant): Promise<Variant> {
-    const newVariant = new this.variantModel(variant);
+    const newVariant = new this.variantModel(this.mapToModel(variant));
     const savedVariant = await newVariant.save();
     return this.mapToEntity(savedVariant);
   }
@@ -39,6 +39,12 @@ export class MongooseVariantRepositoryAdapter implements VariantRepositoryPort {
   }
 
   private mapToEntity(variantModel: VariantModel): Variant {
-    return new Variant(variantModel._id.toString(), variantModel.product_id.toString());
+    return new Variant(variantModel._id.toString(), variantModel.product.toString());
+  }
+
+  private mapToModel(variant: Partial<Variant>): Partial<VariantModel> {
+    return {
+      product: new Types.ObjectId(variant.product),
+    };
   }
 }

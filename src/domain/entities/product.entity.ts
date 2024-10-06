@@ -1,20 +1,44 @@
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, Min } from 'class-validator';
 
+export interface Attributes {
+  brand: string;
+}
+
+export interface Image {
+  url: string;
+  alt_text: string;
+}
+
+export interface Prices {
+  cost: number;
+  retail: number;
+  reseller: number;
+}
+
 export class Product {
   constructor(
     public id: string,
     public name: string,
-    public code: string,
     public description: string,
-    public brand: string,
+    public code: string,
     public categories: string[],
-    public quantity: number,
-    public size: string,
-    public costPrice: number,
-    public publicPrice: number,
-    public resellerPrice: number,
-    public images: string[],
+    public attributes: Attributes,
+    public pictures: Image[],
+    public prices: Prices,
+  ) {}
+}
+
+export class GetProduct {
+  constructor(
+    public id: string,
+    public name: string,
+    public description: string,
+    public code: string,
+    public categories: string[],
+    public attributes: Attributes,
+    public pictures: Image[],
+    public prices: Prices,
   ) {}
 }
 

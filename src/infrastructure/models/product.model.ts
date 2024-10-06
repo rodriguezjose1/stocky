@@ -2,41 +2,70 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, SchemaTypes, Types } from 'mongoose';
 
-@Schema({ collection: 'products', timestamps: true })
-export class ProductModel extends Document {
-  @Prop({ required: true })
-  name: string;
+interface Attributes {
+  brand: string;
+}
 
-  @Prop({ required: true })
-  code: string;
-
-  @Prop()
-  description: string;
-
+@Schema({ _id: false })
+class AttributeSchema {
   @Prop({ required: true })
   brand: string;
+}
 
-  // todo: make table
-  @Prop({ required: true, type: [SchemaTypes.ObjectId], ref: 'Category' })
+interface Image {
+  url: string;
+  alt_text: string;
+}
+
+@Schema({ _id: false })
+class ImageSchema {
+  @Prop({ required: true })
+  url: string;
+
+  @Prop({ required: true })
+  alt_text: string;
+}
+
+interface Prices {
+  cost: number;
+  retail: number;
+  reseller: number;
+}
+
+@Schema({ _id: false })
+class PricesSchema {
+  @Prop({ required: true })
+  cost: number;
+
+  @Prop({ required: true })
+  retail: number;
+
+  @Prop({ required: true })
+  reseller: number;
+}
+
+@Schema({ timestamps: true, collection: 'products' })
+export class ProductModel extends Document {
+  @Prop({ required: true, type: [SchemaTypes.ObjectId], ref: 'CategoryModel' })
   categories: Types.ObjectId[];
 
-  @Prop({ required: true, type: String })
-  size: string;
+  @Prop({ type: String, required: true })
+  name: string;
 
-  @Prop({ required: true })
-  quantity: number;
+  @Prop({ type: String, required: true })
+  code: string;
 
-  @Prop({ required: true })
-  costPrice: number;
+  @Prop({ type: String, required: true })
+  description: string;
 
-  @Prop({ required: true })
-  publicPrice: number;
+  @Prop({ type: AttributeSchema, required: true })
+  attributes: Attributes;
 
-  @Prop({ required: true })
-  resellerPrice: number;
+  @Prop({ type: [ImageSchema] })
+  pictures: Image[];
 
-  @Prop({ required: true })
-  images: string[];
+  @Prop({ type: PricesSchema, required: true })
+  prices: Prices;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(ProductModel);

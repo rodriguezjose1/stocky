@@ -50,7 +50,7 @@ export class StockUseCases {
         // save variant
         const variantToSave: Variant = {
           id: undefined,
-          product_id: stockDto.product_id,
+          product: stockDto.product,
         };
         const savedVariant = await this.variantUseCases.createVariant(variantToSave);
         variantId = savedVariant.id;
@@ -70,10 +70,10 @@ export class StockUseCases {
         // create stock
         const stockToSave: Stock = {
           id: undefined,
-          productId: stockDto.product_id,
+          product: stockDto.product,
           variantId: variantId,
           quantity: stockDto.quantity,
-          costPrice: stockDto.cost_price,
+          costPrice: stockDto.costPrice,
           date: stockDto.date,
         };
 
@@ -81,14 +81,14 @@ export class StockUseCases {
       } else {
         // update existing stock
         const stockDB = await this.stockRepository.getStockByVariantId(variantId);
-        if (stockDB && stockDB.costPrice !== stockDto.cost_price) {
+        if (stockDB && stockDB.costPrice !== stockDto.costPrice) {
           // create stock with different cost price
           const stockToSave: Stock = {
             id: undefined,
-            productId: stockDto.product_id,
+            product: stockDto.product,
             variantId: variantId,
             quantity: stockDto.quantity,
-            costPrice: stockDto.cost_price,
+            costPrice: stockDto.costPrice,
             date: stockDto.date,
           };
 
