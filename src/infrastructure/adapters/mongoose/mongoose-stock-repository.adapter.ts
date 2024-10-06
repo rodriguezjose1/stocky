@@ -2,7 +2,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection, Model, Types } from 'mongoose';
-import { Stock } from '../../../domain/entities/stock.entity';
+import { ReqGetStocksDto, ResGetStocksDto, Stock } from '../../../domain/entities/stock.entity';
 import { StockRepositoryPort } from '../../../domain/ports/stock-repository.port';
 import { StockModel, StockSchema } from '../../models/stock.model';
 
@@ -13,12 +13,14 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
     this.stockModel = this.connection.model(StockModel.name, StockSchema);
   }
 
-  async findAll(): Promise<Stock[]> {
+  async findAll(query: ReqGetStocksDto): Promise<ResGetStocksDto> {
+    const skip = (query.page - 1) * query.limit;
+
     const stocks = await this.stockModel.aggregate([
       {
         $lookup: {
           from: 'variants',
-          localField: 'variant_id',
+          localField: 'variant',
           foreignField: '_id',
           as: 'variant',
         },
@@ -34,15 +36,15 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
       },
       { $unwind: '$product' },
       {
-        $lookup: {
-          from: 'productvariants',
-          localField: 'variant._id',
-          foreignField: 'variant_id',
-          as: 'productVariant',
-        },
+        $skip: skip,
+      },
+      {
+        $limit: query.limit,
       },
     ]);
-    return stocks.map((stock) => this.mapToEntity(stock));
+
+    const total = await this.stockModel.countDocuments().exec();
+    return { stocks: stocks.map((stock) => this.mapToEntity(stock)), total };
   }
 
   async findById(id: string): Promise<Stock | null> {
@@ -93,29 +95,18 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
   }
 
   async getStockByVariantId(variantId: string): Promise<Stock | null> {
-    const stock = await this.stockModel.findOne({ variant_id: variantId }).exec();
+    const stock = await this.stockModel.findOne({ variant: variantId }).exec();
     return stock ? this.mapToEntity(stock) : null;
   }
 
   private mapToEntity(stockModel: StockModel): Stock {
-    return new Stock(
-      stockModel._id.toString(),
-      stockModel.product.toString(),
-      stockModel.variant_id.toString(),
-      stockModel.quantity,
-      stockModel.cost_price,
-      stockModel.date,
-      stockModel.productVariant.map((variant) => ({
-        attribute_type: variant.attribute_type,
-        attribute_value: variant.attribute_value,
-      })),
-    );
+    return new Stock(stockModel._id.toString(), stockModel.product, stockModel.variant, stockModel.quantity, stockModel.cost_price, stockModel.date);
   }
 
   private mapToModel(stock: Partial<Stock>): Partial<StockModel> {
     return {
       product: new Types.ObjectId(stock.product),
-      variant_id: new Types.ObjectId(stock.variantId),
+      variant: new Types.ObjectId(stock.variant),
       cost_price: stock.costPrice,
       quantity: stock.quantity,
       date: stock.date,

@@ -5,6 +5,12 @@ import { Document, SchemaTypes, Types } from 'mongoose';
 export class VariantModel extends Document {
   @Prop({ type: SchemaTypes.ObjectId, required: true })
   product: Types.ObjectId;
+
+  @Prop({ type: String, required: true })
+  size: string;
+
+  @Prop({ type: String, required: true })
+  color: string;
 }
 
 export const VariantSchema = SchemaFactory.createForClass(VariantModel);

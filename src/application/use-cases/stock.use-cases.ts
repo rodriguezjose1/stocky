@@ -1,14 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { ProductVariant } from 'src/domain/entities/product-variant.entity';
+import { InjectConnection } from '@nestjs/mongoose';
+import mongoose from 'mongoose';
 import { SaleDetail } from 'src/domain/entities/sale.entity';
 import { Variant } from 'src/domain/entities/variant.entity';
 import { InsufficientStockException } from 'src/domain/exceptions/insufficient-stock.exception';
-import { Stock, UpdateStockDto } from '../../domain/entities/stock.entity';
+import { ReqGetStocksDto, ResGetStocksDto, Stock, UpdateStockDto } from '../../domain/entities/stock.entity';
 import { StockRepositoryPort } from '../../domain/ports/stock-repository.port';
-import { ProductVariantUseCases } from './product-variant.use-cases';
 import { VariantUseCases } from './variant.use-cases';
-import mongoose from 'mongoose';
-import { InjectConnection } from '@nestjs/mongoose';
 
 @Injectable()
 export class StockUseCases {
@@ -16,7 +14,6 @@ export class StockUseCases {
     @Inject('StockRepositoryPort')
     private stockRepository: StockRepositoryPort,
     private variantUseCases: VariantUseCases,
-    private productVariantUseCases: ProductVariantUseCases,
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
 
@@ -24,8 +21,8 @@ export class StockUseCases {
     return this.stockRepository.getByProductId(productId);
   }
 
-  async getAllStocks(): Promise<Stock[]> {
-    return this.stockRepository.findAll();
+  async getAllStocks(query: ReqGetStocksDto): Promise<ResGetStocksDto> {
+    return this.stockRepository.findAll(query);
   }
 
   async getStockById(id: string): Promise<Stock | null> {
@@ -41,9 +38,9 @@ export class StockUseCases {
         stockDto.date = new Date();
       }
 
-      const productVariantExists = await this.productVariantUseCases.existsProductVariant(stockDto.variant);
+      const variant = await this.variantUseCases.getOneBy(stockDto.variant);
 
-      let variantId = productVariantExists;
+      let variantId = variant ? variant.id : null;
       let stock = null;
 
       if (!variantId) {
@@ -51,27 +48,17 @@ export class StockUseCases {
         const variantToSave: Variant = {
           id: undefined,
           product: stockDto.product,
+          size: stockDto.variant.size,
+          color: stockDto.variant.color,
         };
         const savedVariant = await this.variantUseCases.createVariant(variantToSave);
         variantId = savedVariant.id;
-
-        // save product variants
-        const productsVariants: ProductVariant[] = [];
-        stockDto.variant.forEach((variant) => {
-          productsVariants.push({
-            id: undefined,
-            variant_id: variantId,
-            attribute_type: variant.attributeType,
-            attribute_value: variant.attributeValue,
-          });
-        });
-        await this.productVariantUseCases.createManyProductVariants(productsVariants);
 
         // create stock
         const stockToSave: Stock = {
           id: undefined,
           product: stockDto.product,
-          variantId: variantId,
+          variant: variantId,
           quantity: stockDto.quantity,
           costPrice: stockDto.costPrice,
           date: stockDto.date,
@@ -86,7 +73,7 @@ export class StockUseCases {
           const stockToSave: Stock = {
             id: undefined,
             product: stockDto.product,
-            variantId: variantId,
+            variant: variantId,
             quantity: stockDto.quantity,
             costPrice: stockDto.costPrice,
             date: stockDto.date,

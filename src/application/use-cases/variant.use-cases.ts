@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Variant } from '../../domain/entities/variant.entity';
 import { VariantRepositoryPort } from '../../domain/ports/variant-repository.port';
+import { Filter } from 'src/infrastructure/adapters/mongoose/mongoose-variant-repository.adapter';
 
 @Injectable()
 export class VariantUseCases {
@@ -11,6 +12,10 @@ export class VariantUseCases {
 
   async getAllVariants(): Promise<Variant[]> {
     return this.variantRepository.findAll();
+  }
+
+  async getOneBy(filter: Filter): Promise<Variant> {
+    return this.variantRepository.findOneBy(filter);
   }
 
   async getVariantById(id: string): Promise<Variant | null> {

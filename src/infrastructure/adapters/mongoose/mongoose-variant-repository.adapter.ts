@@ -5,6 +5,11 @@ import { VariantRepositoryPort } from '../../../domain/ports/variant-repository.
 import { VariantModel, VariantSchema } from '../../models/variant.model';
 import { Variant } from 'src/domain/entities/variant.entity';
 
+export interface Filter {
+  size: string;
+  color: string;
+}
+
 @Injectable()
 export class MongooseVariantRepositoryAdapter implements VariantRepositoryPort {
   private variantModel = Model<any>;
@@ -15,6 +20,12 @@ export class MongooseVariantRepositoryAdapter implements VariantRepositoryPort {
   async findAll(): Promise<Variant[]> {
     const variants = await this.variantModel.find().exec();
     return variants.map((variant) => this.mapToEntity(variant));
+  }
+
+  async findOneBy(filter: Filter) {
+    const variant = await this.variantModel.findOne(filter);
+
+    return variant ? this.mapToEntity(variant) : null;
   }
 
   async findById(id: string): Promise<Variant | null> {
@@ -39,12 +50,14 @@ export class MongooseVariantRepositoryAdapter implements VariantRepositoryPort {
   }
 
   private mapToEntity(variantModel: VariantModel): Variant {
-    return new Variant(variantModel._id.toString(), variantModel.product.toString());
+    return new Variant(variantModel._id.toString(), variantModel.product.toString(), variantModel.size, variantModel.color);
   }
 
   private mapToModel(variant: Partial<Variant>): Partial<VariantModel> {
     return {
       product: new Types.ObjectId(variant.product),
+      size: variant.size,
+      color: variant.color,
     };
   }
 }

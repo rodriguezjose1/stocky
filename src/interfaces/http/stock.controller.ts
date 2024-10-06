@@ -1,18 +1,19 @@
 // interfaces/http/stock.controller.ts
-import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, Query } from '@nestjs/common';
 import { StockUseCases } from '../../application/use-cases/stock.use-cases';
-import { Stock, UpdateStockDto } from '../../domain/entities/stock.entity';
+import { ReqGetStocksDto, ResGetStocksDto, Stock, UpdateStockDto } from '../../domain/entities/stock.entity';
 
 @Controller('stock')
 export class StockController {
   constructor(private stockUseCases: StockUseCases) {}
 
   @Get()
-  async getAllStocks() {
-    const stocks = await this.stockUseCases.getAllStocks();
+  async getAllStocks(@Query() query: ReqGetStocksDto): Promise<ResGetStocksDto> {
+    const { stocks, total } = await this.stockUseCases.getAllStocks(query);
 
     return {
       stocks,
+      total,
     };
   }
 

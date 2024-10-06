@@ -7,7 +7,7 @@ export class StockModel extends Document {
   product: Types.ObjectId;
 
   @Prop({ type: SchemaTypes.ObjectId, required: true, ref: 'VariantModel' })
-  variant_id: Types.ObjectId;
+  variant: Types.ObjectId;
 
   @Prop({ required: true })
   quantity: number;
@@ -17,8 +17,6 @@ export class StockModel extends Document {
 
   @Prop({ required: true })
   date: Date;
-
-  productVariant: any;
 }
 
 export const StockSchema = SchemaFactory.createForClass(StockModel);
