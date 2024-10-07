@@ -83,10 +83,10 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
     return updatedStock ? this.mapToEntity(updatedStock) : null;
   }
 
-  async getByProductAndCostPriceWithQuantity(productId: string, costPrice: number) {
+  async getByVariantAndCostPriceWithQuantity(variantId: string, costPrice: number) {
     const stock = await this.stockModel
       .findOne({
-        product_id: productId,
+        variant_id: variantId,
         cost_price: costPrice,
         quantity: { $gt: 0 },
       })
@@ -94,9 +94,27 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
     return stock ? this.mapToEntity(stock) : null;
   }
 
-  async getStockByVariantId(variantId: string): Promise<Stock | null> {
-    const stock = await this.stockModel.findOne({ variant: variantId }).exec();
-    return stock ? this.mapToEntity(stock) : null;
+  async getStockByVariantId(variantId: string): Promise<Stock[]> {
+    const stocks = await this.stockModel.find({ variant: variantId }).sort({ createdAt: 1 }).exec();
+    return stocks ? stocks.map((stock) => this.mapToEntity(stock)) : null;
+  }
+
+  async getQuantityByVariantId(variantId: string): Promise<number> {
+    const stock = await this.stockModel.aggregate([
+      {
+        $match: {
+          variant: new Types.ObjectId(variantId),
+        },
+      },
+      {
+        $group: {
+          _id: '$variant',
+          quantity: { $sum: '$quantity' },
+        },
+      },
+    ]);
+
+    return stock[0] ? stock[0].quantity : 0;
   }
 
   private mapToEntity(stockModel: StockModel): Stock {
@@ -105,8 +123,8 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
 
   private mapToModel(stock: Partial<Stock>): Partial<StockModel> {
     return {
-      product: new Types.ObjectId(stock.product),
-      variant: new Types.ObjectId(stock.variant),
+      product: stock.product ? new Types.ObjectId(stock.product) : undefined,
+      variant: stock.variant ? new Types.ObjectId(stock.variant) : undefined,
       cost_price: stock.costPrice,
       quantity: stock.quantity,
       date: stock.date,

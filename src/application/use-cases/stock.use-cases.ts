@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
-import { SaleDetail } from 'src/domain/entities/sale.entity';
+import { SaleDetail, StocksUpdated } from 'src/domain/entities/sale.entity';
 import { Variant } from 'src/domain/entities/variant.entity';
 import { InsufficientStockException } from 'src/domain/exceptions/insufficient-stock.exception';
 import { ReqGetStocksDto, ResGetStocksDto, Stock, UpdateStockDto } from '../../domain/entities/stock.entity';
@@ -67,8 +67,8 @@ export class StockUseCases {
         stock = await this.stockRepository.create(stockToSave);
       } else {
         // update existing stock
-        const stockDB = await this.stockRepository.getStockByVariantId(variantId);
-        if (stockDB && stockDB.costPrice !== stockDto.costPrice) {
+        const stockDB = await this.stockRepository.getByVariantAndCostPriceWithQuantity(variantId, stockDto.costPrice);
+        if (!stockDB) {
           // create stock with different cost price
           const stockToSave: Stock = {
             id: undefined,
@@ -104,28 +104,51 @@ export class StockUseCases {
     return this.stockRepository.delete(id);
   }
 
-  async incrementStock(productId, { quantity }) {
-    const stock = await this.stockRepository.getByProductId(productId);
-    if (stock) {
-      await this.stockRepository.incrementStock(stock.id, quantity);
-    }
+  async incrementStock(stockId, { quantity }) {
+    return this.stockRepository.incrementStock(stockId, quantity);
   }
 
-  async decrementStock(productId, { quantity }) {
-    const stock = await this.stockRepository.getByProductId(productId);
-    if (stock) {
-      await this.stockRepository.decrementStock(stock.id, quantity);
+  async decrementStock(variantId, { quantity: decrementAmount }): Promise<StocksUpdated[]> {
+    const decremented: StocksUpdated[] = [];
+    const stocks = await this.stockRepository.getStockByVariantId(variantId);
+
+    let remaining = decrementAmount; // Cuánto stock queda por decrementar
+
+    let quantitySaved = 0;
+    for (const stock of stocks) {
+      if (remaining <= 0) break; // Si ya hemos decrementado suficiente, salimos
+
+      if (stock.quantity >= remaining) {
+        // Si este registro tiene suficiente stock para cubrir lo que queda
+        stock.quantity -= remaining;
+        quantitySaved = remaining;
+        remaining = 0; // Ya no necesitamos restar más
+      } else {
+        // Si no tiene suficiente stock, restamos todo el stock disponible y seguimos
+        remaining -= stock.quantity;
+        quantitySaved = stock.quantity;
+        stock.quantity = 0;
+      }
+
+      decremented.push({
+        stock: stock.id,
+        quantity: quantitySaved,
+        costPrice: stock.costPrice,
+      });
+
+      // Guardamos los cambios en la base de datos
+      await this.stockRepository.update(stock.id, { quantity: stock.quantity });
     }
+
+    return decremented;
   }
 
   public async checkStock(details: SaleDetail[]): Promise<void> {
     for (const detail of details) {
-      const stock = await this.stockRepository.getByProductId(detail.product_id);
-      if (!stock) {
-        throw new Error(`Product with id ${detail.product_id} not found`);
-      }
-      if (stock.quantity < detail.quantity) {
-        throw new InsufficientStockException(detail.product_id, detail.quantity, stock.quantity);
+      const quantity = await this.stockRepository.getQuantityByVariantId(detail.variantId);
+
+      if (quantity < detail.quantity) {
+        throw new InsufficientStockException(detail.productId, detail.quantity, quantity);
       }
     }
   }

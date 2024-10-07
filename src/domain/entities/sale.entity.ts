@@ -6,10 +6,17 @@ export enum SaleStatus {
 
 export class SaleDetail {
   constructor(
-    public product_id: string,
-    public variant_id: string,
+    public productId: string,
+    public variantId: string,
     public quantity: number,
-    public unit_price: number,
+  ) {}
+}
+
+export class StocksUpdated {
+  constructor(
+    public stock: string,
+    public quantity: number,
+    public costPrice: number,
   ) {}
 }
 
@@ -19,5 +26,6 @@ export class Sale {
     public date: Date,
     public status: SaleStatus,
     public details: SaleDetail[],
+    public stocksUpdated: StocksUpdated[],
   ) {}
 }

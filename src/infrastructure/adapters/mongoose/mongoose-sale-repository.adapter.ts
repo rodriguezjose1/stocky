@@ -1,8 +1,8 @@
 // infrastructure/adapters/mongoose-sale-repository.adapter.ts
 import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
-import { Connection, Model } from 'mongoose';
-import { Sale, SaleDetail } from '../../../domain/entities/sale.entity';
+import { Connection, Model, Types } from 'mongoose';
+import { Sale, SaleDetail, StocksUpdated } from '../../../domain/entities/sale.entity';
 import { SaleRepositoryPort } from '../../../domain/ports/sale-repository.port';
 import { SaleModel, SaleSchema } from '../../models/sale.model';
 
@@ -14,7 +14,7 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
   }
 
   async create(sale: Sale): Promise<Sale> {
-    const createdSale = new this.saleModel(sale);
+    const createdSale = new this.saleModel(this.mapToModel(sale));
     const savedSale = await createdSale.save();
     return this.mapToDomain(savedSale);
   }
@@ -35,7 +35,7 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
   }
 
   async update(id: string, sale: Partial<Sale>): Promise<Sale | null> {
-    const updatedSale = await this.saleModel.findByIdAndUpdate(id, sale, { new: true }).exec();
+    const updatedSale = await this.saleModel.findByIdAndUpdate(id, this.mapToModel(sale), { new: true }).exec();
     return updatedSale ? this.mapToDomain(updatedSale) : null;
   }
 
@@ -44,7 +44,27 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
       saleModel._id.toString(),
       saleModel.date,
       saleModel.status,
-      saleModel.details.map((detail) => new SaleDetail(detail.product_id.toString(), detail.variant_id.toString(), detail.quantity, detail.unit_price)),
+      saleModel.details.map((detail) => new SaleDetail(detail.product.toString(), detail.variant.toString(), detail.quantity)),
+      saleModel.stocks_updated.map((stockUpdated) => new StocksUpdated(stockUpdated.stock.toString(), stockUpdated.quantity, stockUpdated.cost_price)),
     );
+  }
+
+  private mapToModel(sale: Partial<Sale>): Partial<SaleModel> {
+    return {
+      date: sale.date || undefined,
+      status: sale.status || undefined,
+      details:
+        sale.details?.map((detail) => ({
+          product: new Types.ObjectId(detail.productId),
+          variant: new Types.ObjectId(detail.variantId),
+          quantity: detail.quantity,
+        })) || undefined,
+      stocks_updated:
+        sale.stocksUpdated?.map((stockUpdated) => ({
+          stock: new Types.ObjectId(stockUpdated.stock),
+          quantity: stockUpdated.quantity,
+          cost_price: stockUpdated.costPrice,
+        })) || undefined,
+    };
   }
 }

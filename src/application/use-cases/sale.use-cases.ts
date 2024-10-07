@@ -25,7 +25,8 @@ export class SalesUseCase {
         null,
         new Date(saleData.date),
         SaleStatus.PENDING,
-        saleData.details.map((detail) => new SaleDetail(detail.product_id, detail.variant_id, detail.quantity, detail.unit_price)),
+        saleData.details.map((detail) => new SaleDetail(detail.productId, detail.variantId, detail.quantity)),
+        [],
       );
 
       const createdSale = await this.saleRepository.create(sale);

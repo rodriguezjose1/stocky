@@ -1,5 +1,5 @@
 // interfaces/http/sale.controller.ts
-import { Controller, Post, Body, Get, Put } from '@nestjs/common';
+import { Controller, Post, Body, Get, Put, Param } from '@nestjs/common';
 import { SalesUseCase } from '../../application/use-cases/sale.use-cases';
 import { Sale } from 'src/domain/entities/sale.entity';
 
@@ -38,7 +38,7 @@ export class SaleController {
   }
 
   @Put(':id')
-  async updateSale(id: string, @Body() saleData: Partial<Sale>) {
+  async updateSale(@Param('id') id: string, @Body() saleData: Partial<Sale>) {
     const updatedSale = await this.saleUseCases.updateSale(id, saleData);
 
     return {

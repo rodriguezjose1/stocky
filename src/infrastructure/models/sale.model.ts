@@ -4,18 +4,35 @@ import { Document, SchemaTypes, Types } from 'mongoose';
 import { SaleStatus } from 'src/domain/entities/sale.entity';
 
 @Schema()
-class SaleDetailSchema {
+class StocksUpdated {
   @Prop({ type: SchemaTypes.ObjectId, required: true })
-  product_id: Types.ObjectId;
-
-  @Prop({ type: SchemaTypes.ObjectId, required: true })
-  variant_id: Types.ObjectId;
+  stock: Types.ObjectId;
 
   @Prop({ required: true })
   quantity: number;
 
   @Prop({ required: true })
-  unit_price: number;
+  cost_price: number;
+}
+
+interface IStocksUpated {
+  stock: Types.ObjectId;
+  quantity: number;
+  cost_price: number;
+}
+
+const StocksUpdatedSchema = SchemaFactory.createForClass(StocksUpdated);
+
+@Schema()
+class SaleDetailSchema {
+  @Prop({ type: SchemaTypes.ObjectId, required: true })
+  product: Types.ObjectId;
+
+  @Prop({ type: SchemaTypes.ObjectId, required: true })
+  variant: Types.ObjectId;
+
+  @Prop({ required: true })
+  quantity: number;
 }
 
 const SaleDetailSchemaFactory = SchemaFactory.createForClass(SaleDetailSchema);
@@ -30,6 +47,9 @@ export class SaleModel extends Document {
 
   @Prop({ type: [SaleDetailSchemaFactory], required: true })
   details: SaleDetailSchema[];
+
+  @Prop({ required: true, type: [StocksUpdatedSchema] })
+  stocks_updated: IStocksUpated[];
 }
 
 export const SaleSchema = SchemaFactory.createForClass(SaleModel);

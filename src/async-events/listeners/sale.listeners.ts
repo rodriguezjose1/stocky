@@ -23,11 +23,17 @@ export class SaleListener {
       return;
     }
 
+    const stocksUpdated = [];
+
     for (const detail of sale.details) {
-      await this.stockUseCases.decrementStock(detail.product_id, {
+      const decremented = await this.stockUseCases.decrementStock(detail.variantId, {
         quantity: detail.quantity,
       });
+
+      stocksUpdated.push(...decremented);
     }
+
+    await this.saleUseCases.updateSale(event.saleId, { stocksUpdated });
   }
 
   @OnEvent('sale.updated.status')
@@ -41,9 +47,9 @@ export class SaleListener {
     }
 
     if (sale.status === SaleStatus.REJECTED) {
-      for (const detail of sale.details) {
-        await this.stockUseCases.incrementStock(detail.product_id, {
-          quantity: detail.quantity,
+      for (const stockUpdated of sale.stocksUpdated) {
+        await this.stockUseCases.incrementStock(stockUpdated.stock, {
+          quantity: stockUpdated.quantity,
         });
       }
     }
