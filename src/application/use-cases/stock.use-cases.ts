@@ -7,6 +7,7 @@ import { InsufficientStockException } from 'src/domain/exceptions/insufficient-s
 import { ReqGetStocksDto, ResGetStocksDto, Stock, UpdateStockDto } from '../../domain/entities/stock.entity';
 import { StockRepositoryPort } from '../../domain/ports/stock-repository.port';
 import { VariantUseCases } from './variant.use-cases';
+import { ProductUseCases } from './product.use-cases';
 
 @Injectable()
 export class StockUseCases {
@@ -14,6 +15,7 @@ export class StockUseCases {
     @Inject('StockRepositoryPort')
     private stockRepository: StockRepositoryPort,
     private variantUseCases: VariantUseCases,
+    private productUseCases: ProductUseCases,
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
 
@@ -111,6 +113,7 @@ export class StockUseCases {
   async decrementStock(variantId, { quantity: decrementAmount }): Promise<StocksUpdated[]> {
     const decremented: StocksUpdated[] = [];
     const stocks = await this.stockRepository.getStockByVariantId(variantId);
+    const product = await this.productUseCases.getProductById(stocks[0].product);
 
     let remaining = decrementAmount; // Cuánto stock queda por decrementar
 
@@ -133,7 +136,11 @@ export class StockUseCases {
       decremented.push({
         stock: stock.id,
         quantity: quantitySaved,
-        costPrice: stock.costPrice,
+        prices: {
+          cost: stock.costPrice,
+          retail: product.prices.retail,
+          reseller: product.prices.reseller,
+        },
       });
 
       // Guardamos los cambios en la base de datos

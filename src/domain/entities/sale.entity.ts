@@ -4,11 +4,20 @@ export enum SaleStatus {
   REJECTED = 'rejected',
 }
 
+export class Prices {
+  constructor(
+    public cost?: number,
+    public retail?: number,
+    public reseller?: number,
+  ) {}
+}
+
 export class SaleDetail {
   constructor(
     public productId: string,
     public variantId: string,
     public quantity: number,
+    public prices: Prices,
   ) {}
 }
 
@@ -16,7 +25,7 @@ export class StocksUpdated {
   constructor(
     public stock: string,
     public quantity: number,
-    public costPrice: number,
+    public prices: Prices,
   ) {}
 }
 

@@ -27,15 +27,15 @@ class ImageSchema {
 }
 
 interface Prices {
-  cost: number;
+  cost?: number;
   retail: number;
   reseller: number;
 }
 
 @Schema({ _id: false })
 class PricesSchema {
-  @Prop({ required: true })
-  cost: number;
+  @Prop({ required: false })
+  cost?: number;
 
   @Prop({ required: true })
   retail: number;

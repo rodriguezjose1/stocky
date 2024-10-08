@@ -11,7 +11,7 @@ export interface Image {
 }
 
 export interface Prices {
-  cost: number;
+  cost?: number;
   retail: number;
   reseller: number;
 }

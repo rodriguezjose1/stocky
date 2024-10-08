@@ -6,9 +6,10 @@ import { SaleController } from '../interfaces/http/sale.controller';
 import { StockModule } from './stock.module';
 import { ERROR_HANDLER_PORT } from '../domain/ports/error-handler.port';
 import { NestErrorHandlerAdapter } from '../infrastructure/adapters/nest-error-handler.adapter';
+import { ProductModule } from './product.module';
 
 @Module({
-  imports: [StockModule],
+  imports: [StockModule, ProductModule],
   providers: [
     {
       provide: 'SaleRepositoryPort',

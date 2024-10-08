@@ -3,6 +3,24 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, SchemaTypes, Types } from 'mongoose';
 import { SaleStatus } from 'src/domain/entities/sale.entity';
 
+export interface Prices {
+  cost?: number;
+  retail?: number;
+  reseller?: number;
+}
+
+@Schema({ _id: false })
+export class PricesSchema {
+  @Prop({})
+  cost?: number;
+
+  @Prop({})
+  retail?: number;
+
+  @Prop({})
+  reseller?: number;
+}
+
 @Schema()
 class StocksUpdated {
   @Prop({ type: SchemaTypes.ObjectId, required: true })
@@ -11,14 +29,14 @@ class StocksUpdated {
   @Prop({ required: true })
   quantity: number;
 
-  @Prop({ required: true })
-  cost_price: number;
+  @Prop({ type: PricesSchema })
+  prices: Prices;
 }
 
 interface IStocksUpated {
   stock: Types.ObjectId;
   quantity: number;
-  cost_price: number;
+  prices: Prices;
 }
 
 const StocksUpdatedSchema = SchemaFactory.createForClass(StocksUpdated);
@@ -33,6 +51,9 @@ class SaleDetailSchema {
 
   @Prop({ required: true })
   quantity: number;
+
+  @Prop({ type: PricesSchema, required: true })
+  prices: Prices;
 }
 
 const SaleDetailSchemaFactory = SchemaFactory.createForClass(SaleDetailSchema);

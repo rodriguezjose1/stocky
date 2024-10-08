@@ -1,11 +1,13 @@
 // application/use-cases/create-sale.use-case.ts
-import { Inject, Injectable } from '@nestjs/common';
-import { Sale, SaleDetail, SaleStatus } from 'src/domain/entities/sale.entity';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { Prices, Sale, SaleDetail, SaleStatus } from 'src/domain/entities/sale.entity';
 import { SaleRepositoryPort } from '../../domain/ports/sale-repository.port';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SaleCreatedEvent, SaleUpdatedEvent } from 'src/async-events/events/sale.events';
 import { StockUseCases } from './stock.use-cases';
 import { ERROR_HANDLER_PORT, ErrorHandlerPort } from 'src/domain/ports/error-handler.port';
+import { ProductUseCases } from './product.use-cases';
+import { Product } from 'src/domain/entities/product.entity';
 
 @Injectable()
 export class SalesUseCase {
@@ -13,6 +15,7 @@ export class SalesUseCase {
     @Inject('SaleRepositoryPort')
     private saleRepository: SaleRepositoryPort,
     private eventEmitter: EventEmitter2,
+    private productUseCases: ProductUseCases,
     private stockUseCases: StockUseCases,
     @Inject(ERROR_HANDLER_PORT) private errorHandler: ErrorHandlerPort,
   ) {}
@@ -21,13 +24,18 @@ export class SalesUseCase {
     try {
       await this.stockUseCases.checkStock(saleData.details);
 
-      const sale = new Sale(
-        null,
-        new Date(saleData.date),
-        SaleStatus.PENDING,
-        saleData.details.map((detail) => new SaleDetail(detail.productId, detail.variantId, detail.quantity)),
-        [],
-      );
+      const details: SaleDetail[] = [];
+      const calls = saleData.details.map(async (detail, i) => {
+        const product: Product = await this.productUseCases.getProductById(detail.productId);
+        const prices: Prices = {
+          retail: product.prices.retail,
+          reseller: product.prices.reseller,
+        };
+        details[i] = new SaleDetail(detail.productId, detail.variantId, detail.quantity, prices);
+      });
+      await Promise.all(calls);
+
+      const sale = new Sale(null, new Date(saleData.date), SaleStatus.PENDING, details, []);
 
       const createdSale = await this.saleRepository.create(sale);
 
@@ -53,14 +61,18 @@ export class SalesUseCase {
   }
 
   async updateSale(id: string, sale: Partial<Sale>): Promise<Sale | null> {
+    const saleDB = await this.saleRepository.findById(id);
+    if (!saleDB) throw new BadRequestException('Sale not found');
+
     const updatedSale = await this.saleRepository.update(id, sale);
 
-    if (updatedSale && sale.status) this.handleSaleStatusChange(sale.status, updatedSale.id);
+    if (updatedSale && sale.status) this.handleSaleStatusChange(saleDB.status, sale.status, updatedSale.id);
 
     return updatedSale;
   }
 
-  private handleSaleStatusChange(newStatus: SaleStatus, saleId: string): void {
+  private handleSaleStatusChange(prevStatus: SaleStatus, newStatus: SaleStatus, saleId: string): void {
+    if (prevStatus === newStatus) return;
     const isNewStatusValid = newStatus !== SaleStatus.PENDING;
 
     if (isNewStatusValid) {

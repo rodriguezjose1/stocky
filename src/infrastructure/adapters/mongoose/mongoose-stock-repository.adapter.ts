@@ -16,7 +16,7 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
   async findAll(query: ReqGetStocksDto): Promise<ResGetStocksDto> {
     const skip = (query.page - 1) * query.limit;
 
-    const stocks = await this.stockModel.aggregate([
+    const aggregate = [
       {
         $lookup: {
           from: 'variants',
@@ -41,10 +41,12 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
       {
         $limit: query.limit,
       },
-    ]);
+    ];
+
+    const stocks = await this.stockModel.aggregate(aggregate);
 
     const total = await this.stockModel.countDocuments().exec();
-    return { stocks: stocks.map((stock) => this.mapToEntity(stock)), total };
+    return { stocks: stocks.map((stock) => this.mapToEntity(stock, true)), total };
   }
 
   async findById(id: string): Promise<Stock | null> {
@@ -86,7 +88,7 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
   async getByVariantAndCostPriceWithQuantity(variantId: string, costPrice: number) {
     const stock = await this.stockModel
       .findOne({
-        variant_id: variantId,
+        variant: variantId,
         cost_price: costPrice,
         quantity: { $gt: 0 },
       })
@@ -117,8 +119,26 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
     return stock[0] ? stock[0].quantity : 0;
   }
 
-  private mapToEntity(stockModel: StockModel): Stock {
-    return new Stock(stockModel._id.toString(), stockModel.product, stockModel.variant, stockModel.quantity, stockModel.cost_price, stockModel.date);
+  private mapToEntity(stockModel: StockModel, withPopulate = false): Stock {
+    let product: any = stockModel.product;
+    let variant: any = stockModel.variant;
+    if (withPopulate) {
+      product = {
+        id: stockModel.product._id.toString(),
+        name: product.name,
+        prices: {
+          retail: product.prices.retail,
+          reseller: product.prices.reseller,
+          cost: product.prices.cost,
+        },
+      };
+      variant = {
+        id: stockModel.variant._id.toString(),
+        size: variant.size,
+        color: variant.color,
+      };
+    }
+    return new Stock(stockModel._id.toString(), product, variant, stockModel.quantity, stockModel.cost_price, stockModel.date);
   }
 
   private mapToModel(stock: Partial<Stock>): Partial<StockModel> {
