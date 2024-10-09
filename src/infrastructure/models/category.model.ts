@@ -1,22 +1,42 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, SchemaTypes, Types } from 'mongoose';
 
-@Schema({ collection: 'categories' })
-export class CategoryModel extends Document {
-  @Prop({ type: String, required: true })
-  code: string;
+interface IAncestor {
+  _id: Types.ObjectId;
+  name: string;
+  slug: string;
+}
 
-  @Prop({ type: String, required: true })
+@Schema({ _id: false })
+class Ancestor {
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'CategoryModel' })
+  _id: Types.ObjectId;
+
+  @Prop({ type: String })
   name: string;
 
-  @Prop({ type: SchemaTypes.ObjectId, required: true, ref: 'Category' })
-  root: Types.ObjectId;
+  @Prop({ type: String })
+  slug: string;
+}
 
-  @Prop({ type: SchemaTypes.ObjectId, required: true, ref: 'Category' })
+const AncestorSchema = SchemaFactory.createForClass(Ancestor);
+
+@Schema({ collection: 'categories' })
+export class CategoryModel extends Document {
+  @Prop({ required: true, unique: true })
+  name: string;
+
+  @Prop({ required: true, unique: true })
+  slug: string;
+
+  @Prop({ type: SchemaTypes.ObjectId, default: null })
   parent: Types.ObjectId;
 
-  @Prop({ type: String, required: true })
-  path: string;
+  @Prop({ type: [AncestorSchema] })
+  ancestors: IAncestor[];
+
+  @Prop({ type: [SchemaTypes.ObjectId], ref: 'CategoryModel' })
+  children: Types.ObjectId[];
 }
 
 export const CategorySchema = SchemaFactory.createForClass(CategoryModel);

@@ -46,6 +46,9 @@ class PricesSchema {
 
 @Schema({ timestamps: true, collection: 'products' })
 export class ProductModel extends Document {
+  @Prop({ required: true, type: [[SchemaTypes.ObjectId]], ref: 'CategoryModel' })
+  categories_filter: Types.ObjectId[][];
+
   @Prop({ required: true, type: [SchemaTypes.ObjectId], ref: 'CategoryModel' })
   categories: Types.ObjectId[];
 

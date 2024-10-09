@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, Min } from 'class-validator';
+import { Category } from './category.entity';
 
 export interface Attributes {
   brand: string;
@@ -16,7 +17,7 @@ export interface Prices {
   reseller: number;
 }
 
-export class Product {
+export class CreateProductDto {
   constructor(
     public id: string,
     public name: string,
@@ -29,16 +30,17 @@ export class Product {
   ) {}
 }
 
-export class GetProduct {
+export class Product {
   constructor(
     public id: string,
     public name: string,
     public description: string,
     public code: string,
-    public categories: string[],
+    public categories: string[] | Category[],
     public attributes: Attributes,
     public pictures: Image[],
     public prices: Prices,
+    public categories_filter?: string[][],
   ) {}
 }
 

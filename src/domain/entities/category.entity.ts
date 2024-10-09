@@ -1,10 +1,18 @@
+export class Ancestor {
+  constructor(
+    public id: string,
+    public name: string,
+    public slug: string,
+  ) {}
+}
+
 export class Category {
   constructor(
     public id: string,
-    public code: string,
     public name: string,
-    public root: string,
-    public parent: number,
-    public path: string,
+    public slug: string,
+    public parent: string,
+    public ancestors: Ancestor[],
+    public children: any[],
   ) {}
 }

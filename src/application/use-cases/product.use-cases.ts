@@ -1,8 +1,10 @@
 // application/use-cases/product-use-cases.ts
 import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Product, ResGetProductsDto } from '../../domain/entities/product.entity';
+import { CreateProductDto, Product, ResGetProductsDto } from '../../domain/entities/product.entity';
 import { ProductRepositoryPort } from '../../domain/ports/product-repository.port';
+import { CategoryUseCases } from './category.use-cases';
+import { Category } from 'src/domain/entities/category.entity';
 
 @Injectable()
 export class ProductUseCases {
@@ -10,7 +12,13 @@ export class ProductUseCases {
     @Inject('ProductRepositoryPort')
     private productRepository: ProductRepositoryPort,
     private eventEmitter: EventEmitter2,
+    private categoryUseCases: CategoryUseCases,
   ) {}
+
+  async getProductsByCategory(categoryId: string): Promise<Product[]> {
+    const products = await this.productRepository.getByCategory(categoryId);
+    return products;
+  }
 
   async getAllProducts(query): Promise<ResGetProductsDto> {
     return this.productRepository.findAll(query);
@@ -20,8 +28,16 @@ export class ProductUseCases {
     return this.productRepository.findById(id);
   }
 
-  async createProduct(product: Product): Promise<Product> {
-    const createdProduct = await this.productRepository.create(product);
+  async createProduct(product: CreateProductDto): Promise<Product> {
+    const categoryIds = product.categories; // IDs de las categorías seleccionadas
+
+    // Obtener las categorías y sus ancestros
+    const categories = await this.categoryUseCases.getCategoriesBy({ _id: { $in: categoryIds } });
+
+    // Construir el categoryPaths
+    const categoryPaths = this.buildCategoryPaths(categories);
+
+    const createdProduct = await this.productRepository.create({ ...product, categories: categoryIds, categories_filter: categoryPaths });
     // this.eventEmitter.emit(
     //   'product.created',
     //   new ProductCreatedEvent(createdProduct.id),
@@ -36,5 +52,22 @@ export class ProductUseCases {
 
   async deleteProduct(id: string): Promise<boolean> {
     return this.productRepository.delete(id);
+  }
+
+  private buildCategoryPaths(categories: Category[]): string[][] {
+    const paths: string[][] = [];
+
+    categories.forEach((category) => {
+      const path = this.getFullPath(category);
+      paths.push(path);
+    });
+
+    return paths;
+  }
+
+  private getFullPath(category: Category): string[] {
+    const path: string[] = category.ancestors.map((ancestor) => ancestor.id); // Agregar los ancestros
+    path.push(category.id); // Agregar la categoría actual
+    return path;
   }
 }
