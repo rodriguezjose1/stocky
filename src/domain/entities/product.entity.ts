@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, Min } from 'class-validator';
+import { IsInt, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 import { Category } from './category.entity';
 
 export interface Attributes {
@@ -41,6 +41,8 @@ export class Product {
     public pictures: Image[],
     public prices: Prices,
     public categories_filter?: string[][],
+    public stock?: any,
+    public variant?: any,
   ) {}
 }
 
@@ -61,4 +63,90 @@ export class ReqGetProductsDto {
 export class ResGetProductsDto {
   products: Product[];
   total: number;
+}
+
+export class FilterProductsDto {
+  //product
+  @IsOptional()
+  @IsString()
+  code?: string;
+
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  minRetailPrice?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  maxRetailPrice?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  minResellerPrice?: number; // Nuevo filtro para el precio de revendedor
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  maxResellerPrice?: number; // Nuevo filtro para el precio de revendedor
+
+  @IsOptional()
+  @IsString({ each: true })
+  categories?: string | string[];
+
+  @IsOptional()
+  @IsString()
+  brand?: string;
+
+  //variants
+  @IsOptional()
+  @IsString()
+  color?: string;
+
+  @IsOptional()
+  @IsString()
+  size?: string;
+
+  //stock
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  minCostPrice?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  maxCostPrice?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  minQuantity?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  maxQuantity?: number;
+
+  // Parámetros para paginación
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  @Min(1)
+  page?: number = 1;
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  @Min(1)
+  limit?: number = 20;
 }

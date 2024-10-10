@@ -69,6 +69,9 @@ export class ProductModel extends Document {
 
   @Prop({ type: PricesSchema, required: true })
   prices: Prices;
+
+  stock: any;
+  variant: any;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(ProductModel);

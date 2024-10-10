@@ -1,5 +1,5 @@
 // domain/ports/product-repository.port.ts
-import { Product, ReqGetProductsDto, ResGetProductsDto } from '../entities/product.entity';
+import { FilterProductsDto, Product, ReqGetProductsDto, ResGetProductsDto } from '../entities/product.entity';
 
 export interface ProductRepositoryPort {
   findAll(query: ReqGetProductsDto): Promise<ResGetProductsDto>;
@@ -8,4 +8,5 @@ export interface ProductRepositoryPort {
   update(id: string, product: Partial<Product>): Promise<Product | null>;
   delete(id: string): Promise<boolean>;
   getByCategory(categoryId: string): Promise<Product[]>;
+  filterProducts(filterDto: FilterProductsDto): Promise<ResGetProductsDto>;
 }

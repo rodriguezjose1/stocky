@@ -1,10 +1,11 @@
 // application/use-cases/product-use-cases.ts
 import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { CreateProductDto, Product, ResGetProductsDto } from '../../domain/entities/product.entity';
+import { CreateProductDto, FilterProductsDto, Product, ResGetProductsDto } from '../../domain/entities/product.entity';
 import { ProductRepositoryPort } from '../../domain/ports/product-repository.port';
 import { CategoryUseCases } from './category.use-cases';
 import { Category } from 'src/domain/entities/category.entity';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class ProductUseCases {
@@ -32,7 +33,8 @@ export class ProductUseCases {
     const categoryIds = product.categories; // IDs de las categorías seleccionadas
 
     // Obtener las categorías y sus ancestros
-    const categories = await this.categoryUseCases.getCategoriesBy({ _id: { $in: categoryIds } });
+    // TODO: move to dao
+    const categories = await this.categoryUseCases.getCategoriesBy({ _id: { $in: categoryIds.map((id) => new Types.ObjectId(id)) } });
 
     // Construir el categoryPaths
     const categoryPaths = this.buildCategoryPaths(categories);
@@ -52,6 +54,10 @@ export class ProductUseCases {
 
   async deleteProduct(id: string): Promise<boolean> {
     return this.productRepository.delete(id);
+  }
+
+  async filterProducts(filterDto: FilterProductsDto): Promise<ResGetProductsDto> {
+    return this.productRepository.filterProducts(filterDto);
   }
 
   private buildCategoryPaths(categories: Category[]): string[][] {
