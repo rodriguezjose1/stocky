@@ -1,6 +1,10 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { IsEnum, IsInt, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 import { Category } from './category.entity';
+
+export enum By {
+  'variant' = 'variant',
+}
 
 export interface Attributes {
   brand: string;
@@ -43,6 +47,7 @@ export class Product {
     public categories_filter?: string[][],
     public stock?: any,
     public variant?: any,
+    public stocks?: any,
   ) {}
 }
 
@@ -149,4 +154,11 @@ export class FilterProductsDto {
   @Type(() => Number)
   @Min(1)
   limit?: number = 20;
+}
+
+export class GetProductByIdQueryDto {
+  @IsString()
+  @IsOptional()
+  @IsEnum(By)
+  by: By;
 }

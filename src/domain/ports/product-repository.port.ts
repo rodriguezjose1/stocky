@@ -9,4 +9,5 @@ export interface ProductRepositoryPort {
   delete(id: string): Promise<boolean>;
   getByCategory(categoryId: string): Promise<Product[]>;
   filterProducts(filterDto: FilterProductsDto): Promise<ResGetProductsDto>;
+  findByIdAdmin(id: string, filter): Promise<Product | null>;
 }

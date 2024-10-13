@@ -72,6 +72,7 @@ export class ProductModel extends Document {
 
   stock: any;
   variant: any;
+  stocks: any;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(ProductModel);

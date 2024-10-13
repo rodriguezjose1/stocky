@@ -19,7 +19,7 @@ export class StockUseCases {
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
 
-  async getStockByProductId(productId: string): Promise<Stock | null> {
+  async getStockByProductId(productId: string): Promise<Stock[] | null> {
     return this.stockRepository.getByProductId(productId);
   }
 

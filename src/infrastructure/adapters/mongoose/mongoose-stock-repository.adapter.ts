@@ -65,9 +65,9 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
     return updatedStock ? this.mapToEntity(updatedStock) : null;
   }
 
-  async getByProductId(productId: string): Promise<Stock | null> {
-    const stock = await this.stockModel.findOne({ product_id: productId }).exec();
-    return stock ? this.mapToEntity(stock) : null;
+  async getByProductId(productId: string): Promise<Stock[] | null> {
+    const stock = await this.stockModel.find({ product_id: productId }).exec();
+    return stock.length ? stock.map((stock) => this.mapToEntity(stock)) : null;
   }
 
   async delete(id: string): Promise<boolean> {

@@ -29,6 +29,10 @@ export class ProductUseCases {
     return this.productRepository.findById(id);
   }
 
+  async getProductByIdAdmin(id: string, filter): Promise<Product | null> {
+    return this.productRepository.findByIdAdmin(id, filter);
+  }
+
   async createProduct(product: CreateProductDto): Promise<Product> {
     const categoryIds = product.categories; // IDs de las categorías seleccionadas
 

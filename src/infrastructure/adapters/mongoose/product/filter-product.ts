@@ -7,8 +7,23 @@ export class FilterProduct {
   constructor() {}
 
   filterProducts(filterDto: FilterProductsDto) {
-    const { code, name, description, minRetailPrice, maxRetailPrice, categories, brand, color, size, minCostPrice, maxCostPrice, minQuantity, maxQuantity, page, limit } =
-      filterDto;
+    const {
+      code,
+      name,
+      description,
+      minRetailPrice,
+      maxRetailPrice,
+      categories,
+      brand,
+      color,
+      size,
+      minCostPrice,
+      maxCostPrice,
+      minQuantity,
+      maxQuantity,
+      page = 1,
+      limit = 20,
+    } = filterDto;
 
     const match: any = {};
 

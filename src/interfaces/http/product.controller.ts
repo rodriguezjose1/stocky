@@ -1,7 +1,7 @@
 // interfaces/http/product.controller.ts
 import { Controller, Get, Post, Put, Delete, Param, Body, Query } from '@nestjs/common';
 import { ProductUseCases } from '../../application/use-cases/product.use-cases';
-import { ReqGetProductsDto, Product, CreateProductDto, FilterProductsDto } from '../../domain/entities/product.entity';
+import { ReqGetProductsDto, Product, CreateProductDto, FilterProductsDto, GetProductByIdQueryDto } from '../../domain/entities/product.entity';
 
 @Controller('products')
 export class ProductController {
@@ -30,6 +30,15 @@ export class ProductController {
   @Get(':id')
   async getProductById(@Param('id') id: string) {
     const product = await this.productUseCases.getProductById(id);
+
+    return {
+      product,
+    };
+  }
+
+  @Get('admin/:id')
+  async getProductByIdAdmin(@Query() query: GetProductByIdQueryDto, @Param('id') id: string) {
+    const product = await this.productUseCases.getProductByIdAdmin(id, query);
 
     return {
       product,
