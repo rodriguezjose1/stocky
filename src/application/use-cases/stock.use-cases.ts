@@ -8,6 +8,8 @@ import { ReqGetStocksDto, ResGetStocksDto, Stock, UpdateStockDto } from '../../d
 import { StockRepositoryPort } from '../../domain/ports/stock-repository.port';
 import { VariantUseCases } from './variant.use-cases';
 import { ProductUseCases } from './product.use-cases';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { StockCreatedEvent, StockDecrementedEvent, StockIncrementedEvent } from 'src/async-events/events/stock.events';
 
 @Injectable()
 export class StockUseCases {
@@ -16,6 +18,7 @@ export class StockUseCases {
     private stockRepository: StockRepositoryPort,
     private variantUseCases: VariantUseCases,
     private productUseCases: ProductUseCases,
+    private eventEmitter: EventEmitter2,
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
 
@@ -82,8 +85,9 @@ export class StockUseCases {
           };
 
           stock = await this.stockRepository.create(stockToSave);
+          this.eventEmitter.emit('stock.created', new StockCreatedEvent(stock.id));
         } else {
-          stock = await this.stockRepository.incrementStock(stockDB.id, stockDto.quantity);
+          stock = await this.incrementStock(stockDB.id, { quantity: stockDto.quantity });
         }
       }
 
@@ -107,7 +111,9 @@ export class StockUseCases {
   }
 
   async incrementStock(stockId, { quantity }) {
-    return this.stockRepository.incrementStock(stockId, quantity);
+    const stock = await this.stockRepository.incrementStock(stockId, quantity);
+    this.eventEmitter.emit('stock.incremented', new StockIncrementedEvent(stockId));
+    return stock;
   }
 
   async decrementStock(variantId, { quantity: decrementAmount }): Promise<StocksUpdated[]> {
@@ -146,6 +152,8 @@ export class StockUseCases {
       // Guardamos los cambios en la base de datos
       await this.stockRepository.update(stock.id, { quantity: stock.quantity });
     }
+
+    this.eventEmitter.emit('stock.decremented', new StockDecrementedEvent(product.id));
 
     return decremented;
   }

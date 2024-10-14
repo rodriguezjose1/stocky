@@ -51,6 +51,9 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
 
   async findByIdAdmin(id: string, filter): Promise<Product | null> {
     const product = await this.productModel.findById(id).exec();
+    if (!product) {
+      return null;
+    }
 
     let stocks = [];
     if (filter.by !== By.variant) {
@@ -102,7 +105,7 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
   }
 
   async update(id: string, product: Partial<Product>): Promise<Product | null> {
-    const updatedProduct = await this.productModel.findByIdAndUpdate(id, product, { new: true }).exec();
+    const updatedProduct = await this.productModel.findByIdAndUpdate(id, this.mapToModel(product), { new: true }).exec();
     return updatedProduct ? this.mapToEntity(updatedProduct) : null;
   }
 
@@ -114,6 +117,15 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
   async getByCategory(categoryId: string): Promise<Product[]> {
     const products = await this.productModel.aggregate([{ $unwind: '$categories_filter' }, { $match: { categories: new Types.ObjectId(categoryId) } }]);
     return products.map((product) => this.mapToEntity(product));
+  }
+
+  private mapToModel(product: Partial<Product>): Partial<ProductModel> {
+    return {
+      ...product,
+      categories_filter: (product.categoriesFilter as any) || undefined,
+      categories: (product.categories as any) || undefined,
+      has_stock: product.hasStock,
+    };
   }
 
   private mapToEntity(productModel: ProductModel, withPopulate = false): Product {
@@ -133,11 +145,11 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
       productModel.name,
       productModel.description,
       productModel.code,
-      // productModel.categories?.map((category) => category.map((c) => c._id.toString())),
       categories,
       productModel.attributes,
       productModel.pictures,
       productModel.prices,
+      productModel.has_stock,
       undefined,
       productModel.stock
         ? {
@@ -158,7 +170,11 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
         ? productModel.stocks.map((stock) => ({
             id: stock._id.toString(),
             quantity: stock.quantity,
-            variant: stock.variant,
+            variant: {
+              id: stock.variant._id.toString(),
+              color: stock.variant.color,
+              size: stock.variant.size,
+            },
             costPrice: stock.cost_price,
             date: stock.date,
           }))

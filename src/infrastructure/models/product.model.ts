@@ -70,6 +70,9 @@ export class ProductModel extends Document {
   @Prop({ type: PricesSchema, required: true })
   prices: Prices;
 
+  @Prop({ type: Boolean, required: true, default: false })
+  has_stock: boolean;
+
   stock: any;
   variant: any;
   stocks: any;

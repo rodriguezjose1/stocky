@@ -43,7 +43,7 @@ export class ProductUseCases {
     // Construir el categoryPaths
     const categoryPaths = this.buildCategoryPaths(categories);
 
-    const createdProduct = await this.productRepository.create({ ...product, categories: categoryIds, categories_filter: categoryPaths });
+    const createdProduct = await this.productRepository.create({ ...product, categories: categoryIds, categoriesFilter: categoryPaths });
     // this.eventEmitter.emit(
     //   'product.created',
     //   new ProductCreatedEvent(createdProduct.id),
