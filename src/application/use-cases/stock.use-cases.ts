@@ -70,6 +70,7 @@ export class StockUseCases {
         };
 
         stock = await this.stockRepository.create(stockToSave);
+        this.eventEmitter.emit('stock.created', new StockCreatedEvent(stock.id));
       } else {
         // update existing stock
         const stockDB = await this.stockRepository.getByVariantAndCostPriceWithQuantity(variantId, stockDto.costPrice);

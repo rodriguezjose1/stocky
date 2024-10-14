@@ -46,9 +46,8 @@ export class Product {
     public prices: Prices,
     public hasStock?: boolean,
     public categoriesFilter?: string[][],
-    public stock?: any,
-    public variant?: any,
     public stocks?: any,
+    public quantity?: any,
   ) {}
 }
 
@@ -87,21 +86,25 @@ export class FilterProductsDto {
 
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   @Min(0)
   minRetailPrice?: number;
 
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   @Min(0)
   maxRetailPrice?: number;
 
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   @Min(0)
   minResellerPrice?: number; // Nuevo filtro para el precio de revendedor
 
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   @Min(0)
   maxResellerPrice?: number; // Nuevo filtro para el precio de revendedor
 
@@ -125,21 +128,25 @@ export class FilterProductsDto {
   //stock
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   @Min(0)
   minCostPrice?: number;
 
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   @Min(0)
   maxCostPrice?: number;
 
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   @Min(0)
   minQuantity?: number;
 
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   @Min(0)
   maxQuantity?: number;
 
@@ -157,7 +164,7 @@ export class FilterProductsDto {
   limit?: number = 20;
 }
 
-export class GetProductByIdQueryDto {
+export class GetProductByIdQueryDto extends FilterProductsDto {
   @IsString()
   @IsOptional()
   @IsEnum(By)

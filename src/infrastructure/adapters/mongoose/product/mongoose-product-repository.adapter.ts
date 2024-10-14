@@ -50,49 +50,75 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
   }
 
   async findByIdAdmin(id: string, filter): Promise<Product | null> {
+    const { color, size, minQuantity, maxQuantity, minCostPrice, maxCostPrice } = filter;
     const product = await this.productModel.findById(id).exec();
     if (!product) {
       return null;
     }
 
+    const aggregate: any[] = [
+      {
+        $match: { product: new Types.ObjectId(id) },
+      },
+      {
+        $lookup: {
+          from: 'variants',
+          localField: 'variant',
+          foreignField: '_id',
+          as: 'variant',
+        },
+      },
+      { $unwind: '$variant' },
+      {
+        $match: {
+          ...(color ? { 'variant.color': color } : {}),
+          ...(size ? { 'variant.size': size } : {}),
+          ...(minCostPrice || maxCostPrice
+            ? {
+                cost_price: {
+                  ...(minCostPrice ? { $gte: minCostPrice } : {}),
+                  ...(maxCostPrice ? { $lte: maxCostPrice } : {}),
+                },
+              }
+            : {}),
+          ...(minQuantity || maxQuantity
+            ? {
+                quantity: {
+                  ...(minQuantity ? { $gte: minQuantity } : {}),
+                  ...(maxQuantity ? { $lte: maxQuantity } : {}),
+                },
+              }
+            : {}),
+        },
+      },
+    ];
+
     let stocks = [];
-    if (filter.by !== By.variant) {
-      stocks = await this.stockModel.find({ product: id }).populate('variant').lean();
-    } else {
-      // aggregate to get stock grouped by variant if front request by variant
-      const aggregate = [
-        {
-          $match: { product: new Types.ObjectId(id) },
-        },
-        {
-          $lookup: {
-            from: 'variants',
-            localField: 'variant',
-            foreignField: '_id',
-            as: 'variant',
+    if (filter.by === By.variant) {
+      aggregate.push(
+        ...[
+          {
+            $group: {
+              _id: '$variant._id',
+              quantity: { $sum: '$quantity' },
+              date: { $first: '$date' },
+              variant: { $first: '$variant' },
+              stock_id: { $first: '$_id' },
+            },
           },
-        },
-        { $unwind: '$variant' },
-        {
-          $group: {
-            _id: '$variant._id',
-            quantity: { $sum: '$quantity' },
-            date: { $first: '$date' },
-            variant: { $first: '$variant' },
-            stock_id: { $first: '$_id' },
+          {
+            $project: {
+              quantity: 1,
+              date: 1,
+              variant: 1,
+              _id: { $toString: '$stock_id' },
+            },
           },
-        },
-        {
-          $project: {
-            quantity: 1,
-            date: 1,
-            variant: 1,
-            _id: { $toString: '$stock_id' },
-          },
-        },
-      ];
-      stocks = await this.stockModel.aggregate(aggregate).exec();
+        ],
+      );
     }
+
+    stocks = await this.stockModel.aggregate(aggregate).exec();
 
     product.stocks = stocks;
     return product ? this.mapToEntity(product, false) : null;
@@ -151,21 +177,6 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
       productModel.prices,
       productModel.has_stock,
       undefined,
-      productModel.stock
-        ? {
-            id: productModel.stock._id.toString(),
-            quantity: productModel.stock.quantity,
-            costPrice: productModel.stock.cost_price,
-            date: productModel.stock.date,
-          }
-        : undefined,
-      productModel.variant
-        ? {
-            id: productModel.variant._id.toString(),
-            color: productModel.variant.color,
-            size: productModel.variant.size,
-          }
-        : undefined,
       productModel.stocks
         ? productModel.stocks.map((stock) => ({
             id: stock._id.toString(),
@@ -179,6 +190,7 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
             date: stock.date,
           }))
         : undefined,
+      productModel.quantity,
     );
   }
 }

@@ -73,9 +73,8 @@ export class ProductModel extends Document {
   @Prop({ type: Boolean, required: true, default: false })
   has_stock: boolean;
 
-  stock: any;
-  variant: any;
   stocks: any;
+  quantity: any;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(ProductModel);
