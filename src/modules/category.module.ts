@@ -1,8 +1,8 @@
 // sale.module.ts
 import { Module } from '@nestjs/common';
-import { MongooseCategoryRepositoryAdapter } from '../infrastructure/adapters/mongoose/mongoose-category-repository.adapter';
-import { CategoryController } from 'src/interfaces/http/category.controller';
 import { CategoryUseCases } from 'src/application/use-cases/category.use-cases';
+import { CategoryController } from 'src/interfaces/http/category.controller';
+import { MongooseCategoryRepositoryAdapter } from '../infrastructure/adapters/mongoose/mongoose-category-repository.adapter';
 
 @Module({
   providers: [

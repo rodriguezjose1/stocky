@@ -1,8 +1,9 @@
 // application/use-cases/user-use-cases.ts
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { EncrypterPort } from 'src/domain/ports/encrypter.port';
 import { User } from '../../domain/entities/user.entity';
 import { UserRepositoryPort } from '../../domain/ports/user-repository.port';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UserUseCases {
@@ -11,6 +12,7 @@ export class UserUseCases {
     private userRepository: UserRepositoryPort,
     @Inject('EncrypterPort')
     private encrypter: EncrypterPort,
+    private configService: ConfigService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<User | null> {
@@ -24,6 +26,15 @@ export class UserUseCases {
     }
 
     return null;
+  }
+  async validateUserBasic(username: string, password: string): Promise<any> {
+    const user = await this.userRepository.findByEmailAuth(username);
+
+    if (this.configService.get('BASIC_PASS') !== password) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    return user;
   }
 
   async updatePassword(id: string, newPassword: string): Promise<void> {

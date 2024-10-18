@@ -14,9 +14,9 @@ import { PurchaseModule } from './modules/purchase.module';
 import { RoleModule } from './modules/role.module';
 import { SaleModule } from './modules/sale.module';
 import { StockModule } from './modules/stock.module';
+import { UploadImageModule } from './modules/upload-image.module';
 import { UserModule } from './modules/user.module';
 import { VariantModule } from './modules/variant.module';
-import { UploadImageModule } from './modules/upload-image.module';
 
 @Module({
   imports: [
