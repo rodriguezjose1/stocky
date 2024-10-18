@@ -141,6 +141,25 @@ export class FilterProduct {
       },
     });
 
+    aggregatePipeline.push({
+      $project: {
+        _id: '$_id',
+        code: '$code',
+        name: '$name',
+        description: '$description',
+        categories: '$categories',
+        attributes: {
+          brand: '$brand',
+        },
+        quantity: '$stock.quantity',
+        prices: {
+          reseller: '$reseller_price',
+          retail: '$retail_price',
+        },
+        pictures: '$pictures',
+      },
+    });
+
     // Añadir los campos de total y paginación
     aggregatePipeline.push(
       // Fase de conteo total de productos
