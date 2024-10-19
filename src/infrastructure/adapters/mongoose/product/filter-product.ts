@@ -135,9 +135,10 @@ export class FilterProduct {
         categories: { $first: '$categories' },
         brand: { $first: '$attributes.brand' },
         quantity: { $sum: '$stock.quantity' },
-        reseller_price: { $first: '$prices.reseller' },
-        retail_price: { $first: '$prices.retail' },
+        resellerPrice: { $first: '$prices.reseller' },
+        retailPrice: { $first: '$prices.retail' },
         pictures: { $first: '$pictures' },
+        has_stock: { $first: '$has_stock' },
       },
     });
 
@@ -151,12 +152,13 @@ export class FilterProduct {
         attributes: {
           brand: '$brand',
         },
-        quantity: '$stock.quantity',
+        quantity: '$quantity',
         prices: {
-          reseller: '$reseller_price',
-          retail: '$retail_price',
+          reseller: '$resellerPrice',
+          retail: '$retailPrice',
         },
         pictures: '$pictures',
+        has_stock: '$has_stock',
       },
     });
 
