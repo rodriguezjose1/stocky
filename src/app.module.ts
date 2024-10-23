@@ -17,6 +17,7 @@ import { StockModule } from './modules/stock.module';
 import { UploadImageModule } from './modules/upload-image.module';
 import { UserModule } from './modules/user.module';
 import { VariantModule } from './modules/variant.module';
+import { CartModule } from './modules/cart.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { VariantModule } from './modules/variant.module';
     VariantModule,
     AttributeTypeModule,
     UploadImageModule,
+    CartModule,
   ],
 })
 export class AppModule implements NestModule {
