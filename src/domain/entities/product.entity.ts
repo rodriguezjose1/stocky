@@ -31,6 +31,8 @@ export class CreateProductDto {
     public attributes: Attributes,
     public pictures: Image[],
     public prices: Prices,
+    public sizes: string[],
+    public colors: string[],
   ) {}
 }
 
@@ -48,6 +50,9 @@ export class Product {
     public categoriesFilter?: string[][],
     public stocks?: any,
     public quantity?: any,
+    public sizes?: string[],
+    public colors?: string[],
+    public createdAt?: Date,
   ) {}
 }
 

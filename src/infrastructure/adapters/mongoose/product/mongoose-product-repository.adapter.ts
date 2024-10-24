@@ -191,6 +191,9 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
           }))
         : undefined,
       productModel.quantity,
+      productModel.sizes,
+      productModel.colors,
+      productModel.createdAt,
     );
   }
 }

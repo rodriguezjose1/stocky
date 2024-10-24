@@ -139,6 +139,9 @@ export class FilterProduct {
         retailPrice: { $first: '$prices.retail' },
         pictures: { $first: '$pictures' },
         has_stock: { $first: '$has_stock' },
+        sizes: { $first: '$sizes' },
+        colors: { $first: '$colors' },
+        createdAt: { $first: '$createdAt' },
       },
     });
 
@@ -159,8 +162,14 @@ export class FilterProduct {
         },
         pictures: '$pictures',
         has_stock: '$has_stock',
+        sizes: { $ifNull: ['$sizes', []] },
+        colors: { $ifNull: ['$colors', []] },
+        createdAt: '$createdAt',
       },
     });
+
+    // add sort by last created
+    aggregatePipeline.push({ $sort: { createdAt: -1 } });
 
     // Añadir los campos de total y paginación
     aggregatePipeline.push(
