@@ -36,7 +36,7 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
 
   async findAll({ page, limit }: ReqGetProductsDto): Promise<ResGetProductsDto> {
     const offset = (page - 1) * limit;
-    const products = await this.productModel.find().populate('categories').limit(limit).skip(offset).exec();
+    const products = await this.productModel.find().populate('categories').sort({ createdAt: -1 }).limit(limit).skip(offset).exec();
     const total = await this.productModel.countDocuments().exec();
     return {
       products: products.map((product) => this.mapToEntity(product, true)),

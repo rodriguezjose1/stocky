@@ -96,6 +96,7 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
     return stock ? this.mapToEntity(stock) : null;
   }
 
+  // there may be stocks with the same variant and different cost price
   async getStockByVariantId(variantId: string): Promise<Stock[]> {
     const stocks = await this.stockModel.find({ variant: variantId }).sort({ createdAt: 1 }).exec();
     return stocks ? stocks.map((stock) => this.mapToEntity(stock)) : null;

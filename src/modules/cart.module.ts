@@ -5,9 +5,10 @@ import { MongooseCartRepositoryAdapter } from 'src/infrastructure/adapters/mongo
 import { CartController } from 'src/interfaces/http/cart.controller';
 import { ProductModule } from './product.module';
 import { VariantModule } from './variant.module';
+import { StockModule } from './stock.module';
 
 @Module({
-  imports: [ProductModule, VariantModule],
+  imports: [ProductModule, VariantModule, StockModule],
   providers: [
     {
       provide: 'CartRepositoryPort',

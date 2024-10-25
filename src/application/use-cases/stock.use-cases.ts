@@ -168,4 +168,8 @@ export class StockUseCases {
       }
     }
   }
+
+  public async getQuantityByVariantId(variantId: string): Promise<number> {
+    return this.stockRepository.getQuantityByVariantId(variantId);
+  }
 }

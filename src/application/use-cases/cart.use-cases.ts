@@ -1,9 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { AddProductToCartDTO, Cart } from 'src/domain/entities/cart.entity';
 import { User } from 'src/domain/entities/user.entity';
 import { ICartRepository } from 'src/domain/ports/cart-repository.port';
 import { ProductUseCases } from './product.use-cases';
 import { VariantUseCases } from './variant.use-cases';
+import { StockUseCases } from './stock.use-cases';
 
 @Injectable()
 export class CartUseCases {
@@ -12,6 +13,7 @@ export class CartUseCases {
     private readonly cartRepository: ICartRepository,
     private productUseCases: ProductUseCases,
     private variantUseCases: VariantUseCases,
+    private stockUseCases: StockUseCases,
   ) {}
   async createCart(user: User): Promise<Cart> {
     return this.cartRepository.createCart(user.id);
@@ -20,11 +22,16 @@ export class CartUseCases {
   async addProductToCart({ cartId, productId, variantId, quantity }: AddProductToCartDTO): Promise<Cart> {
     const product = await this.productUseCases.getProductById(productId);
     if (!product) {
-      throw new Error('Product not found');
+      throw new BadRequestException('Product not found');
     }
     const variant = await this.variantUseCases.getVariantById(variantId);
     if (!variant) {
-      throw new Error('Variant not found');
+      throw new BadRequestException('Variant not found');
+    }
+    const quantityInStock = await this.stockUseCases.getQuantityByVariantId(variantId);
+
+    if (quantity > quantityInStock) {
+      throw new BadRequestException('Insufficient stock');
     }
     return this.cartRepository.addProduct(cartId, product, variant, quantity);
   }
@@ -34,6 +41,12 @@ export class CartUseCases {
   }
 
   async updateProductQuantity(cartId: string, variantId: string, quantity: number): Promise<Cart> {
+    const quantityInStock = await this.stockUseCases.getQuantityByVariantId(variantId);
+
+    if (quantity > quantityInStock) {
+      throw new BadRequestException('Insufficient stock');
+    }
+
     return this.cartRepository.updateQuantity(cartId, variantId, quantity);
   }
 
