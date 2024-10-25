@@ -19,6 +19,7 @@ import { UploadImageModule } from './modules/upload-image.module';
 import { UserModule } from './modules/user.module';
 import { VariantModule } from './modules/variant.module';
 import { ProductAttributeSubtypeModule } from './modules/product-attribute-subtype.module';
+import { NotificationModule } from './modules/notification.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { ProductAttributeSubtypeModule } from './modules/product-attribute-subty
     UploadImageModule,
     CartModule,
     ProductAttributeSubtypeModule,
+    NotificationModule,
   ],
 })
 export class AppModule implements NestModule {

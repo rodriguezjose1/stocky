@@ -5,6 +5,7 @@ import { SalesUseCase } from 'src/application/use-cases/sale.use-cases';
 import { Injectable } from '@nestjs/common';
 import { SaleStatus } from 'src/domain/entities/sale.entity';
 import { CartUseCases } from 'src/application/use-cases/cart.use-cases';
+import { NotificationUseCases } from 'src/application/use-cases/notification.use-cases';
 
 @Injectable()
 export class SaleListener {
@@ -12,6 +13,7 @@ export class SaleListener {
     private stockUseCases: StockUseCases,
     private saleUseCases: SalesUseCase,
     private cartUseCases: CartUseCases,
+    private notificationUseCases: NotificationUseCases,
   ) {}
 
   @OnEvent('sale.created')
@@ -38,6 +40,12 @@ export class SaleListener {
     await this.cartUseCases.updateCart({ _id: sale.cartId, active: false });
 
     await this.saleUseCases.updateSale(event.saleId, { stocksUpdated });
+
+    // TODO: fix this with correct data
+    // notify to admin to accept o reject the sale
+    await this.notificationUseCases.notifyUser('rodriguezjosee8@gmail.com', `New sale: ${sale.id}`);
+    // notify to customer about the sale
+    await this.notificationUseCases.notifyUser('stocky.arg@gmail.com', `Your sale: ${sale.id}`);
   }
 
   @OnEvent('sale.updated.status')
