@@ -85,9 +85,10 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
     return updatedStock ? this.mapToEntity(updatedStock) : null;
   }
 
-  async getByVariantAndCostPriceWithQuantity(variantId: string, costPrice: number) {
+  async getByVariantAndProductAndCostPriceWithQuantity(productId: string, variantId: string, costPrice: number) {
     const stock = await this.stockModel
       .findOne({
+        product: productId,
         variant: variantId,
         cost_price: costPrice,
         quantity: { $gt: 0 },
@@ -97,8 +98,8 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
   }
 
   // there may be stocks with the same variant and different cost price
-  async getStockByVariantId(variantId: string): Promise<Stock[]> {
-    const stocks = await this.stockModel.find({ variant: variantId }).sort({ createdAt: 1 }).exec();
+  async getStockByVariantIdAndProductId(variantId: string, productId: string): Promise<Stock[]> {
+    const stocks = await this.stockModel.find({ variant: variantId, product: productId }).sort({ createdAt: 1 }).exec();
     return stocks ? stocks.map((stock) => this.mapToEntity(stock)) : null;
   }
 

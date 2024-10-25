@@ -1,6 +1,6 @@
 // application/use-cases/create-sale.use-case.ts
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { Prices, Sale, SaleDetail, SaleStatus } from 'src/domain/entities/sale.entity';
+import { CreateSaleDto, Prices, Sale, SaleDetail, SaleStatus } from 'src/domain/entities/sale.entity';
 import { SaleRepositoryPort } from '../../domain/ports/sale-repository.port';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SaleCreatedEvent, SaleUpdatedEvent } from 'src/async-events/events/sale.events';
@@ -8,6 +8,7 @@ import { StockUseCases } from './stock.use-cases';
 import { ERROR_HANDLER_PORT, ErrorHandlerPort } from 'src/domain/ports/error-handler.port';
 import { ProductUseCases } from './product.use-cases';
 import { Product } from 'src/domain/entities/product.entity';
+import { CartUseCases } from './cart.use-cases';
 
 @Injectable()
 export class SalesUseCase {
@@ -17,12 +18,18 @@ export class SalesUseCase {
     private eventEmitter: EventEmitter2,
     private productUseCases: ProductUseCases,
     private stockUseCases: StockUseCases,
+    private cartUseCases: CartUseCases,
     @Inject(ERROR_HANDLER_PORT) private errorHandler: ErrorHandlerPort,
   ) {}
 
-  async createSale(saleData: Sale) {
+  async createSale(saleData: CreateSaleDto) {
     try {
       await this.stockUseCases.checkStock(saleData.details);
+
+      if (saleData.cartId) {
+        const cart = await this.cartUseCases.getCartById(saleData.cartId);
+        saleData.details = cart.items.map((item) => new SaleDetail(item.product._id, item.variant._id, item.quantity));
+      }
 
       const details: SaleDetail[] = [];
       const calls = saleData.details.map(async (detail, i) => {

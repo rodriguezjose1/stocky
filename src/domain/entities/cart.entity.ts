@@ -2,6 +2,7 @@ export class CartItem {
   constructor(
     public id: string,
     public product: any,
+    public variant: any,
     public quantity: number,
   ) {}
 }

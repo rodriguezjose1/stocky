@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
-import { Connection, Model, Types } from 'mongoose';
+import { Connection, Model } from 'mongoose';
+import { Variant } from 'src/domain/entities/variant.entity';
 import { VariantRepositoryPort } from '../../../domain/ports/variant-repository.port';
 import { VariantModel, VariantSchema } from '../../models/variant.model';
-import { Variant } from 'src/domain/entities/variant.entity';
 
 export interface Filter {
   size: string;
@@ -50,12 +50,11 @@ export class MongooseVariantRepositoryAdapter implements VariantRepositoryPort {
   }
 
   private mapToEntity(variantModel: VariantModel): Variant {
-    return new Variant(variantModel._id.toString(), variantModel.product.toString(), variantModel.size, variantModel.color);
+    return new Variant(variantModel._id.toString(), variantModel.size, variantModel.color);
   }
 
   private mapToModel(variant: Partial<Variant>): Partial<VariantModel> {
     return {
-      product: new Types.ObjectId(variant.product),
       size: variant.size,
       color: variant.color,
     };

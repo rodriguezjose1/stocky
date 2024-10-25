@@ -17,7 +17,7 @@ export class SaleDetail {
     public productId: string,
     public variantId: string,
     public quantity: number,
-    public prices: Prices,
+    public prices?: Prices,
   ) {}
 }
 
@@ -25,7 +25,7 @@ export class StocksUpdated {
   constructor(
     public stock: string,
     public quantity: number,
-    public prices: Prices,
+    public prices?: Prices,
   ) {}
 }
 
@@ -34,7 +34,18 @@ export class Sale {
     public id: string,
     public date: Date,
     public status: SaleStatus,
-    public details: SaleDetail[],
-    public stocksUpdated: StocksUpdated[],
+    public details?: SaleDetail[],
+    public stocksUpdated?: StocksUpdated[],
+  ) {}
+}
+
+export class CreateSaleDto {
+  constructor(
+    public date: Date,
+    public status: SaleStatus,
+    public details?: SaleDetail[],
+    public stocksUpdated?: StocksUpdated[],
+    //
+    public cartId?: string,
   ) {}
 }

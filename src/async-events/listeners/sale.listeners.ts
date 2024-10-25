@@ -26,7 +26,7 @@ export class SaleListener {
     const stocksUpdated = [];
 
     for (const detail of sale.details) {
-      const decremented = await this.stockUseCases.decrementStock(detail.variantId, {
+      const decremented = await this.stockUseCases.decrementStock(detail.productId, detail.variantId, {
         quantity: detail.quantity,
       });
 

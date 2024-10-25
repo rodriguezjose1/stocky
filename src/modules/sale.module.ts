@@ -7,9 +7,10 @@ import { StockModule } from './stock.module';
 import { ERROR_HANDLER_PORT } from '../domain/ports/error-handler.port';
 import { NestErrorHandlerAdapter } from '../infrastructure/adapters/nest-error-handler.adapter';
 import { ProductModule } from './product.module';
+import { CartModule } from './cart.module';
 
 @Module({
-  imports: [StockModule, ProductModule],
+  imports: [StockModule, ProductModule, CartModule],
   providers: [
     {
       provide: 'SaleRepositoryPort',

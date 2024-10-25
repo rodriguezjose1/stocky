@@ -52,7 +52,6 @@ export class StockUseCases {
         // save variant
         const variantToSave: Variant = {
           id: undefined,
-          product: stockDto.product,
           size: stockDto.variant.size,
           color: stockDto.variant.color,
         };
@@ -73,7 +72,7 @@ export class StockUseCases {
         this.eventEmitter.emit('stock.created', new StockCreatedEvent(stock.id));
       } else {
         // update existing stock
-        const stockDB = await this.stockRepository.getByVariantAndCostPriceWithQuantity(variantId, stockDto.costPrice);
+        const stockDB = await this.stockRepository.getByVariantAndProductAndCostPriceWithQuantity(stockDto.product, variantId, stockDto.costPrice);
         if (!stockDB) {
           // create stock with different cost price
           const stockToSave: Stock = {
@@ -117,9 +116,9 @@ export class StockUseCases {
     return stock;
   }
 
-  async decrementStock(variantId, { quantity: decrementAmount }): Promise<StocksUpdated[]> {
+  async decrementStock(productId, variantId, { quantity: decrementAmount }): Promise<StocksUpdated[]> {
     const decremented: StocksUpdated[] = [];
-    const stocks = await this.stockRepository.getStockByVariantId(variantId);
+    const stocks = await this.stockRepository.getStockByVariantIdAndProductId(variantId, productId);
     const product = await this.productUseCases.getProductById(stocks[0].product);
 
     let remaining = decrementAmount; // Cuánto stock queda por decrementar
