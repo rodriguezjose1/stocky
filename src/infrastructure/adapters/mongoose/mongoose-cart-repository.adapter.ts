@@ -88,7 +88,7 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
     cart.total = cart.items.reduce((total, item) => total + item.product.prices.retail * item.quantity, 0);
   }
 
-  private updateCart(cart: any): Promise<Cart> {
+  async updateCart(cart: any): Promise<Cart> {
     return this.cartModel.findByIdAndUpdate(cart._id, cart, { new: true });
   }
 

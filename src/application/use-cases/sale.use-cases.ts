@@ -24,12 +24,12 @@ export class SalesUseCase {
 
   async createSale(saleData: CreateSaleDto) {
     try {
-      await this.stockUseCases.checkStock(saleData.details);
-
       if (saleData.cartId) {
         const cart = await this.cartUseCases.getCartById(saleData.cartId);
         saleData.details = cart.items.map((item) => new SaleDetail(item.product._id, item.variant._id, item.quantity));
       }
+
+      await this.stockUseCases.checkStock(saleData.details);
 
       const details: SaleDetail[] = [];
       const calls = saleData.details.map(async (detail, i) => {
@@ -42,7 +42,7 @@ export class SalesUseCase {
       });
       await Promise.all(calls);
 
-      const sale = new Sale(null, new Date(saleData.date), SaleStatus.PENDING, details, []);
+      const sale = new Sale(null, new Date(saleData.date), SaleStatus.PENDING, details, [], saleData.cartId);
 
       const createdSale = await this.saleRepository.create(sale);
 

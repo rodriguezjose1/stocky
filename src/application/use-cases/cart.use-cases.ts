@@ -57,4 +57,8 @@ export class CartUseCases {
   async getCartByUser(userId: string): Promise<Cart> {
     return this.cartRepository.getCartByUser(userId);
   }
+
+  async updateCart(cart: any): Promise<Cart> {
+    return this.cartRepository.updateCart(cart);
+  }
 }

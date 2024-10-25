@@ -46,6 +46,7 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
       saleModel.status,
       saleModel.details.map((detail) => new SaleDetail(detail.product.toString(), detail.variant.toString(), detail.quantity, detail.prices)),
       saleModel.stocks_updated.map((stockUpdated) => new StocksUpdated(stockUpdated.stock.toString(), stockUpdated.quantity, stockUpdated.prices)),
+      saleModel.cart ? saleModel.cart.toString() : null,
     );
   }
 
@@ -66,6 +67,7 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
           quantity: stockUpdated.quantity,
           prices: stockUpdated.prices,
         })) || undefined,
+      cart: sale.cartId ? new Types.ObjectId(sale.cartId) : undefined,
     };
   }
 }

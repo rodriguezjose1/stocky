@@ -36,6 +36,7 @@ export class Sale {
     public status: SaleStatus,
     public details?: SaleDetail[],
     public stocksUpdated?: StocksUpdated[],
+    public cartId?: string,
   ) {}
 }
 

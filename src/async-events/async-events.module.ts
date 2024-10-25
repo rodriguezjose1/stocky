@@ -7,9 +7,10 @@ import { ProductModule } from 'src/modules/product.module';
 import { SaleListener } from './listeners/sale.listeners';
 import { SaleModule } from 'src/modules/sale.module';
 import { StockListener } from './listeners/stock.listeners';
+import { CartModule } from 'src/modules/cart.module';
 
 @Module({
-  imports: [PurchaseModule, StockModule, ProductModule, SaleModule],
+  imports: [PurchaseModule, StockModule, ProductModule, SaleModule, CartModule],
   providers: [PurchaseListener, ProductListener, SaleListener, StockListener],
   exports: [PurchaseListener, ProductListener, SaleListener, StockListener],
 })

@@ -71,6 +71,9 @@ export class SaleModel extends Document {
 
   @Prop({ required: true, type: [StocksUpdatedSchema] })
   stocks_updated: IStocksUpated[];
+
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'CartModel', default: null })
+  cart?: Types.ObjectId;
 }
 
 export const SaleSchema = SchemaFactory.createForClass(SaleModel);

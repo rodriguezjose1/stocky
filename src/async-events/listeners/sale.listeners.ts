@@ -4,12 +4,14 @@ import { SaleCreatedEvent, SaleUpdatedEvent } from '../events/sale.events';
 import { SalesUseCase } from 'src/application/use-cases/sale.use-cases';
 import { Injectable } from '@nestjs/common';
 import { SaleStatus } from 'src/domain/entities/sale.entity';
+import { CartUseCases } from 'src/application/use-cases/cart.use-cases';
 
 @Injectable()
 export class SaleListener {
   constructor(
     private stockUseCases: StockUseCases,
     private saleUseCases: SalesUseCase,
+    private cartUseCases: CartUseCases,
   ) {}
 
   @OnEvent('sale.created')
@@ -32,6 +34,8 @@ export class SaleListener {
 
       stocksUpdated.push(...decremented);
     }
+
+    await this.cartUseCases.updateCart({ _id: sale.cartId, active: false });
 
     await this.saleUseCases.updateSale(event.saleId, { stocksUpdated });
   }
