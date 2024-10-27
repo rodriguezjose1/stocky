@@ -19,9 +19,20 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
     return this.mapToDomain(savedSale);
   }
 
-  async findAll(): Promise<Sale[]> {
-    const sales = await this.saleModel.find().exec();
-    return sales.map((sale) => this.mapToDomain(sale));
+  async findAll({ page, limit }: { page: number; limit: number }): Promise<any> {
+    const sales = await this.saleModel
+      .find()
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .exec();
+
+    const total = await this.saleModel.countDocuments().exec();
+
+    return {
+      sales: sales.map((sale) => this.mapToDomain(sale)),
+      total,
+    };
   }
 
   async findById(id: string): Promise<Sale | null> {
@@ -44,9 +55,18 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
       saleModel._id.toString(),
       saleModel.date,
       saleModel.status,
-      saleModel.details.map((detail) => new SaleDetail(detail.product.toString(), detail.variant.toString(), detail.quantity, detail.prices)),
+      saleModel.details.map(
+        (detail) =>
+          new SaleDetail(detail.product.toString(), detail.variant.toString(), detail.quantity, detail.prices, {
+            productName: detail.variant_data.product_name,
+            productCode: detail.variant_data.product_code,
+            variantAttributes: detail.variant_data.variant_attributes,
+          }),
+      ),
       saleModel.stocks_updated.map((stockUpdated) => new StocksUpdated(stockUpdated.stock.toString(), stockUpdated.quantity, stockUpdated.prices)),
+      saleModel.user,
       saleModel.cart ? saleModel.cart.toString() : null,
+      saleModel.weekCode,
     );
   }
 
@@ -58,6 +78,11 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
         sale.details?.map((detail) => ({
           product: new Types.ObjectId(detail.productId),
           variant: new Types.ObjectId(detail.variantId),
+          variant_data: {
+            product_name: detail.variantData.productName,
+            product_code: detail.variantData.productCode,
+            variant_attributes: detail.variantData.variantAttributes,
+          },
           quantity: detail.quantity,
           prices: detail.prices,
         })) || undefined,
@@ -68,6 +93,8 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
           prices: stockUpdated.prices,
         })) || undefined,
       cart: sale.cartId ? new Types.ObjectId(sale.cartId) : undefined,
+      user: sale.user || undefined,
+      weekCode: sale.weekCode || undefined,
     };
   }
 }

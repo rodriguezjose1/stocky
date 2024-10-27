@@ -1,7 +1,7 @@
 // interfaces/http/sale.controller.ts
-import { Controller, Post, Body, Get, Put, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get, Put, Param, Query } from '@nestjs/common';
 import { SalesUseCase } from '../../application/use-cases/sale.use-cases';
-import { Sale } from 'src/domain/entities/sale.entity';
+import { CreateSaleDto, GetSalesFilterDto, Sale } from 'src/domain/entities/sale.entity';
 
 @Controller('sales')
 export class SaleController {
@@ -10,7 +10,7 @@ export class SaleController {
   @Post()
   async createSale(
     @Body()
-    saleData: Sale,
+    saleData: CreateSaleDto,
   ) {
     const sale = await this.saleUseCases.createSale(saleData);
 
@@ -20,11 +20,12 @@ export class SaleController {
   }
 
   @Get()
-  async getAllSales() {
-    const sales = await this.saleUseCases.findAll();
+  async getAllSales(@Query() query: GetSalesFilterDto) {
+    const { sales, total } = await this.saleUseCases.findAll(query);
 
     return {
       sales,
+      total,
     };
   }
 

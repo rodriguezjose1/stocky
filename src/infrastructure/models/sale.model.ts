@@ -3,6 +3,24 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, SchemaTypes, Types } from 'mongoose';
 import { SaleStatus } from 'src/domain/entities/sale.entity';
 
+@Schema({ _id: false })
+export class UserDataSchema {
+  @Prop({ type: SchemaTypes.ObjectId, required: true })
+  id: Types.ObjectId;
+
+  @Prop({ required: true })
+  name: string;
+
+  @Prop({ required: true })
+  lastname: string;
+}
+
+interface UserData {
+  id: string;
+  name: string;
+  lastname: string;
+}
+
 export interface Prices {
   cost?: number;
   retail?: number;
@@ -41,6 +59,38 @@ interface IStocksUpated {
 
 const StocksUpdatedSchema = SchemaFactory.createForClass(StocksUpdated);
 
+@Schema({ _id: false })
+export class VariantAttributeSchema {
+  @Prop({ required: true })
+  name: string;
+
+  @Prop({ required: true })
+  value: string;
+}
+
+interface VariantAttribute {
+  name: string;
+  value: string;
+}
+
+@Schema({ _id: false })
+class VarianDataSchema {
+  @Prop({ type: String, required: true })
+  product_name: string;
+
+  @Prop({ type: String, required: true })
+  product_code: string;
+
+  @Prop({ type: [VariantAttributeSchema], required: true })
+  variant_attributes: VariantAttribute[];
+}
+
+interface VariantData {
+  product_name: string;
+  product_code: string;
+  variant_attributes: VariantAttribute[];
+}
+
 @Schema()
 class SaleDetailSchema {
   @Prop({ type: SchemaTypes.ObjectId, required: true })
@@ -48,6 +98,9 @@ class SaleDetailSchema {
 
   @Prop({ type: SchemaTypes.ObjectId, required: true })
   variant: Types.ObjectId;
+
+  @Prop({ type: VarianDataSchema })
+  variant_data: VariantData;
 
   @Prop({ required: true })
   quantity: number;
@@ -74,6 +127,12 @@ export class SaleModel extends Document {
 
   @Prop({ type: SchemaTypes.ObjectId, ref: 'CartModel', default: null })
   cart?: Types.ObjectId;
+
+  @Prop({ type: UserDataSchema })
+  user: UserData;
+
+  @Prop({ required: true })
+  weekCode: string;
 }
 
 export const SaleSchema = SchemaFactory.createForClass(SaleModel);

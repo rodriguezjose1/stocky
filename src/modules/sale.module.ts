@@ -8,9 +8,11 @@ import { ERROR_HANDLER_PORT } from '../domain/ports/error-handler.port';
 import { NestErrorHandlerAdapter } from '../infrastructure/adapters/nest-error-handler.adapter';
 import { ProductModule } from './product.module';
 import { CartModule } from './cart.module';
+import { UserModule } from './user.module';
+import { VariantModule } from './variant.module';
 
 @Module({
-  imports: [StockModule, ProductModule, CartModule],
+  imports: [StockModule, ProductModule, CartModule, UserModule, VariantModule],
   providers: [
     {
       provide: 'SaleRepositoryPort',
