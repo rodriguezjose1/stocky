@@ -8,6 +8,8 @@ export class LoginUseCases {
     private readonly userUseCases: UserUseCases,
     @Inject('TokenGeneratorPort')
     private readonly tokenGenerator: TokenGeneratorPort,
+    @Inject('TokenGeneratorBasicPort')
+    private readonly tokenGeneratorBasic: TokenGeneratorPort,
   ) {}
 
   async login(username: string, password: string) {
@@ -17,6 +19,7 @@ export class LoginUseCases {
     }
     return {
       accessToken: this.tokenGenerator.generateToken(user),
+      basicToken: this.tokenGeneratorBasic.generateToken(user),
       user,
     };
   }

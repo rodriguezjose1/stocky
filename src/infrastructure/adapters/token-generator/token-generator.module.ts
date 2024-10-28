@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JwtTokenGenerator } from './jwt-token-generator.adapter';
 import { JwtModuleOptions, JwtService } from '@nestjs/jwt';
+import { BasicTokenGenerator } from './basic-token-generator.adapter';
 
 @Module({
   providers: [
@@ -18,7 +19,11 @@ import { JwtModuleOptions, JwtService } from '@nestjs/jwt';
       provide: 'TokenGeneratorPort',
       useClass: JwtTokenGenerator,
     },
+    {
+      provide: 'TokenGeneratorBasicPort',
+      useClass: BasicTokenGenerator,
+    },
   ],
-  exports: ['TokenGeneratorPort'],
+  exports: ['TokenGeneratorPort', 'TokenGeneratorBasicPort'],
 })
 export class TokenGeneratorModule {}
