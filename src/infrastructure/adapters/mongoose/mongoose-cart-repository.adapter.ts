@@ -85,7 +85,7 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
 
   // Helper function to calculate the total price of the cart
   private calculateTotal(cart: Cart): void {
-    cart.total = cart.items.reduce((total, item) => total + item.product.prices.retail * item.quantity, 0);
+    cart.total = cart.items.reduce((total, item) => total + item.product.prices.reseller * item.quantity, 0);
   }
 
   async updateCart(cart: any): Promise<Cart> {
