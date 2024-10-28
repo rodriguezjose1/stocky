@@ -15,6 +15,18 @@ export class UserModel extends Document {
   @Prop({ type: String, required: true })
   email: string;
 
+  @Prop({ type: Boolean, default: true })
+  active: boolean;
+
+  @Prop({ type: String, required: true, default: '' })
+  phone: string;
+
+  @Prop({ type: Date, default: null })
+  last_connection: Date;
+
+  @Prop({ type: String, required: true, default: '' })
+  address: string;
+
   @Prop({ type: [SchemaTypes.ObjectId], ref: 'RoleModel' })
   roles: Types.ObjectId[];
 }

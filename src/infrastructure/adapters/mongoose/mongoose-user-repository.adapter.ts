@@ -5,6 +5,7 @@ import { Connection, Model } from 'mongoose';
 import { User } from '../../../domain/entities/user.entity';
 import { UserRepositoryPort } from '../../../domain/ports/user-repository.port';
 import { UserModel, UserSchema } from '../../models/user.model';
+import { Role } from 'src/domain/enums/role.enum';
 
 @Injectable()
 export class MongooseUserRepositoryAdapter implements UserRepositoryPort {
@@ -54,6 +55,41 @@ export class MongooseUserRepositoryAdapter implements UserRepositoryPort {
     return user ? this.mapToDomain(user) : null;
   }
 
+  async findResellers(filter): Promise<any> {
+    const aggregate = [
+      {
+        $lookup: {
+          from: 'roles',
+          localField: 'roles',
+          foreignField: '_id',
+          as: 'roles',
+        },
+      },
+      {
+        $match: {
+          'roles.name': Role.SELLER,
+        },
+      },
+    ];
+    const users = await this.userModel.aggregate([
+      ...aggregate,
+      { $skip: (filter.page - 1) * filter.limit },
+      { $limit: filter.limit },
+      { $sort: { createdAt: -1 } },
+      {
+        $project: {
+          password: 0,
+        },
+      },
+    ]);
+
+    const total = await this.userModel.aggregate([...aggregate, { $count: 'total' }]).exec();
+    return {
+      resellers: users.map((user) => this.mapToDomain(user)),
+      total: total[0]?.total || 0,
+    };
+  }
+
   private mapToDomain(userModel: UserModel): User {
     return new User(
       userModel._id.toString(),
@@ -61,7 +97,17 @@ export class MongooseUserRepositoryAdapter implements UserRepositoryPort {
       userModel.lastname,
       userModel.password,
       userModel.email,
-      userModel.roles.map((role) => role.toJSON()),
+      userModel.roles.map((role: any) => {
+        return {
+          id: role._id.toString(),
+          name: role.name,
+          description: role.description,
+          permissions: role.permissions,
+        };
+      }),
+      userModel.phone,
+      userModel.active,
+      userModel.last_connection,
     );
   }
 }

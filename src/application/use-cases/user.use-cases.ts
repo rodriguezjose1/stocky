@@ -55,6 +55,9 @@ export class UserUseCases {
   }
 
   async createUser(user: User): Promise<User> {
+    if (!user.password) {
+      user.password = this.configService.get('DEFAULT_PASSWORD');
+    }
     const hashedPassword = await this.encrypter.hash(user.password);
     user.password = hashedPassword;
     const createdUser = await this.userRepository.create(user);
@@ -67,5 +70,9 @@ export class UserUseCases {
 
   async deleteUser(id: string): Promise<boolean> {
     return this.userRepository.delete(id);
+  }
+
+  async findResellers(filter): Promise<any> {
+    return this.userRepository.findResellers(filter);
   }
 }

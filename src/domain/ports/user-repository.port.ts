@@ -9,4 +9,5 @@ export interface UserRepositoryPort {
   findAll(): Promise<User[]>;
   findByEmail(email: string): Promise<User | null>;
   findByEmailAuth(email: string): Promise<User | null>;
+  findResellers(filter): Promise<any>;
 }

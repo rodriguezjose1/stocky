@@ -1,10 +1,11 @@
 // interfaces/http/user.controller.ts
-import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, Query } from '@nestjs/common';
 import { UserUseCases } from '../../application/use-cases/user.use-cases';
-import { User } from '../../domain/entities/user.entity';
+import { GetResellersFilterDto, User } from '../../domain/entities/user.entity';
 import { JwtAuthGuard } from 'src/infrastructure/auth/guards/jwt-auth.guard';
 import { Roles } from 'src/infrastructure/auth/decorators/roles.decorator';
 import { RolesGuard } from 'src/infrastructure/auth/guards/roles.guard';
+import { BasicAuthGuard } from 'src/infrastructure/auth/guards/basic-auth.guard';
 
 @Controller('users')
 export class UserController {
@@ -18,6 +19,17 @@ export class UserController {
 
     return {
       users,
+    };
+  }
+
+  @UseGuards(BasicAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Get('resellers')
+  async findResellers(@Query() filter: GetResellersFilterDto) {
+    const { resellers, total } = await this.userUseCases.findResellers(filter);
+    return {
+      resellers,
+      total,
     };
   }
 
