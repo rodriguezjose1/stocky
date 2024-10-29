@@ -22,8 +22,8 @@ export class VariantUseCases {
     return this.variantRepository.findById(id);
   }
 
-  async createVariant(variant: Variant): Promise<Variant> {
-    const createdVariant = await this.variantRepository.create(variant);
+  async createVariant(variant: Variant, session): Promise<Variant> {
+    const createdVariant = await this.variantRepository.create(variant, session);
 
     return createdVariant;
   }

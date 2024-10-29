@@ -10,6 +10,7 @@ import { VariantUseCases } from './variant.use-cases';
 import { ProductUseCases } from './product.use-cases';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { StockCreatedEvent, StockDecrementedEvent, StockIncrementedEvent } from 'src/async-events/events/stock.events';
+import { DEFAULT_ERROR, QUANTITY_LESS_THAN_CURRENT_TOTAL } from '../error.constants';
 
 @Injectable()
 export class StockUseCases {
@@ -34,14 +35,23 @@ export class StockUseCases {
     return this.stockRepository.findById(id);
   }
 
-  async createStockMultiple(stockDto: UpdateStockDto[]): Promise<Stock[]> {
+  async createStockMultiple(stocksDto: UpdateStockDto[]): Promise<Stock[]> {
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
       const stocks: Stock[] = [];
-      for (const stock of stockDto) {
-        const createdStock = await this.createStock(stock);
-        stocks.push(createdStock);
+      const errors = [];
+      for (const [index, stock] of stocksDto.entries()) {
+        try {
+          const createdStock = await this.createStock(stock, session);
+          stocks.push(createdStock);
+        } catch (err) {
+          errors.push({ index, error: err.message || DEFAULT_ERROR });
+        }
+      }
+
+      if (errors.length > 0) {
+        throw new BadRequestException({ message: 'Error creating stocks', errors });
       }
       await session.commitTransaction();
       return stocks;
@@ -53,7 +63,7 @@ export class StockUseCases {
     }
   }
 
-  async createStock(stockDto: UpdateStockDto): Promise<Stock> {
+  async createStock(stockDto: UpdateStockDto, session?): Promise<Stock> {
     // const session = await this.connection.startSession();
     try {
       // session.startTransaction();
@@ -69,7 +79,7 @@ export class StockUseCases {
 
       if (!variantId) {
         if (stockDto.quantity <= 0) {
-          throw new BadRequestException('Quantity must be greater than 0');
+          throw new BadRequestException(QUANTITY_LESS_THAN_CURRENT_TOTAL);
         }
         // save variant
         const variantToSave: Variant = {
@@ -77,7 +87,7 @@ export class StockUseCases {
           size: stockDto.variant.size,
           color: stockDto.variant.color,
         };
-        const savedVariant = await this.variantUseCases.createVariant(variantToSave);
+        const savedVariant = await this.variantUseCases.createVariant(variantToSave, session);
         variantId = savedVariant.id;
 
         // create stock
@@ -90,14 +100,14 @@ export class StockUseCases {
           date: stockDto.date,
         };
 
-        stock = await this.stockRepository.create(stockToSave);
+        stock = await this.stockRepository.create(stockToSave, session);
         this.eventEmitter.emit('stock.created', new StockCreatedEvent(stock.id));
       } else {
         // update existing stock
         const stockDB = await this.stockRepository.getByVariantAndProductAndCostPriceWithQuantity(stockDto.product, variantId, stockDto.costPrice);
         if (!stockDB) {
           if (stockDto.quantity <= 0) {
-            throw new BadRequestException('Quantity must be greater than 0');
+            throw new BadRequestException(QUANTITY_LESS_THAN_CURRENT_TOTAL);
           }
           // create stock with different cost price
           const stockToSave: Stock = {
@@ -109,14 +119,14 @@ export class StockUseCases {
             date: stockDto.date,
           };
 
-          stock = await this.stockRepository.create(stockToSave);
+          stock = await this.stockRepository.create(stockToSave, session);
           this.eventEmitter.emit('stock.created', new StockCreatedEvent(stock.id));
         } else {
           const diff = stockDB.quantity + stockDto.quantity;
           if (diff <= 0) {
-            throw new BadRequestException(`Quantity must be greater than -${stockDB.quantity}`);
+            throw new BadRequestException(QUANTITY_LESS_THAN_CURRENT_TOTAL);
           }
-          stock = await this.incrementStock(stockDB.id, { quantity: stockDto.quantity });
+          stock = await this.incrementStock(stockDB.id, { quantity: stockDto.quantity }, session);
         }
       }
 
@@ -126,8 +136,6 @@ export class StockUseCases {
     } catch (error) {
       // await session.abortTransaction();
       throw error;
-    } finally {
-      // session.endSession();
     }
   }
 
@@ -139,8 +147,8 @@ export class StockUseCases {
     return this.stockRepository.delete(id);
   }
 
-  async incrementStock(stockId, { quantity }) {
-    const stock = await this.stockRepository.incrementStock(stockId, quantity);
+  async incrementStock(stockId, { quantity }, session?): Promise<Stock | null> {
+    const stock = await this.stockRepository.incrementStock(stockId, quantity, session);
     this.eventEmitter.emit('stock.incremented', new StockIncrementedEvent(stockId));
     return stock;
   }

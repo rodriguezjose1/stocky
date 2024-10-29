@@ -54,10 +54,9 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
     return stock ? this.mapToEntity(stock) : null;
   }
 
-  async create(stock: Stock): Promise<Stock> {
-    const newStock = new this.stockModel(this.mapToModel(stock));
-    const savedStock = await newStock.save();
-    return this.mapToEntity(savedStock);
+  async create(stock: Stock, session?): Promise<Stock> {
+    const newStock: any = await this.stockModel.create(this.mapToModel(stock), { session });
+    return this.mapToEntity(newStock);
   }
 
   async update(id: string, stock: Partial<Stock>): Promise<Stock | null> {
@@ -75,8 +74,8 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
     return result.deletedCount === 1;
   }
 
-  async incrementStock(id: string, quantity: number): Promise<Stock | null> {
-    const updatedStock = await this.stockModel.findByIdAndUpdate(id, { $inc: { quantity } }, { new: true }).exec();
+  async incrementStock(id: string, quantity: number, session?): Promise<Stock | null> {
+    const updatedStock = await this.stockModel.findByIdAndUpdate(id, { $inc: { quantity } }, { new: true, session }).exec();
     return updatedStock ? this.mapToEntity(updatedStock) : null;
   }
 

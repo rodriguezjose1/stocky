@@ -33,10 +33,9 @@ export class MongooseVariantRepositoryAdapter implements VariantRepositoryPort {
     return variant ? this.mapToEntity(variant) : null;
   }
 
-  async create(variant: Variant): Promise<Variant> {
-    const newVariant = new this.variantModel(this.mapToModel(variant));
-    const savedVariant = await newVariant.save();
-    return this.mapToEntity(savedVariant);
+  async create(variant: Variant, session): Promise<Variant> {
+    const newVariant: any = await this.variantModel.create(this.mapToModel(variant), { session });
+    return this.mapToEntity(newVariant);
   }
 
   async update(id: string, variant: Partial<Variant>): Promise<Variant | null> {

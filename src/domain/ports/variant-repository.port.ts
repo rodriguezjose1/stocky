@@ -5,7 +5,7 @@ export interface VariantRepositoryPort {
   findAll(): Promise<Variant[]>;
   findById(id: string): Promise<Variant | null>;
   findOneBy(filter: Filter): Promise<Variant | null>;
-  create(stock: Variant): Promise<Variant>;
+  create(stock: Variant, session): Promise<Variant>;
   update(id: string, stock: Partial<Variant>): Promise<Variant | null>;
   delete(id: string): Promise<boolean>;
 }
