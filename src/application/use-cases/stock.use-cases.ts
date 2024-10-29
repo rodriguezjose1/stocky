@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 import { SaleDetail, StocksUpdated } from 'src/domain/entities/sale.entity';
@@ -34,10 +34,29 @@ export class StockUseCases {
     return this.stockRepository.findById(id);
   }
 
-  async createStock(stockDto: UpdateStockDto): Promise<Stock> {
+  async createStockMultiple(stockDto: UpdateStockDto[]): Promise<Stock[]> {
     const session = await this.connection.startSession();
     try {
       session.startTransaction();
+      const stocks: Stock[] = [];
+      for (const stock of stockDto) {
+        const createdStock = await this.createStock(stock);
+        stocks.push(createdStock);
+      }
+      await session.commitTransaction();
+      return stocks;
+    } catch (err) {
+      await session.abortTransaction();
+      throw err;
+    } finally {
+      session.endSession();
+    }
+  }
+
+  async createStock(stockDto: UpdateStockDto): Promise<Stock> {
+    // const session = await this.connection.startSession();
+    try {
+      // session.startTransaction();
 
       if (!stockDto.date) {
         stockDto.date = new Date();
@@ -49,6 +68,9 @@ export class StockUseCases {
       let stock = null;
 
       if (!variantId) {
+        if (stockDto.quantity <= 0) {
+          throw new BadRequestException('Quantity must be greater than 0');
+        }
         // save variant
         const variantToSave: Variant = {
           id: undefined,
@@ -74,6 +96,9 @@ export class StockUseCases {
         // update existing stock
         const stockDB = await this.stockRepository.getByVariantAndProductAndCostPriceWithQuantity(stockDto.product, variantId, stockDto.costPrice);
         if (!stockDB) {
+          if (stockDto.quantity <= 0) {
+            throw new BadRequestException('Quantity must be greater than 0');
+          }
           // create stock with different cost price
           const stockToSave: Stock = {
             id: undefined,
@@ -87,18 +112,22 @@ export class StockUseCases {
           stock = await this.stockRepository.create(stockToSave);
           this.eventEmitter.emit('stock.created', new StockCreatedEvent(stock.id));
         } else {
+          const diff = stockDB.quantity + stockDto.quantity;
+          if (diff <= 0) {
+            throw new BadRequestException(`Quantity must be greater than -${stockDB.quantity}`);
+          }
           stock = await this.incrementStock(stockDB.id, { quantity: stockDto.quantity });
         }
       }
 
-      await session.commitTransaction();
+      // await session.commitTransaction();
 
       return stock;
     } catch (error) {
-      await session.abortTransaction();
+      // await session.abortTransaction();
       throw error;
     } finally {
-      session.endSession();
+      // session.endSession();
     }
   }
 

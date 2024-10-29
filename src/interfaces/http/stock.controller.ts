@@ -35,6 +35,15 @@ export class StockController {
     };
   }
 
+  @Post('multiple')
+  async createStockMultiple(@Body() stock: UpdateStockDto[]) {
+    const newStocks = await this.stockUseCases.createStockMultiple(stock);
+
+    return {
+      stocks: newStocks,
+    };
+  }
+
   @Put(':id')
   async updateStock(@Param('id') id: string, @Body() stock: Partial<Stock>) {
     return this.stockUseCases.updateStock(id, stock);

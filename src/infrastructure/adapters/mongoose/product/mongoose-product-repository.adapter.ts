@@ -44,6 +44,19 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
     };
   }
 
+  async findByCodeOrName(filter): Promise<ResGetProductsDto> {
+    const offset = (filter.page - 1) * filter.limit;
+
+    const filterFind = { $or: [{ name: { $regex: filter.q, $options: 'i' } }, { code: { $regex: filter.q, $options: 'i' } }] };
+
+    const products = await this.productModel.find(filterFind).sort({ name: 1 }).limit(filter.limit).skip(offset).exec();
+    const total = await this.productModel.countDocuments(filterFind).exec();
+    return {
+      products: products.map((product) => this.mapToEntity(product, true)),
+      total,
+    };
+  }
+
   async findById(id: string): Promise<Product | null> {
     const product = await this.productModel.findById(id).exec();
     return product ? this.mapToEntity(product) : null;

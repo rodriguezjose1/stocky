@@ -10,4 +10,5 @@ export interface ProductRepositoryPort {
   getByCategory(categoryId: string): Promise<Product[]>;
   filterProducts(filterDto: FilterProductsDto): Promise<ResGetProductsDto>;
   findByIdAdmin(id: string, filter): Promise<Product | null>;
+  findByCodeOrName(filter): Promise<ResGetProductsDto>;
 }

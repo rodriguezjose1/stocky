@@ -175,3 +175,20 @@ export class GetProductByIdQueryDto extends FilterProductsDto {
   @IsEnum(By)
   by: By;
 }
+
+export class FilterProductsByCodeOrNameDto {
+  @IsString()
+  q: string;
+
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  @Min(1)
+  page: number = 1;
+
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  @Min(1)
+  limit: number = 20;
+}

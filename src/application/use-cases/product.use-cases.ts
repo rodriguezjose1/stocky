@@ -64,6 +64,10 @@ export class ProductUseCases {
     return this.productRepository.filterProducts(filterDto);
   }
 
+  async findByCodeOrName(filter): Promise<ResGetProductsDto> {
+    return this.productRepository.findByCodeOrName(filter);
+  }
+
   private buildCategoryPaths(categories: Category[]): string[][] {
     const paths: string[][] = [];
 
