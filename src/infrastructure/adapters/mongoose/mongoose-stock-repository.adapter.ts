@@ -55,8 +55,8 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
   }
 
   async create(stock: Stock, session?): Promise<Stock> {
-    const newStock: any = await this.stockModel.create(this.mapToModel(stock), { session });
-    return this.mapToEntity(newStock);
+    const newStock: any = await this.stockModel.create([this.mapToModel(stock)], { session });
+    return this.mapToEntity(newStock[0]);
   }
 
   async update(id: string, stock: Partial<Stock>): Promise<Stock | null> {

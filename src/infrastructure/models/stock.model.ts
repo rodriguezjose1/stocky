@@ -15,7 +15,7 @@ export class StockModel extends Document {
   @Prop({ required: true })
   cost_price: number;
 
-  @Prop({ required: true })
+  @Prop({ default: new Date() })
   date: Date;
 }
 
