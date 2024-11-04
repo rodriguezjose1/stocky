@@ -92,7 +92,7 @@ interface VariantData {
 }
 
 @Schema()
-class SaleDetailSchema {
+export class SaleDetailSchema {
   @Prop({ type: SchemaTypes.ObjectId, required: true })
   product: Types.ObjectId;
 

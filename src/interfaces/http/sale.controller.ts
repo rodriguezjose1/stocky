@@ -46,4 +46,31 @@ export class SaleController {
       sale: updatedSale,
     };
   }
+
+  @Get('/by/user')
+  async getSalesByUser() {
+    const users = await this.saleUseCases.findSellersWithSalesInCurrentWeek();
+
+    return {
+      users,
+    };
+  }
+
+  @Get('/by/user/:id')
+  async getProductsInSalesByUser(@Param('id') userId: string) {
+    const products = await this.saleUseCases.findProductsBySellerId(userId);
+
+    return {
+      products,
+    };
+  }
+
+  @Get('/by/products')
+  async getSalesByProducts() {
+    const products = await this.saleUseCases.findGroupedProductsInCurrentWeek();
+
+    return {
+      products,
+    };
+  }
 }

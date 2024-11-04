@@ -12,6 +12,7 @@ import { CartUseCases } from './cart.use-cases';
 import { UserUseCases } from './user.use-cases';
 import { VariantUseCases } from './variant.use-cases';
 import { Variant } from 'src/domain/entities/variant.entity';
+import { getWeekCode } from 'src/common/utils/date.utils';
 
 @Injectable()
 export class SalesUseCase {
@@ -79,7 +80,7 @@ export class SalesUseCase {
         };
       }
 
-      const weekCode = `${new Date().getFullYear()}-${this.getWeekNumber(new Date())}`;
+      const weekCode = getWeekCode(new Date());
       const sale = new Sale(null, new Date(saleData.date), SaleStatus.PENDING, details, [], saleData.user, saleData.cartId, weekCode);
 
       const createdSale = await this.saleRepository.create(sale);
@@ -116,6 +117,18 @@ export class SalesUseCase {
     return updatedSale;
   }
 
+  async findSellersWithSalesInCurrentWeek(): Promise<Sale[]> {
+    return this.saleRepository.findSellersWithSalesInCurrentWeek();
+  }
+
+  async findProductsBySellerId(sellerId: string): Promise<any> {
+    return this.saleRepository.findProductsBySellerId(sellerId);
+  }
+
+  async findGroupedProductsInCurrentWeek(): Promise<any> {
+    return this.saleRepository.findGroupedProductsInCurrentWeek();
+  }
+
   private handleSaleStatusChange(prevStatus: SaleStatus, newStatus: SaleStatus, saleId: string): void {
     if (prevStatus === newStatus) return;
     const isNewStatusValid = newStatus !== SaleStatus.PENDING;
@@ -123,22 +136,5 @@ export class SalesUseCase {
     if (isNewStatusValid) {
       this.eventEmitter.emit('sale.updated.status', new SaleUpdatedEvent(saleId));
     }
-  }
-
-  // function to get current week of year
-  private getWeekNumber(date = new Date()): number {
-    // Crear el primer día del año
-    const year = date.getFullYear();
-    const firstDayOfYear = new Date(year, 0, 1);
-
-    // Ajustar para el primer lunes del año
-    const dayOffset = firstDayOfYear.getDay() === 0 ? 1 : 8 - firstDayOfYear.getDay(); // 0 = Domingo, ajusta a Lunes
-    const firstMonday = new Date(year, 0, 1 + dayOffset);
-
-    // Calcular los días entre la fecha dada y el primer lunes
-    const diff = (date.getTime() - firstMonday.getTime()) / 86400000;
-
-    // Calcular el número de la semana
-    return Math.ceil((diff + 1) / 7);
   }
 }

@@ -7,4 +7,7 @@ export interface SaleRepositoryPort {
   findById(id: string): Promise<Sale | null>;
   delete(id: string): Promise<boolean>;
   update(id: string, sale: Partial<Sale>): Promise<Sale | null>;
+  findSellersWithSalesInCurrentWeek(): Promise<Sale[]>;
+  findProductsBySellerId(sellerId: string): Promise<any>;
+  findGroupedProductsInCurrentWeek(): Promise<any>;
 }

@@ -2,9 +2,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection, Model, Types } from 'mongoose';
-import { Sale, SaleDetail, StocksUpdated } from '../../../domain/entities/sale.entity';
+import { Sale, SaleDetail, SaleStatus, StocksUpdated } from '../../../domain/entities/sale.entity';
 import { SaleRepositoryPort } from '../../../domain/ports/sale-repository.port';
-import { SaleModel, SaleSchema } from '../../models/sale.model';
+import { SaleDetailSchema, SaleModel, SaleSchema } from '../../models/sale.model';
+import { getWeekCode } from 'src/common/utils/date.utils';
 
 @Injectable()
 export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
@@ -50,6 +51,76 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
     return updatedSale ? this.mapToDomain(updatedSale) : null;
   }
 
+  async findSellersWithSalesInCurrentWeek(): Promise<Sale[]> {
+    return this.saleModel.aggregate([
+      {
+        $match: {
+          weekCode: getWeekCode(new Date()),
+          status: SaleStatus.APPROVED,
+        },
+      },
+      {
+        $group: {
+          _id: '$user.id',
+          user: { $first: '$user' },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          id: '$user.id',
+          name: '$user.name',
+          lastname: '$user.lastname',
+        },
+      },
+    ]);
+  }
+
+  async findProductsBySellerId(sellerId: string): Promise<any> {
+    const sales = await this.saleModel.find({ 'user.id': sellerId, status: SaleStatus.APPROVED }).lean();
+
+    const products = {};
+
+    sales.forEach((sale) => {
+      sale.details.forEach((detail) => {
+        const code = `${detail.product}-${detail.variant}`;
+
+        if (products[code]) {
+          products[code].quantity += detail.quantity;
+        } else {
+          products[code] = { ...detail, quantity: detail.quantity };
+        }
+      });
+    });
+
+    return this.mapDetailsToDomain(Object.values(products));
+  }
+
+  async findGroupedProductsInCurrentWeek(): Promise<any> {
+    const sales = await this.saleModel
+      .find({
+        weekCode: getWeekCode(new Date()),
+        status: SaleStatus.APPROVED,
+      })
+      .lean();
+
+    const products = {};
+
+    sales.forEach((sale) => {
+      sale.details.forEach((detail) => {
+        const code = `${detail.product}-${detail.variant}`;
+
+        if (products[code]) {
+          products[code].quantity += detail.quantity;
+        } else {
+          products[code] = { ...detail, quantity: detail.quantity };
+        }
+      });
+    });
+
+    return this.mapDetailsToDomain(Object.values(products));
+  }
+
   private mapToDomain(saleModel: SaleModel): Sale {
     return new Sale(
       saleModel._id.toString(),
@@ -67,6 +138,17 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
       saleModel.user,
       saleModel.cart ? saleModel.cart.toString() : null,
       saleModel.weekCode,
+    );
+  }
+
+  private mapDetailsToDomain(details: SaleDetailSchema[]): SaleDetail[] {
+    return details.map(
+      (detail) =>
+        new SaleDetail(detail.product.toString(), detail.variant.toString(), detail.quantity, detail.prices, {
+          productName: detail.variant_data.product_name,
+          productCode: detail.variant_data.product_code,
+          variantAttributes: detail.variant_data.variant_attributes,
+        }),
     );
   }
 
