@@ -66,6 +66,11 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
         },
       },
       {
+        $sort: {
+          name: 1,
+        },
+      },
+      {
         $project: {
           _id: 0,
           id: '$user.id',
@@ -93,7 +98,9 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
       });
     });
 
-    return this.mapDetailsToDomain(Object.values(products));
+    const orderedProducts: any = Object.values(products).sort((a: any, b: any) => b.quantity - a.quantity);
+
+    return this.mapDetailsToDomain(Object.values(orderedProducts));
   }
 
   async findGroupedProductsInCurrentWeek(): Promise<any> {
@@ -118,7 +125,10 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
       });
     });
 
-    return this.mapDetailsToDomain(Object.values(products));
+    // sort by quantity desc
+    const orderedProducts: any = Object.values(products).sort((a: any, b: any) => b.quantity - a.quantity);
+
+    return this.mapDetailsToDomain(Object.values(orderedProducts));
   }
 
   private mapToDomain(saleModel: SaleModel): Sale {
