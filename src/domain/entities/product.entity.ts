@@ -21,6 +21,11 @@ export interface Prices {
   reseller: number;
 }
 
+export interface Percentages {
+  reseller: number;
+  retail: number;
+}
+
 export class CreateProductDto {
   constructor(
     public id: string,
@@ -31,6 +36,7 @@ export class CreateProductDto {
     public attributes: Attributes,
     public pictures: Image[],
     public prices: Prices,
+    public percentages: Percentages,
     public sizes: string[],
     public colors: string[],
   ) {}
@@ -46,6 +52,7 @@ export class Product {
     public attributes: Attributes,
     public pictures: Image[],
     public prices: Prices,
+    public percentages: Prices,
     public hasStock?: boolean,
     public categoriesFilter?: string[][],
     public stocks?: any,
@@ -191,4 +198,21 @@ export class FilterProductsByCodeOrNameDto {
   @Type(() => Number)
   @Min(1)
   limit: number = 20;
+}
+
+export class CalculatePricesDto {
+  @IsNumber()
+  @Type(() => Number)
+  @Min(0)
+  costPrice: number;
+
+  @IsNumber()
+  @Type(() => Number)
+  @Min(0)
+  percentageReseller: number;
+
+  @IsNumber()
+  @Type(() => Number)
+  @Min(0)
+  percentageRetail: number;
 }

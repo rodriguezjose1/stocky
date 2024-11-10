@@ -43,6 +43,15 @@ export class ProductUseCases {
     // Construir el categoryPaths
     const categoryPaths = this.buildCategoryPaths(categories);
 
+    const calculatePrices = await this.calculatePrices({
+      costPrice: product.prices.cost,
+      percentageReseller: product.percentages.reseller,
+      percentageRetail: product.percentages.retail,
+    });
+
+    product.prices.reseller = calculatePrices.reseller;
+    product.prices.retail = calculatePrices.retail;
+
     const createdProduct = await this.productRepository.create({ ...product, categories: categoryIds, categoriesFilter: categoryPaths });
     // this.eventEmitter.emit(
     //   'product.created',
@@ -66,6 +75,10 @@ export class ProductUseCases {
 
   async findByCodeOrName(filter): Promise<ResGetProductsDto> {
     return this.productRepository.findByCodeOrName(filter);
+  }
+
+  async calculatePrices({ costPrice, percentageReseller, percentageRetail }) {
+    return this.productRepository.calculatePrices(costPrice, percentageReseller, percentageRetail);
   }
 
   private buildCategoryPaths(categories: Category[]): string[][] {

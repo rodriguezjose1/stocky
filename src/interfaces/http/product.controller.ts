@@ -1,7 +1,15 @@
 // interfaces/http/product.controller.ts
 import { Controller, Get, Post, Put, Delete, Param, Body, Query } from '@nestjs/common';
 import { ProductUseCases } from '../../application/use-cases/product.use-cases';
-import { ReqGetProductsDto, Product, CreateProductDto, FilterProductsDto, GetProductByIdQueryDto, FilterProductsByCodeOrNameDto } from '../../domain/entities/product.entity';
+import {
+  ReqGetProductsDto,
+  Product,
+  CreateProductDto,
+  FilterProductsDto,
+  GetProductByIdQueryDto,
+  FilterProductsByCodeOrNameDto,
+  CalculatePricesDto,
+} from '../../domain/entities/product.entity';
 
 @Controller('products')
 export class ProductController {
@@ -78,6 +86,14 @@ export class ProductController {
     return {
       products,
       total,
+    };
+  }
+
+  @Get('calculations/prices')
+  async calculatePrices(@Query() query: CalculatePricesDto) {
+    const prices = await this.productUseCases.calculatePrices(query);
+    return {
+      prices,
     };
   }
 }

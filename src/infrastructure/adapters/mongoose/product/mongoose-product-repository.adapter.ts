@@ -158,6 +158,12 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
     return products.map((product) => this.mapToEntity(product));
   }
 
+  async calculatePrices(costPrice, percentageReseller, percentageRetail) {
+    const reseller = costPrice + costPrice * (percentageReseller / 100);
+    const retail = costPrice + costPrice * (percentageRetail / 100);
+    return { reseller, retail, costPrice };
+  }
+
   private mapToModel(product: Partial<Product>): Partial<ProductModel> {
     return {
       ...product,
@@ -188,6 +194,7 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
       productModel.attributes,
       productModel.pictures,
       productModel.prices,
+      productModel.percentages,
       productModel.has_stock,
       undefined,
       productModel.stocks

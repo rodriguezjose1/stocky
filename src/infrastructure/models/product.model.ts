@@ -44,6 +44,20 @@ class PricesSchema {
   reseller: number;
 }
 
+interface Percentages {
+  reseller: number;
+  retail: number;
+}
+
+@Schema({ _id: false })
+class PercentagesSchema {
+  @Prop({ required: true })
+  retail: number;
+
+  @Prop({ required: true })
+  reseller: number;
+}
+
 @Schema({ timestamps: true, collection: 'products' })
 export class ProductModel extends Document {
   @Prop({ required: true, type: [[SchemaTypes.ObjectId]], ref: 'CategoryModel' })
@@ -69,6 +83,9 @@ export class ProductModel extends Document {
 
   @Prop({ type: PricesSchema, required: true })
   prices: Prices;
+
+  @Prop({ type: PercentagesSchema, required: true })
+  percentages: Percentages;
 
   @Prop({ type: Boolean, required: true, default: false })
   has_stock: boolean;
