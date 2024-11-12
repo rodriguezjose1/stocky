@@ -32,6 +32,9 @@ export class SalesUseCase {
     try {
       if (saleData.cartId) {
         const cart = await this.cartUseCases.getCartById(saleData.cartId);
+        if (cart.userId.toString() !== userReq.id) {
+          throw new BadRequestException('Cart does not belong to user');
+        }
         saleData.details = cart.items.map((item) => new SaleDetail(item.product._id, item.variant._id, item.quantity));
       }
 

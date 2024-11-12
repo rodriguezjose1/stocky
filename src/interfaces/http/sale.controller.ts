@@ -1,18 +1,25 @@
 // interfaces/http/sale.controller.ts
-import { Controller, Post, Body, Get, Put, Param, Query } from '@nestjs/common';
+import { Controller, Post, Body, Get, Put, Param, Query, UseGuards, Req } from '@nestjs/common';
 import { SalesUseCase } from '../../application/use-cases/sale.use-cases';
 import { CreateSaleDto, GetSalesFilterDto, Sale } from 'src/domain/entities/sale.entity';
+import { Roles } from 'src/infrastructure/auth/decorators/roles.decorator';
+import { Role } from 'src/domain/enums/role.enum';
+import { RolesGuard } from 'src/infrastructure/auth/guards/roles.guard';
+import { BasicAuthGuard } from 'src/infrastructure/auth/guards/basic-auth.guard';
 
 @Controller('sales')
 export class SaleController {
   constructor(private saleUseCases: SalesUseCase) {}
 
+  @UseGuards(BasicAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SELLER)
   @Post()
   async createSale(
     @Body()
     saleData: CreateSaleDto,
+    @Req() req,
   ) {
-    const sale = await this.saleUseCases.createSale(saleData);
+    const sale = await this.saleUseCases.createSale(saleData, req.user);
 
     return {
       sale,
