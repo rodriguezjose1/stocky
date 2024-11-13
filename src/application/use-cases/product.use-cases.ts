@@ -1,7 +1,7 @@
 // application/use-cases/product-use-cases.ts
 import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { CreateProductDto, FilterProductsDto, Product, ResGetProductsDto } from '../../domain/entities/product.entity';
+import { CreateProductDto, FilterProductsDto, IncreasePrices, Product, ResGetProductsDto } from '../../domain/entities/product.entity';
 import { ProductRepositoryPort } from '../../domain/ports/product-repository.port';
 import { CategoryUseCases } from './category.use-cases';
 import { Category } from 'src/domain/entities/category.entity';
@@ -79,6 +79,10 @@ export class ProductUseCases {
 
   async calculatePrices({ costPrice, percentageReseller, percentageRetail }) {
     return this.productRepository.calculatePrices(costPrice, percentageReseller, percentageRetail);
+  }
+
+  async increasePrices(data: IncreasePrices) {
+    return this.productRepository.increasePrices(data);
   }
 
   private buildCategoryPaths(categories: Category[]): string[][] {

@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { ArrayMinSize, IsArray, IsEnum, IsInt, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 import { Category } from './category.entity';
+import { User } from './user.entity';
 
 export enum By {
   'variant' = 'variant',
@@ -216,3 +217,19 @@ export class CalculatePricesDto {
   @Min(0)
   percentageRetail: number;
 }
+
+export class IncreasePrices {
+  // as min should be an element
+  @IsArray()
+  @ArrayMinSize(1, { message: 'productsIds should have at least one element' })
+  @IsString({ each: true })
+  productsIds: [string];
+
+  @IsNumber()
+  @Type(() => Number)
+  @Min(-200)
+  percentageIncrease: number;
+
+  user: User;
+}
+// automation and

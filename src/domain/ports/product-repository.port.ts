@@ -1,5 +1,5 @@
 // domain/ports/product-repository.port.ts
-import { FilterProductsDto, Product, ReqGetProductsDto, ResGetProductsDto } from '../entities/product.entity';
+import { FilterProductsDto, IncreasePrices, Product, ReqGetProductsDto, ResGetProductsDto } from '../entities/product.entity';
 
 export interface ProductRepositoryPort {
   findAll(query: ReqGetProductsDto): Promise<ResGetProductsDto>;
@@ -12,4 +12,5 @@ export interface ProductRepositoryPort {
   findByIdAdmin(id: string, filter): Promise<Product | null>;
   findByCodeOrName(filter): Promise<ResGetProductsDto>;
   calculatePrices(costPrice, percentageReseller, percentageRetail): any;
+  increasePrices(data: IncreasePrices): Promise<Product[]>;
 }

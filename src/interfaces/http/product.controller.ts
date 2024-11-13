@@ -1,5 +1,5 @@
 // interfaces/http/product.controller.ts
-import { Controller, Get, Post, Put, Delete, Param, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards, Req } from '@nestjs/common';
 import { ProductUseCases } from '../../application/use-cases/product.use-cases';
 import {
   ReqGetProductsDto,
@@ -9,7 +9,12 @@ import {
   GetProductByIdQueryDto,
   FilterProductsByCodeOrNameDto,
   CalculatePricesDto,
+  IncreasePrices,
 } from '../../domain/entities/product.entity';
+import { BasicAuthGuard } from 'src/infrastructure/auth/guards/basic-auth.guard';
+import { RolesGuard } from 'src/infrastructure/auth/guards/roles.guard';
+import { Roles } from 'src/infrastructure/auth/decorators/roles.decorator';
+import { Role } from 'src/domain/enums/role.enum';
 
 @Controller('products')
 export class ProductController {
@@ -94,6 +99,17 @@ export class ProductController {
     const prices = await this.productUseCases.calculatePrices(query);
     return {
       prices,
+    };
+  }
+
+  @UseGuards(BasicAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Put('prices/increase')
+  async increasePrices(@Body() body: IncreasePrices, @Req() req) {
+    body.user = req.user;
+    const products = await this.productUseCases.increasePrices(body);
+    return {
+      products,
     };
   }
 }

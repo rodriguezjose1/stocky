@@ -26,14 +26,14 @@ class ImageSchema {
   alt_text: string;
 }
 
-interface Prices {
+export interface Prices {
   cost?: number;
   retail: number;
   reseller: number;
 }
 
 @Schema({ _id: false })
-class PricesSchema {
+export class PricesSchema {
   @Prop({ required: false })
   cost?: number;
 

@@ -7,17 +7,20 @@ import { ProductRepositoryPort } from '../../../../domain/ports/product-reposito
 import { ProductModel, ProductSchema } from '../../../models/product.model';
 import { FilterProduct } from './filter-product';
 import { StockModel, StockSchema } from 'src/infrastructure/models/stock.model';
+import { PriceHistoryModel, PriceHistorySchema } from 'src/infrastructure/models/price-history.model';
 
 @Injectable()
 export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
   private productModel = Model<any>;
   private stockModel = Model<any>;
+  private priceHistoryModel = Model<any>;
   constructor(
     @InjectConnection() private connection: Connection,
     private filterProduct: FilterProduct,
   ) {
     this.productModel = this.connection.model(ProductModel.name, ProductSchema);
     this.stockModel = this.connection.model(StockModel.name, StockSchema);
+    this.priceHistoryModel = this.connection.model(PriceHistoryModel.name, PriceHistorySchema);
   }
 
   async filterProducts(filterDto: FilterProductsDto): Promise<ResGetProductsDto> {
@@ -162,6 +165,35 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
     const reseller = costPrice + costPrice * (percentageReseller / 100);
     const retail = costPrice + costPrice * (percentageRetail / 100);
     return { reseller, retail, costPrice };
+  }
+
+  async increasePrices({ productsIds, percentageIncrease, user }): Promise<Product[]> {
+    const products: ProductModel[] = await this.productModel.find({ _id: { $in: productsIds } }).lean();
+    const result = await Promise.all(products.map((product) => this.increasePrice(product, percentageIncrease, user)));
+
+    return result;
+  }
+
+  async increasePrice(product: ProductModel, percentageIncrease, user): Promise<Product> {
+    const reseller = Math.ceil((product.prices.reseller + (product.prices.reseller * percentageIncrease) / 100) / 10) * 10;
+    const retail = Math.ceil((product.prices.retail + (product.prices.retail * percentageIncrease) / 100) / 10) * 10;
+
+    if (reseller < 0 || retail < 0) {
+      throw new Error('El precio no puede ser negativo');
+    }
+
+    const updatedProduct = { ...product, prices: { ...product.prices, reseller, retail } };
+    const updated = await this.productModel.findOneAndUpdate({ _id: product._id }, { $set: { prices: updatedProduct.prices } }, { new: true }).exec();
+    await this.priceHistoryModel.create({
+      productId: product._id,
+      previousPrice: product.prices,
+      newPrice: updatedProduct.prices,
+      modfifiedAt: new Date(),
+      modifiedBy: user.id,
+      percentage: percentageIncrease,
+    });
+
+    return this.mapToEntity(updated);
   }
 
   private mapToModel(product: Partial<Product>): Partial<ProductModel> {
