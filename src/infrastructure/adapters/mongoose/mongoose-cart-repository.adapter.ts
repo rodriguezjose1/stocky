@@ -41,6 +41,7 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
             retail: product.prices.retail,
             reseller: product.prices.reseller,
           },
+          pictures: product.pictures,
         },
         variant: {
           _id: variant.id,
