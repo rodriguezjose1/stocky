@@ -87,6 +87,11 @@ export class FilterProductsDto {
   //product
   @IsOptional()
   @IsString()
+  q?: string;
+
+  //product
+  @IsOptional()
+  @IsString()
   code?: string;
 
   @IsOptional()

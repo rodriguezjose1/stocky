@@ -1,10 +1,15 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { GetProductAttributesQuery } from 'src/domain/entities/product-attribute.entity';
 import { ProductAttributeUseCases } from '../../application/use-cases/product-attribute.use-cases';
+import { ProductAttributeSubtypeUseCases } from 'src/application/use-cases/product-attribute-subtype.use-cases';
+import { GetProductAttributeSubtypesQuery } from 'src/domain/entities/product-attribute-subtype.entity';
 
 @Controller('product-attributes')
 export class ProductAttributeController {
-  constructor(private readonly productAttributeService: ProductAttributeUseCases) {}
+  constructor(
+    private readonly productAttributeService: ProductAttributeUseCases,
+    private readonly productAttributeSubtypeService: ProductAttributeSubtypeUseCases,
+  ) {}
 
   @Get('')
   async getProductAttributes(@Query() query: GetProductAttributesQuery) {
@@ -12,6 +17,15 @@ export class ProductAttributeController {
 
     return {
       productAttributes,
+    };
+  }
+
+  @Get('subtypes')
+  async getProductAttributeSubtype(@Query() query: GetProductAttributeSubtypesQuery) {
+    const productAttributeSubtypes = await this.productAttributeSubtypeService.getProductAttributeSubtypes(query.type);
+
+    return {
+      productAttributeSubtypes,
     };
   }
 }

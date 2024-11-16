@@ -8,6 +8,7 @@ export class FilterProduct {
 
   filterProducts(filterDto: FilterProductsDto) {
     const {
+      q,
       code,
       name,
       description,
@@ -41,6 +42,10 @@ export class FilterProduct {
       match.description = { $regex: description, $options: 'i' };
     }
 
+    if (q) {
+      match.$or = [{ name: { $regex: q, $options: 'i' } }, { code: { $regex: q, $options: 'i' } }, { description: { $regex: q, $options: 'i' } }];
+    }
+
     // Filtro por precios de revendedor
     if (minRetailPrice || maxRetailPrice) {
       match['prices.reseller'] = {};
@@ -54,7 +59,7 @@ export class FilterProduct {
 
     // Filtro por marca
     if (brand) {
-      match['attributes.brand'] = { $regex: brand, $options: 'i' };
+      match['attributes.brand'] = { $in: brand.split(',').map((b) => b.toLowerCase()) };
     }
 
     const aggregatePipeline: any[] = [{ $match: match }];
@@ -105,8 +110,8 @@ export class FilterProduct {
 
     aggregatePipeline.push({
       $match: {
-        ...(color ? { 'variant.color': color } : {}),
-        ...(size ? { 'variant.size': size } : {}),
+        ...(color ? { 'variant.color': { $in: color.split(',').map((color) => color.toLowerCase()) } } : {}),
+        ...(size ? { 'variant.size': { $in: size.split(',').map((size) => size.toLowerCase()) } } : {}),
         ...(minCostPrice || maxCostPrice
           ? {
               'stock.cost_price': {

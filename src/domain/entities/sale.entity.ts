@@ -17,6 +17,8 @@ export class GetSalesFilterDto {
   @IsOptional()
   @Type(() => Number)
   limit?: number; // Límite de semanas a devolver
+
+  user;
 }
 
 export class Prices {

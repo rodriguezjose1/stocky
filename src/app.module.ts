@@ -9,6 +9,7 @@ import { LoggerModule } from './infrastructure/logging/logger.module';
 import { CartModule } from './modules/cart.module';
 import { CategoryModule } from './modules/category.module';
 import { LoginModule } from './modules/login.module';
+import { NotificationModule } from './modules/notification.module';
 import { ProductAttributeModule } from './modules/product-attribute.module';
 import { ProductModule } from './modules/product.module';
 import { PurchaseModule } from './modules/purchase.module';
@@ -18,8 +19,6 @@ import { StockModule } from './modules/stock.module';
 import { UploadImageModule } from './modules/upload-image.module';
 import { UserModule } from './modules/user.module';
 import { VariantModule } from './modules/variant.module';
-import { ProductAttributeSubtypeModule } from './modules/product-attribute-subtype.module';
-import { NotificationModule } from './modules/notification.module';
 
 @Module({
   imports: [
@@ -41,7 +40,6 @@ import { NotificationModule } from './modules/notification.module';
     ProductAttributeModule,
     UploadImageModule,
     CartModule,
-    ProductAttributeSubtypeModule,
     NotificationModule,
   ],
 })

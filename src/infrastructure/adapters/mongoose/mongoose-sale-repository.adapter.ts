@@ -20,9 +20,16 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
     return this.mapToDomain(savedSale);
   }
 
-  async findAll({ page, limit }: { page: number; limit: number }): Promise<any> {
+  async findAll({ userId, page, limit }: { userId: string; page: number; limit: number }): Promise<any> {
+    const filter: any = {};
+    console.log(userId);
+
+    if (userId) {
+      filter['user.id'] = userId;
+    }
+
     const sales = await this.saleModel
-      .find()
+      .find({ ...filter })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)

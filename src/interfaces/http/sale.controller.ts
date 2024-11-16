@@ -26,8 +26,11 @@ export class SaleController {
     };
   }
 
+  @UseGuards(BasicAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SELLER)
   @Get()
-  async getAllSales(@Query() query: GetSalesFilterDto) {
+  async getAllSales(@Query() query: GetSalesFilterDto, @Req() req) {
+    query.user = req.user;
     const { sales, total } = await this.saleUseCases.findAll(query);
 
     return {

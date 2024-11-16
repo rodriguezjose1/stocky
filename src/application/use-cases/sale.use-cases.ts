@@ -13,6 +13,7 @@ import { UserUseCases } from './user.use-cases';
 import { VariantUseCases } from './variant.use-cases';
 import { Variant } from 'src/domain/entities/variant.entity';
 import { getWeekCode } from 'src/common/utils/date.utils';
+import { Role } from 'src/domain/enums/role.enum';
 
 @Injectable()
 export class SalesUseCase {
@@ -98,6 +99,9 @@ export class SalesUseCase {
   }
 
   async findAll(filter): Promise<any> {
+    if (this.isSellerNotAdmin(filter.user)) {
+      filter.userId = filter.user.id;
+    }
     return this.saleRepository.findAll(filter);
   }
 
@@ -139,5 +143,10 @@ export class SalesUseCase {
     if (isNewStatusValid) {
       this.eventEmitter.emit('sale.updated.status', new SaleUpdatedEvent(saleId));
     }
+  }
+
+  private isSellerNotAdmin(user): boolean {
+    const roleNames = user.roles.map((role) => role.name);
+    return roleNames.includes(Role.SELLER) && !roleNames.includes(Role.ADMIN);
   }
 }

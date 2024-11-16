@@ -16,6 +16,10 @@ export class CartUseCases {
     private stockUseCases: StockUseCases,
   ) {}
   async createCart(user: User): Promise<Cart> {
+    const cart = await this.cartRepository.getCartByUser(user.id);
+    if (cart) {
+      return cart;
+    }
     return this.cartRepository.createCart(user.id);
   }
 
