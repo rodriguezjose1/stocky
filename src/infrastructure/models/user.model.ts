@@ -18,13 +18,13 @@ export class UserModel extends Document {
   @Prop({ type: Boolean, default: true })
   active: boolean;
 
-  @Prop({ type: String, required: true, default: '' })
+  @Prop({ type: String, default: '' })
   phone: string;
 
   @Prop({ type: Date, default: null })
   last_connection: Date;
 
-  @Prop({ type: String, required: true, default: '' })
+  @Prop({ type: String, default: '' })
   address: string;
 
   @Prop({ type: [SchemaTypes.ObjectId], ref: 'RoleModel' })
