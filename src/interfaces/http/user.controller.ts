@@ -53,7 +53,11 @@ export class UserController {
 
   @Put(':id')
   async updateUser(@Param('id') id: string, @Body() user: Partial<User>) {
-    return this.userUseCases.updateUser(id, user);
+    const updatedUser = await this.userUseCases.updateUser(id, user);
+
+    return {
+      user: updatedUser,
+    };
   }
 
   @Delete(':id')

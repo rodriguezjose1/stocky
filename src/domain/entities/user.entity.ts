@@ -10,6 +10,7 @@ export class User {
     public email: string,
     public roles: any[],
     public phone: string,
+    public address: string,
     public active: boolean,
     public lastConnection: Date,
   ) {}

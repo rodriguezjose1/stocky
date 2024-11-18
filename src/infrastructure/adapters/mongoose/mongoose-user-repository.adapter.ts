@@ -41,8 +41,8 @@ export class MongooseUserRepositoryAdapter implements UserRepositoryPort {
   }
 
   async delete(id: string): Promise<boolean> {
-    const result = await this.userModel.deleteOne({ _id: id }).exec();
-    return result.deletedCount === 1;
+    const result = await this.userModel.findByIdAndUpdate({ _id: id }, { active: false }).exec();
+    return result.updatedCount === 1;
   }
 
   async update(id: string, user: Partial<User>): Promise<User | null> {
@@ -106,6 +106,7 @@ export class MongooseUserRepositoryAdapter implements UserRepositoryPort {
         };
       }),
       userModel.phone,
+      userModel.address,
       userModel.active,
       userModel.last_connection,
     );
