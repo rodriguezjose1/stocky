@@ -1,5 +1,5 @@
-import { Type } from 'class-transformer';
-import { ArrayMinSize, IsArray, IsEnum, IsInt, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { ArrayMinSize, IsArray, IsBoolean, IsEnum, IsInt, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 import { Category } from './category.entity';
 import { User } from './user.entity';
 
@@ -167,6 +167,10 @@ export class FilterProductsDto {
   @Type(() => Number)
   @Min(0)
   maxQuantity?: number;
+
+  @IsBoolean()
+  @Transform(({ value }) => value === 'true')
+  hasStock: boolean = true;
 
   // Parámetros para paginación
   @IsOptional()

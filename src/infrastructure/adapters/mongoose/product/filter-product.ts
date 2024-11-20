@@ -22,6 +22,7 @@ export class FilterProduct {
       maxCostPrice,
       minQuantity,
       maxQuantity,
+      hasStock,
       page = 1,
       limit = 20,
     } = filterDto;
@@ -32,6 +33,8 @@ export class FilterProduct {
     if (code) {
       match.code = code;
     }
+
+    match.has_stock = hasStock;
 
     // Filtro por nombre o descripción parciales
     if (name) {
@@ -111,7 +114,7 @@ export class FilterProduct {
     aggregatePipeline.push({
       $match: {
         ...(color ? { 'variant.color': { $in: color.split(',').map((color) => color.toLowerCase()) } } : {}),
-        ...(size ? { 'variant.size': { $in: size.split(',').map((size) => size.toLowerCase()) } } : {}),
+        ...(size ? { 'variant.size': { $in: size.split(',').map((size) => size.toUpperCase()) } } : {}),
         ...(minCostPrice || maxCostPrice
           ? {
               'stock.cost_price': {
