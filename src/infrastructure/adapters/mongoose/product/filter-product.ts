@@ -34,7 +34,9 @@ export class FilterProduct {
       match.code = code;
     }
 
-    match.has_stock = hasStock;
+    if (hasStock) {
+      match.has_stock = hasStock;
+    }
 
     // Filtro por nombre o descripción parciales
     if (name) {
@@ -73,7 +75,18 @@ export class FilterProduct {
         customFilterCategories = { $all: categories.map((category) => new Types.ObjectId(category)) };
       } else {
         customFilterCategories = new Types.ObjectId(categories);
-        aggregatePipeline.push(...[{ $unwind: '$categories_filter' }, { $match: { categories_filter: customFilterCategories } }]);
+        aggregatePipeline.push(
+          ...[
+            { $unwind: '$categories_filter' },
+            {
+              $match: {
+                categories_filter: {
+                  $all: [customFilterCategories],
+                },
+              },
+            },
+          ],
+        );
       }
     }
 

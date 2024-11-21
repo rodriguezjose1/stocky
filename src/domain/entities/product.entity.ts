@@ -170,7 +170,7 @@ export class FilterProductsDto {
 
   @IsBoolean()
   @Transform(({ value }) => value === 'true')
-  hasStock: boolean = true;
+  hasStock: boolean = false;
 
   // Parámetros para paginación
   @IsOptional()

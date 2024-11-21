@@ -141,7 +141,7 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
   }
 
   async create(product: Product): Promise<Product> {
-    const newProduct = new this.productModel(product);
+    const newProduct = new this.productModel(this.mapToModel(product));
     const savedProduct = await newProduct.save();
     return this.mapToEntity(savedProduct);
   }
