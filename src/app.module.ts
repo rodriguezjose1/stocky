@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { SentryModule } from '@sentry/nestjs/setup';
 import { AsyncEventsModule } from './async-events/async-events.module';
 import { AuthModule } from './infrastructure/auth/auth.module';
 import { DatabaseModule } from './infrastructure/database/database.module';
@@ -25,6 +26,7 @@ import { VariantModule } from './modules/variant.module';
     ConfigModule.forRoot({ isGlobal: true }),
     DatabaseModule.forRootAsync(),
     EventEmitterModule.forRoot(),
+    SentryModule.forRoot(),
     AuthModule,
     LoggerModule,
     AsyncEventsModule,

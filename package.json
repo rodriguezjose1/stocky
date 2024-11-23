@@ -30,6 +30,8 @@
     "@nestjs/mongoose": "^10.0.10",
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.3.10",
+    "@sentry/nestjs": "^8.40.0",
+    "@sentry/profiling-node": "^8.40.0",
     "@types/bcrypt": "^5.0.2",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
