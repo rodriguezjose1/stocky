@@ -145,14 +145,32 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
       saleModel.status,
       saleModel.details.map(
         (detail) =>
-          new SaleDetail(detail.product.toString(), detail.variant.toString(), detail.quantity, detail.prices, {
-            productName: detail.variant_data.product_name,
-            productCode: detail.variant_data.product_code,
-            variantAttributes: detail.variant_data.variant_attributes,
-          }),
+          new SaleDetail(
+            detail.product.toString(),
+            detail.variant.toString(),
+            detail.quantity,
+            {
+              retail: detail.prices.retail,
+              reseller: detail.prices.reseller,
+            },
+            {
+              productName: detail.variant_data.product_name,
+              productCode: detail.variant_data.product_code,
+              variantAttributes: detail.variant_data.variant_attributes.map((attribute) => ({
+                name: attribute.name,
+                value: attribute.value,
+                label: attribute.label,
+                keyLabel: attribute.key_label,
+              })),
+            },
+          ),
       ),
       saleModel.stocks_updated.map((stockUpdated) => new StocksUpdated(stockUpdated.stock.toString(), stockUpdated.quantity, stockUpdated.prices)),
-      saleModel.user,
+      {
+        id: saleModel.user.id,
+        name: saleModel.user.name,
+        lastname: saleModel.user.lastname,
+      },
       saleModel.cart ? saleModel.cart.toString() : null,
       saleModel.weekCode,
     );
@@ -164,7 +182,12 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
         new SaleDetail(detail.product.toString(), detail.variant.toString(), detail.quantity, detail.prices, {
           productName: detail.variant_data.product_name,
           productCode: detail.variant_data.product_code,
-          variantAttributes: detail.variant_data.variant_attributes,
+          variantAttributes: detail.variant_data.variant_attributes.map((attribute) => ({
+            name: attribute.name,
+            value: attribute.value,
+            label: attribute.label,
+            keyLabel: attribute.key_label,
+          })),
         }),
     );
   }
@@ -180,7 +203,12 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
           variant_data: {
             product_name: detail.variantData.productName,
             product_code: detail.variantData.productCode,
-            variant_attributes: detail.variantData.variantAttributes,
+            variant_attributes: detail.variantData.variantAttributes.map((attribute) => ({
+              name: attribute.name,
+              value: attribute.value,
+              label: attribute.label,
+              key_label: attribute.keyLabel,
+            })),
           },
           quantity: detail.quantity,
           prices: detail.prices,

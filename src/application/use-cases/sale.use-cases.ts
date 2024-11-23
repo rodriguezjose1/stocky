@@ -14,6 +14,8 @@ import { VariantUseCases } from './variant.use-cases';
 import { Variant } from 'src/domain/entities/variant.entity';
 import { getWeekCode } from 'src/common/utils/date.utils';
 import { Role } from 'src/domain/enums/role.enum';
+import { ProductAttributeUseCases } from './product-attribute.use-cases';
+import { ProductAttributeSubtypeUseCases } from './product-attribute-subtype.use-cases';
 
 @Injectable()
 export class SalesUseCase {
@@ -26,6 +28,8 @@ export class SalesUseCase {
     private stockUseCases: StockUseCases,
     private cartUseCases: CartUseCases,
     private userUseCases: UserUseCases,
+    private productAttributeUseCases: ProductAttributeUseCases,
+    private porductAttributeSubtypeUseCases: ProductAttributeSubtypeUseCases,
     @Inject(ERROR_HANDLER_PORT) private errorHandler: ErrorHandlerPort,
   ) {}
 
@@ -45,6 +49,7 @@ export class SalesUseCase {
       const calls = saleData.details.map(async (detail, i) => {
         const product: Product = await this.productUseCases.getProductById(detail.productId);
         const variant: Variant = await this.variantUseCases.getVariantById(detail.variantId);
+        const productAttributeColor = await this.productAttributeUseCases.getProductAttributeByValue(variant.color);
         const prices: Prices = {
           retail: product.prices.retail,
           reseller: product.prices.reseller,
@@ -55,11 +60,15 @@ export class SalesUseCase {
           variantAttributes: [
             {
               name: 'color',
+              keyLabel: 'Color',
               value: variant.color,
+              label: productAttributeColor.label,
             },
             {
               name: 'size',
+              keyLabel: 'Talle',
               value: variant.size,
+              label: variant.size,
             },
           ],
         };
@@ -106,7 +115,8 @@ export class SalesUseCase {
   }
 
   async findById(id: string): Promise<Sale | null> {
-    return this.saleRepository.findById(id);
+    const sale = await this.saleRepository.findById(id);
+    return sale;
   }
 
   async deleteSale(id: string): Promise<boolean> {
@@ -134,6 +144,10 @@ export class SalesUseCase {
 
   async findGroupedProductsInCurrentWeek(): Promise<any> {
     return this.saleRepository.findGroupedProductsInCurrentWeek();
+  }
+
+  async processAsyncEvents(saleId: string): Promise<void> {
+    this.eventEmitter.emit('sale.created', new SaleCreatedEvent(saleId));
   }
 
   private handleSaleStatusChange(prevStatus: SaleStatus, newStatus: SaleStatus, saleId: string): void {

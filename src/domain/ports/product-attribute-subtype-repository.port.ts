@@ -3,4 +3,5 @@ import { ProductAttributeSubtype } from '../entities/product-attribute-subtype.e
 export interface ProductAttributeSubtypeRepositoryPort {
   getByType(type: string, subtype?: string): Promise<any[]>;
   getById(id: string): Promise<ProductAttributeSubtype>;
+  getByValue(value: string): Promise<ProductAttributeSubtype>;
 }

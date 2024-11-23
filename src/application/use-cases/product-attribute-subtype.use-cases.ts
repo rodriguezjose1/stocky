@@ -16,4 +16,8 @@ export class ProductAttributeSubtypeUseCases {
   async getProductAttributeSubtypeById(id: string): Promise<ProductAttributeSubtype> {
     return this.productAttributeSubtypeRepository.getById(id);
   }
+
+  async getProductAttributeSubtypeByValue(value: string): Promise<ProductAttributeSubtype> {
+    return this.productAttributeSubtypeRepository.getByValue(value);
+  }
 }

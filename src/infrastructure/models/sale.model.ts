@@ -66,11 +66,19 @@ export class VariantAttributeSchema {
 
   @Prop({ required: true })
   value: string;
+
+  @Prop({ required: true })
+  label: string;
+
+  @Prop({ required: true })
+  key_label: string;
 }
 
 interface VariantAttribute {
   name: string;
   value: string;
+  label: string;
+  key_label: string;
 }
 
 @Schema({ _id: false })

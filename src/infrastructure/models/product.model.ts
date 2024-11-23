@@ -18,7 +18,7 @@ interface Image {
 }
 
 @Schema({ _id: false })
-class ImageSchema {
+export class ImageSchema {
   @Prop({ required: true })
   url: string;
 

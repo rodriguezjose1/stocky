@@ -1,11 +1,10 @@
-import { OnEvent } from '@nestjs/event-emitter';
-import { StockUseCases } from 'src/application/use-cases/stock.use-cases';
-import { SaleCreatedEvent, SaleUpdatedEvent } from '../events/sale.events';
-import { SalesUseCase } from 'src/application/use-cases/sale.use-cases';
 import { Injectable } from '@nestjs/common';
-import { SaleStatus } from 'src/domain/entities/sale.entity';
+import { OnEvent } from '@nestjs/event-emitter';
 import { CartUseCases } from 'src/application/use-cases/cart.use-cases';
-import { NotificationUseCases } from 'src/application/use-cases/notification.use-cases';
+import { SalesUseCase } from 'src/application/use-cases/sale.use-cases';
+import { StockUseCases } from 'src/application/use-cases/stock.use-cases';
+import { SaleStatus } from 'src/domain/entities/sale.entity';
+import { SaleCreatedEvent, SaleUpdatedEvent } from '../events/sale.events';
 
 @Injectable()
 export class SaleListener {
@@ -13,7 +12,6 @@ export class SaleListener {
     private stockUseCases: StockUseCases,
     private saleUseCases: SalesUseCase,
     private cartUseCases: CartUseCases,
-    private notificationUseCases: NotificationUseCases,
   ) {}
 
   @OnEvent('sale.created')
@@ -43,9 +41,9 @@ export class SaleListener {
 
     // TODO: fix this with correct data
     // notify to admin to accept o reject the sale
-    await this.notificationUseCases.notifyUser('rodriguezjosee8@gmail.com', `New sale: ${sale.id}`);
-    // notify to customer about the sale
-    await this.notificationUseCases.notifyUser('stocky.arg@gmail.com', `Your sale: ${sale.id}`);
+    // await this.notificationUseCases.notifyUser('rodriguezjosee8@gmail.com', `New sale: ${sale.id}`);
+    // // notify to customer about the sale
+    // await this.notificationUseCases.notifyUser('stocky.arg@gmail.com', `Your sale: ${sale.id}`);
   }
 
   @OnEvent('sale.updated.status')

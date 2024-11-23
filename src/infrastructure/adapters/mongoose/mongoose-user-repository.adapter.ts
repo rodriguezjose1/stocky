@@ -6,12 +6,15 @@ import { User } from '../../../domain/entities/user.entity';
 import { UserRepositoryPort } from '../../../domain/ports/user-repository.port';
 import { UserModel, UserSchema } from '../../models/user.model';
 import { Role } from 'src/domain/enums/role.enum';
+import { RoleModel, RoleSchema } from 'src/infrastructure/models/role.model';
 
 @Injectable()
 export class MongooseUserRepositoryAdapter implements UserRepositoryPort {
   private userModel = Model<any>;
+  private roleModel = Model<any>;
   constructor(@InjectConnection() private connection: Connection) {
     this.userModel = this.connection.model(UserModel.name, UserSchema);
+    this.roleModel = this.connection.model(RoleModel.name, RoleSchema);
   }
 
   async create(user: User): Promise<User> {
@@ -53,6 +56,15 @@ export class MongooseUserRepositoryAdapter implements UserRepositoryPort {
   async findByEmail(email: string): Promise<User | null> {
     const user = await this.userModel.findOne({ email }).exec();
     return user ? this.mapToDomain(user) : null;
+  }
+
+  async findOnlyRoleAdmins(): Promise<User[]> {
+    const roleAdmin = await this.roleModel.findOne({ name: Role.ADMIN }).exec();
+    if (!roleAdmin) {
+      return [];
+    }
+    const users = await this.userModel.find({ roles: roleAdmin._id }).exec();
+    return users.map((user) => this.mapToDomain(user));
   }
 
   async findResellers(filter): Promise<any> {

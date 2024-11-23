@@ -10,4 +10,5 @@ export interface UserRepositoryPort {
   findByEmail(email: string): Promise<User | null>;
   findByEmailAuth(email: string): Promise<User | null>;
   findResellers(filter): Promise<any>;
+  findOnlyRoleAdmins(): Promise<User[]>;
 }

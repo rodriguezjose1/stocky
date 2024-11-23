@@ -83,4 +83,9 @@ export class SaleController {
       products,
     };
   }
+
+  @Post('/async-events/:saleId')
+  async processAsyncEvents(@Param('saleId') saleId: string) {
+    return this.saleUseCases.processAsyncEvents(saleId);
+  }
 }

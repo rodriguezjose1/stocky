@@ -9,10 +9,11 @@ import { ProductListener } from './listeners/product.listeners';
 import { PurchaseListener } from './listeners/purchase.listeners';
 import { SaleListener } from './listeners/sale.listeners';
 import { StockListener } from './listeners/stock.listeners';
+import { NotificationListener } from './listeners/notification.listeners';
 
 @Module({
   imports: [PurchaseModule, StockModule, ProductModule, SaleModule, CartModule, NotificationModule],
-  providers: [PurchaseListener, ProductListener, SaleListener, StockListener],
-  exports: [PurchaseListener, ProductListener, SaleListener, StockListener],
+  providers: [PurchaseListener, ProductListener, SaleListener, StockListener, NotificationListener],
+  exports: [PurchaseListener, ProductListener, SaleListener, StockListener, NotificationListener],
 })
 export class AsyncEventsModule {}

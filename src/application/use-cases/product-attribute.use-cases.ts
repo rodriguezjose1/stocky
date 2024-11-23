@@ -16,4 +16,8 @@ export class ProductAttributeUseCases {
   async getProductAttributeById(id: string): Promise<ProductAttribute> {
     return this.productAttributeRepository.getById(id);
   }
+
+  async getProductAttributeByValue(value: string): Promise<ProductAttribute> {
+    return this.productAttributeRepository.getByValue(value);
+  }
 }

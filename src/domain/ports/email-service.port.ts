@@ -1,4 +1,4 @@
 // application/ports/email-service.interface.ts
 export interface IEmailService {
-  sendEmail(to: string, subject: string, content: string): Promise<void>;
+  sendEmail(to: string, subject: string, template: string, data: any): Promise<void>;
 }

@@ -48,6 +48,8 @@ export interface UserData {
 interface VariantAttribute {
   name: string;
   value: string;
+  label: string;
+  keyLabel: string;
 }
 
 interface VariantData {
