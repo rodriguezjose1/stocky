@@ -244,7 +244,7 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
           }))
         : undefined,
       productModel.quantity,
-      productModel.size_type._id.toString(),
+      productModel.size_type?.toString() || undefined,
       productModel.sizes,
       productModel.colors,
       productModel.createdAt,
