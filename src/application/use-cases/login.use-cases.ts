@@ -13,7 +13,6 @@ export class LoginUseCases {
   ) {}
 
   async login(username: string, password: string) {
-    throw new Error('Method not implemented.');
     const user = await this.userUseCases.validateUser(username, password);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
