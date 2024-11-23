@@ -12,12 +12,19 @@ export class MongooseProductAttributeRepositoryAdapter implements ProductAttribu
     this.productAttributeModel = this.connection.model(ProductAttributeModel.name, ProductAttributeSchema);
   }
 
-  getByType(type: string, subtype?: string): Promise<any[]> {
+  async getByType(type: string, subtype?: string): Promise<any[]> {
     const filter: any = { type };
     if (subtype) {
       filter.subtype = subtype;
     }
-    return this.productAttributeModel.find(filter);
+    const productAttributes = await this.productAttributeModel.find(filter).exec();
+
+    return productAttributes.map((productAttribute) => this.mapToEntity(productAttribute));
+  }
+
+  async getById(id: string): Promise<ProductAttribute> {
+    const productAttribute = await this.productAttributeModel.findById(id).exec();
+    return this.mapToEntity(productAttribute);
   }
 
   mapToEntity(productAttributeModel: ProductAttributeModel): ProductAttribute {

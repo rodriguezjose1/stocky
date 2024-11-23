@@ -13,6 +13,6 @@ import { ProductAttributeSubtypeUseCases } from 'src/application/use-cases/produ
     ProductAttributeSubtypeUseCases,
   ],
   controllers: [ProductAttributeSubtypeController],
-  exports: [],
+  exports: [ProductAttributeSubtypeUseCases],
 })
 export class ProductAttributeSubtypeModule {}

@@ -199,6 +199,7 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
   private mapToModel(product: Partial<Product>): Partial<ProductModel> {
     return {
       ...product,
+      size_type: new Types.ObjectId(product.sizeType),
       categories_filter: (product.categoriesFilter as any) || undefined,
       categories: (product.categories as any) || undefined,
       has_stock: product.hasStock,
@@ -243,6 +244,7 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
           }))
         : undefined,
       productModel.quantity,
+      productModel.size_type._id.toString(),
       productModel.sizes,
       productModel.colors,
       productModel.createdAt,

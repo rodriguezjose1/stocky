@@ -1,18 +1,20 @@
 // application/use-cases/product-use-cases.ts
 import { Inject, Injectable } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Types } from 'mongoose';
+import { Category } from 'src/domain/entities/category.entity';
 import { CreateProductDto, FilterProductsDto, IncreasePrices, Product, ResGetProductsDto } from '../../domain/entities/product.entity';
 import { ProductRepositoryPort } from '../../domain/ports/product-repository.port';
 import { CategoryUseCases } from './category.use-cases';
-import { Category } from 'src/domain/entities/category.entity';
-import { Types } from 'mongoose';
+import { ProductAttributeSubtypeUseCases } from './product-attribute-subtype.use-cases';
+import { ProductAttributeUseCases } from './product-attribute.use-cases';
 
 @Injectable()
 export class ProductUseCases {
   constructor(
     @Inject('ProductRepositoryPort')
     private productRepository: ProductRepositoryPort,
-    private eventEmitter: EventEmitter2,
+    private productAttributesUseCases: ProductAttributeUseCases,
+    private productAttributesSubtypeUseCases: ProductAttributeSubtypeUseCases,
     private categoryUseCases: CategoryUseCases,
   ) {}
 
@@ -40,6 +42,9 @@ export class ProductUseCases {
     // TODO: move to dao
     const categories = await this.categoryUseCases.getCategoriesBy({ _id: { $in: categoryIds.map((id) => new Types.ObjectId(id)) } });
 
+    const productAttributeSubtypeSize = await this.productAttributesSubtypeUseCases.getProductAttributeSubtypeById(product.sizeType);
+    const sizes = await this.productAttributesUseCases.getProductAttributes('size', productAttributeSubtypeSize.value);
+
     // Construir el categoryPaths
     const categoryPaths = this.buildCategoryPaths(categories);
 
@@ -51,6 +56,8 @@ export class ProductUseCases {
 
     product.prices.reseller = calculatePrices.reseller;
     product.prices.retail = calculatePrices.retail;
+
+    product.sizes = sizes.map((size) => size.value);
 
     const createdProduct = await this.productRepository.create({ ...product, categories: categoryIds, categoriesFilter: categoryPaths });
     // this.eventEmitter.emit(

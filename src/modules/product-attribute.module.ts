@@ -20,6 +20,6 @@ import { MongooseProductAttributeSubtypeRepositoryAdapter } from 'src/infrastruc
     ProductAttributeSubtypeUseCases,
   ],
   controllers: [ProductAttributeController],
-  exports: [],
+  exports: [ProductAttributeUseCases],
 })
 export class ProductAttributeModule {}

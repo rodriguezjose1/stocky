@@ -90,6 +90,10 @@ export class ProductModel extends Document {
   @Prop({ type: Boolean, required: true, default: false })
   has_stock: boolean;
 
+  @Prop({ type: SchemaTypes.ObjectId, required: true, default: false })
+  size_type: Types.ObjectId;
+
+  // TODO: move sizes and colors to other table to avoid add specifc fields
   @Prop({ type: [String], default: [] })
   sizes: string[];
 
