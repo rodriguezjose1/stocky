@@ -5,6 +5,7 @@ export class ProductAttribute {
   type: string;
   subtype: string;
   value: string;
+  label: string;
 }
 
 export class GetProductAttributesQuery {

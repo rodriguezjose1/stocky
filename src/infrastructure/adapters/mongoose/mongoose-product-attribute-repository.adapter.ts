@@ -26,6 +26,7 @@ export class MongooseProductAttributeRepositoryAdapter implements ProductAttribu
       type: productAttributeModel.type,
       subtype: productAttributeModel.subtype,
       value: productAttributeModel.value,
+      label: productAttributeModel.label,
     };
   }
 }

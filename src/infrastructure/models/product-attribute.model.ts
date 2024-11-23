@@ -11,6 +11,9 @@ export class ProductAttributeModel extends Document {
 
   @Prop({ type: String, required: true })
   value: string;
+
+  @Prop({ type: String, required: true })
+  label: string;
 }
 
 export const ProductAttributeSchema = SchemaFactory.createForClass(ProductAttributeModel);
