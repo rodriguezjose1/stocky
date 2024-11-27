@@ -56,6 +56,7 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
       });
     }
 
+    cart.id = cartId;
     this.calculateTotal(cart);
     return this.updateCart(this.mapToModel(cart));
   }
