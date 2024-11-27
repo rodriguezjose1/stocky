@@ -88,12 +88,13 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
   async getCartByUser(userId: string): Promise<Cart> {
     const cart = await this.cartModel.findOne({ userId, active: true }).exec();
 
-    const calls = cart.items.map(async (item, i) => {
-      const stock = await this.stockModel.findOne({ product: item.product._id, variant: item.variant.id }).exec();
-      cart.items[i].stock = stock;
-    });
-
-    await Promise.all(calls);
+    if (cart && cart.items.length > 0) {
+      const calls = cart.items.map(async (item, i) => {
+        const stock = await this.stockModel.findOne({ product: item.product._id, variant: item.variant.id }).exec();
+        cart.items[i].stock = stock;
+      });
+      await Promise.all(calls);
+    }
 
     return cart;
   }
