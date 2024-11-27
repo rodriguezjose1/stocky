@@ -1,7 +1,8 @@
 export class Variant {
   constructor(
     public id: string,
-    public size: string,
-    public color: string,
+    // TODO: FIX THIS
+    public size: any,
+    public color: any,
   ) {}
 }

@@ -43,8 +43,18 @@ export class StockUseCases {
       const errors = [];
       for (const [index, stock] of stocksDto.entries()) {
         try {
-          const createdStock = await this.createStock(stock, session);
-          stocks.push(createdStock);
+          for (const color of stock.variant.color) {
+            for (const size of stock.variant.size) {
+              const createdStock = await this.createStock(
+                {
+                  ...stock,
+                  variant: { id: stock.variant.id, color, size },
+                },
+                session,
+              );
+              stocks.push(createdStock);
+            }
+          }
         } catch (err) {
           errors.push({ index, error: err.message || DEFAULT_ERROR });
         }
@@ -72,7 +82,7 @@ export class StockUseCases {
         stockDto.date = new Date();
       }
 
-      const variant = await this.variantUseCases.getOneBy(stockDto.variant);
+      const variant = await this.variantUseCases.getOneBy(stockDto.variant as any);
 
       let variantId = variant ? variant.id : null;
       let stock = null;
