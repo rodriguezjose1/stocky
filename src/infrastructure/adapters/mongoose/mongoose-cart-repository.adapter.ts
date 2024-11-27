@@ -7,12 +7,15 @@ import { Product } from 'src/domain/entities/product.entity';
 import { Variant } from 'src/domain/entities/variant.entity';
 import { ICartRepository } from 'src/domain/ports/cart-repository.port';
 import { CartModel, CartSchema } from 'src/infrastructure/models/cart.model.model';
+import { StockModel, StockSchema } from 'src/infrastructure/models/stock.model';
 
 @Injectable()
 export class MongooseCartRepositoryAdapter implements ICartRepository {
   private cartModel = Model<any>;
+  private stockModel = Model<any>;
   constructor(@InjectConnection() private connection: Connection) {
     this.cartModel = this.connection.model(CartModel.name, CartSchema);
+    this.stockModel = this.connection.model(StockModel.name, StockSchema);
   }
 
   // Create a new cart for a user
@@ -83,7 +86,16 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
   }
 
   async getCartByUser(userId: string): Promise<Cart> {
-    return this.cartModel.findOne({ userId, active: true }).lean();
+    const cart = await this.cartModel.findOne({ userId, active: true }).exec();
+
+    const calls = cart.items.map(async (item, i) => {
+      const stock = await this.stockModel.findOne({ product: item.product._id, variant: item.variant.id }).exec();
+      cart.items[i].stock = stock;
+    });
+
+    await Promise.all(calls);
+
+    return cart;
   }
 
   // Helper function to calculate the total price of the cart
