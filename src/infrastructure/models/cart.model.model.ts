@@ -11,7 +11,10 @@ export class CartModel extends Document {
   items: CartItem[];
 
   @Prop()
-  total: number;
+  total_reseller: number;
+
+  @Prop()
+  total_retail: number;
 
   @Prop({ type: Boolean, default: true })
   active: boolean;

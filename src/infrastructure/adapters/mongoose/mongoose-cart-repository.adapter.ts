@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
+import { Types } from 'mongoose';
 import { Connection, Model } from 'mongoose';
 import { Cart } from 'src/domain/entities/cart.entity';
 import { Product } from 'src/domain/entities/product.entity';
@@ -53,7 +54,7 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
     }
 
     this.calculateTotal(cart);
-    return this.updateCart(cart);
+    return this.updateCart(this.mapToModel(cart));
   }
 
   // Remove a product from the cart
@@ -72,7 +73,8 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
       cartItem.quantity = quantity;
     }
     this.calculateTotal(cart);
-    return this.updateCart(cart);
+    cart.id = cartId;
+    return this.updateCart(this.mapToModel(cart));
   }
 
   // Get a cart by its ID
@@ -86,23 +88,37 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
 
   // Helper function to calculate the total price of the cart
   private calculateTotal(cart: Cart): void {
-    cart.total = cart.items.reduce((total, item) => total + item.product.prices.reseller * item.quantity, 0);
+    cart.totalReseller = cart.items.reduce((total, item) => total + item.product.prices.reseller * item.quantity, 0);
+    cart.totalRetail = cart.items.reduce((total, item) => total + item.product.prices.retail * item.quantity, 0);
   }
 
   async updateCart(cart: any): Promise<Cart> {
     return this.cartModel.findByIdAndUpdate(cart._id, cart, { new: true });
   }
 
-  private mapToEntity(cart: Cart): Cart {
+  private mapToModel(cart: Cart): Partial<CartModel> {
+    return {
+      _id: new Types.ObjectId(cart.id),
+      userId: new Types.ObjectId(cart.userId),
+      items: cart.items,
+      total_reseller: cart.totalReseller,
+      total_retail: cart.totalRetail,
+      active: cart.active,
+    };
+  }
+
+  private mapToEntity(cart: CartModel): Cart {
     return {
       id: cart.id,
-      userId: cart.userId,
+      userId: cart.userId.toString(),
       items: cart.items.map((item) => ({
-        product: item.product.id,
+        product: item.product._id.toString(),
         variant: item.variant.id,
         quantity: item.quantity,
       })),
-      total: cart.total,
+      totalReseller: cart.total_reseller,
+      totalRetail: cart.total_retail,
+      active: cart.active,
     };
   }
 }

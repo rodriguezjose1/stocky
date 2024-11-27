@@ -13,7 +13,9 @@ export class Cart {
     public id: string,
     public userId: string,
     public items: any[],
-    public total: number,
+    public totalReseller: number,
+    public totalRetail: number,
+    public active: boolean,
   ) {}
 }
 
