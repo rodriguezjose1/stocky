@@ -30,6 +30,7 @@ export class CategoryUseCases {
         id: category.id,
         name: category.name,
         children: [],
+        sizeTypes: category.sizeTypes,
       });
     });
 
