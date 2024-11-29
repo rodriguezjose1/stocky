@@ -17,7 +17,13 @@ export class MongooseProductAttributeRepositoryAdapter implements ProductAttribu
     if (subtype) {
       filter.subtype = subtype;
     }
-    const productAttributes = await this.productAttributeModel.find(filter).exec();
+
+    let productAttributes = [];
+    if (type !== 'size') {
+      productAttributes = await this.productAttributeModel.find(filter).sort({ label: 1 }).exec();
+    } else {
+      productAttributes = await this.productAttributeModel.find(filter).exec();
+    }
 
     return productAttributes.map((productAttribute) => this.mapToEntity(productAttribute));
   }

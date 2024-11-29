@@ -14,5 +14,6 @@ export class Category {
     public parent: string,
     public ancestors: Ancestor[],
     public children: any[],
+    public sizeTypes: string[],
   ) {}
 }

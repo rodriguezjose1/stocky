@@ -18,6 +18,7 @@ export class MongooseUserRepositoryAdapter implements UserRepositoryPort {
   }
 
   async create(user: User): Promise<User> {
+    user.email = user.email.toLowerCase().trim();
     const createdUser = new this.userModel(user);
     const savedUser = await createdUser.save();
     return this.mapToDomain(savedUser);
@@ -34,7 +35,7 @@ export class MongooseUserRepositoryAdapter implements UserRepositoryPort {
   }
 
   async findByEmailAuth(email: string): Promise<User | null> {
-    const user = await this.userModel.findOne({ email }).select('+password').populate({ path: 'roles' }).exec();
+    const user = await this.userModel.findOne({ email, active: true }).select('+password').populate({ path: 'roles' }).exec();
     return user ? this.mapToDomain(user) : null;
   }
 
@@ -54,7 +55,8 @@ export class MongooseUserRepositoryAdapter implements UserRepositoryPort {
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    const user = await this.userModel.findOne({ email }).exec();
+    const emailParsed = email.toLowerCase().trim();
+    const user = await this.userModel.findOne({ email: emailParsed }).exec();
     return user ? this.mapToDomain(user) : null;
   }
 
@@ -118,6 +120,7 @@ export class MongooseUserRepositoryAdapter implements UserRepositoryPort {
         };
       }),
       userModel.phone,
+      userModel.birthdate,
       userModel.address,
       userModel.active,
       userModel.last_connection,

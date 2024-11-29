@@ -24,6 +24,9 @@ export class UserModel extends Document {
   @Prop({ type: Date, default: null })
   last_connection: Date;
 
+  @Prop({ type: Date, default: null })
+  birthdate: Date;
+
   @Prop({ type: String, default: '' })
   address: string;
 

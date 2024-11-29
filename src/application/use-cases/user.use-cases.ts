@@ -1,9 +1,10 @@
 // application/use-cases/user-use-cases.ts
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { EncrypterPort } from 'src/domain/ports/encrypter.port';
 import { User } from '../../domain/entities/user.entity';
 import { UserRepositoryPort } from '../../domain/ports/user-repository.port';
 import { ConfigService } from '@nestjs/config';
+import { userErrors } from '../error.constants';
 
 @Injectable()
 export class UserUseCases {
@@ -55,6 +56,11 @@ export class UserUseCases {
   }
 
   async createUser(user: User): Promise<User> {
+    const userInDB = await this.userRepository.findByEmail(user.email);
+    if (userInDB) {
+      throw new BadRequestException(userErrors.userAlreadyExists);
+    }
+
     if (!user.password) {
       user.password = this.configService.get('DEFAULT_PASSWORD');
     }

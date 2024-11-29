@@ -8,7 +8,6 @@ import './instrument';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  console.log('NODE_ENV', process.env.NODE_ENV);
   if (process.env.NODE_ENV === 'test') {
     mongoose.set('debug', true);
   }

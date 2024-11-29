@@ -163,7 +163,7 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
 
   async calculatePrices(costPrice, percentageReseller, percentageRetail) {
     const reseller = costPrice + costPrice * (percentageReseller / 100);
-    const retail = costPrice + costPrice * (percentageRetail / 100);
+    const retail = reseller + reseller * (percentageRetail / 100);
     return { reseller, retail, costPrice };
   }
 

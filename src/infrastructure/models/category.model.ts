@@ -37,6 +37,9 @@ export class CategoryModel extends Document {
 
   @Prop({ type: [SchemaTypes.ObjectId], ref: 'CategoryModel' })
   children: Types.ObjectId[];
+
+  @Prop({ type: [SchemaTypes.ObjectId] })
+  size_types: Types.ObjectId[];
 }
 
 export const CategorySchema = SchemaFactory.createForClass(CategoryModel);

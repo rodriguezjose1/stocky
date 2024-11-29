@@ -30,6 +30,7 @@ export class MongooseCategoryRepositoryAdapter implements CategoryRepositoryPort
       parent: categoryModel.parent?.toString(),
       ancestors: categoryModel.ancestors.map((ancestor) => new Ancestor(ancestor._id.toString(), ancestor.name, ancestor.slug)),
       children: categoryModel.children,
+      sizeTypes: categoryModel.size_types.map((sizeType) => sizeType.toString()),
     };
   }
 }

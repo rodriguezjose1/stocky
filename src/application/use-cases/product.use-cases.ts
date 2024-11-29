@@ -1,5 +1,5 @@
 // application/use-cases/product-use-cases.ts
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { Category } from 'src/domain/entities/category.entity';
 import { CreateProductDto, FilterProductsDto, IncreasePrices, Product, ResGetProductsDto } from '../../domain/entities/product.entity';
@@ -7,6 +7,7 @@ import { ProductRepositoryPort } from '../../domain/ports/product-repository.por
 import { CategoryUseCases } from './category.use-cases';
 import { ProductAttributeSubtypeUseCases } from './product-attribute-subtype.use-cases';
 import { ProductAttributeUseCases } from './product-attribute.use-cases';
+import { productErrors } from '../error.constants';
 
 @Injectable()
 export class ProductUseCases {
@@ -39,11 +40,27 @@ export class ProductUseCases {
     const categoryIds = product.categories; // IDs de las categorías seleccionadas
 
     // Obtener las categorías y sus ancestros
-    // TODO: move to dao
+    // TODO: move to dao and fix this
     const categories = await this.categoryUseCases.getCategoriesBy({ _id: { $in: categoryIds.map((id) => new Types.ObjectId(id)) } });
 
-    const productAttributeSubtypeSize = await this.productAttributesSubtypeUseCases.getProductAttributeSubtypeById(product.sizeType);
+    let sizeTypeId;
+    if (categories[0].sizeTypes.length === 1) {
+      sizeTypeId = categories[0].sizeTypes[0];
+    } else {
+      if (!product.sizeType) {
+        throw new BadRequestException(productErrors.sizeTypeRequired);
+      }
+      if (!categories[0].sizeTypes.includes(product.sizeType)) {
+        throw new BadRequestException(productErrors.invalidSizeType);
+      }
+      sizeTypeId = product.sizeType;
+    }
+
+    product.sizeType = sizeTypeId;
+
+    const productAttributeSubtypeSize = await this.productAttributesSubtypeUseCases.getProductAttributeSubtypeById(sizeTypeId);
     const sizes = await this.productAttributesUseCases.getProductAttributes('size', productAttributeSubtypeSize.value);
+    product.sizes = sizes.map((size) => size.label || size.value);
 
     // Construir el categoryPaths
     const categoryPaths = this.buildCategoryPaths(categories);
@@ -57,13 +74,7 @@ export class ProductUseCases {
     product.prices.reseller = calculatePrices.reseller;
     product.prices.retail = calculatePrices.retail;
 
-    product.sizes = sizes.map((size) => size.value);
-
     const createdProduct = await this.productRepository.create({ ...product, categories: categoryIds, categoriesFilter: categoryPaths });
-    // this.eventEmitter.emit(
-    //   'product.created',
-    //   new ProductCreatedEvent(createdProduct.id),
-    // );
 
     return createdProduct;
   }
