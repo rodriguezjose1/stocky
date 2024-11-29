@@ -12,12 +12,13 @@ export class MongooseProductAttributeSubtypeRepositoryAdapter implements Product
     this.productAttributeModel = this.connection.model(ProductAttributeSubtypeModel.name, ProductAttributeSubtypeSchema);
   }
 
-  getByType(type: string, subtype?: string): Promise<any[]> {
+  async getByType(type: string, subtype?: string): Promise<any[]> {
     const filter: any = { type };
     if (subtype) {
       filter.subtype = subtype;
     }
-    return this.productAttributeModel.find(filter);
+    const productAttributes = await this.productAttributeModel.find(filter).exec();
+    return productAttributes.map((productAttribute) => this.mapToEntity(productAttribute));
   }
 
   async getById(id: string): Promise<ProductAttributeSubtype> {
@@ -30,11 +31,12 @@ export class MongooseProductAttributeSubtypeRepositoryAdapter implements Product
     return this.mapToEntity(productAttributeSubtype);
   }
 
-  mapToEntity(productAttributeModel: ProductAttributeSubtypeModel): ProductAttributeSubtype {
+  mapToEntity(productAttributeModel: Partial<ProductAttributeSubtypeModel>): ProductAttributeSubtype {
     return {
       id: productAttributeModel._id.toString(),
       type: productAttributeModel.type,
       value: productAttributeModel.value,
+      label: productAttributeModel.label,
     };
   }
 }

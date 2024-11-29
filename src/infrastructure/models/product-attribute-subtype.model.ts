@@ -7,7 +7,7 @@ export class ProductAttributeSubtypeModel extends Document {
   type: string;
 
   @Prop({ type: String, required: true })
-  label_type: string;
+  label: string;
 
   @Prop({ type: String, required: true })
   value: string;
