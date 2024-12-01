@@ -4,6 +4,9 @@ FROM node:18-alpine
 # Establece el directorio de trabajo
 WORKDIR /
 
+# Instala el CLI de NestJS globalmente
+RUN npm install -g @nestjs/cli
+
 # Copia los archivos del proyecto
 COPY package*.json ./
 
