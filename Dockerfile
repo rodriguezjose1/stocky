@@ -10,8 +10,11 @@ COPY package*.json ./
 # Instala las dependencias de producción
 RUN npm install --only=production
 
-# Copia el código compilado al contenedor
-COPY dist ./dist
+COPY . .
+
+RUN npm run build
+
+RUN npm prune --production
 
 # Expone el puerto en el que correrá la aplicación
 EXPOSE 8080
