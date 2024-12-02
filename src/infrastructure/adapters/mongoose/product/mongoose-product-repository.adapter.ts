@@ -8,6 +8,7 @@ import { ProductModel, ProductSchema } from '../../../models/product.model';
 import { FilterProduct } from './filter-product';
 import { StockModel, StockSchema } from 'src/infrastructure/models/stock.model';
 import { PriceHistoryModel, PriceHistorySchema } from 'src/infrastructure/models/price-history.model';
+import { roundUpTo500 } from 'src/common/utils/math.utils';
 
 @Injectable()
 export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
@@ -162,8 +163,8 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
   }
 
   async calculatePrices(costPrice, percentageReseller, percentageRetail) {
-    const reseller = costPrice + costPrice * (percentageReseller / 100);
-    const retail = reseller + reseller * (percentageRetail / 100);
+    const reseller = roundUpTo500(costPrice + costPrice * (percentageReseller / 100));
+    const retail = roundUpTo500(reseller + reseller * (percentageRetail / 100));
     return { reseller, retail, costPrice };
   }
 
@@ -175,8 +176,8 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
   }
 
   async increasePrice(product: ProductModel, percentageIncrease, user): Promise<Product> {
-    const reseller = Math.ceil((product.prices.reseller + (product.prices.reseller * percentageIncrease) / 100) / 10) * 10;
-    const retail = Math.ceil((product.prices.retail + (product.prices.retail * percentageIncrease) / 100) / 10) * 10;
+    const reseller = roundUpTo500(product.prices.reseller + (product.prices.reseller * percentageIncrease) / 100);
+    const retail = roundUpTo500(product.prices.retail + (product.prices.retail * percentageIncrease) / 100);
 
     if (reseller < 0 || retail < 0) {
       throw new Error('El precio no puede ser negativo');

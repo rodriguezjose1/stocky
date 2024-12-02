@@ -41,6 +41,7 @@ export class StockUseCases {
       session.startTransaction();
       const stocks: Stock[] = [];
       const errors = [];
+      const createdStocks: Stock[] = [];
       for (const [index, stock] of stocksDto.entries()) {
         try {
           for (const color of stock.variant.color) {
@@ -52,7 +53,10 @@ export class StockUseCases {
                 },
                 session,
               );
-              stocks.push(createdStock);
+              stocks.push(createdStock.stock);
+              if (createdStock.isCreated) {
+                createdStocks.push(createdStock.stock);
+              }
             }
           }
         } catch (err) {
@@ -64,6 +68,13 @@ export class StockUseCases {
         throw new BadRequestException({ message: 'Error creating stocks', errors });
       }
       await session.commitTransaction();
+
+      if (createdStocks.length > 0) {
+        for (const stock of createdStocks) {
+          this.eventEmitter.emit('stock.created', new StockCreatedEvent(stock.id));
+        }
+      }
+
       return stocks;
     } catch (err) {
       await session.abortTransaction();
@@ -73,8 +84,9 @@ export class StockUseCases {
     }
   }
 
-  async createStock(stockDto: UpdateStockDto, session?): Promise<Stock> {
+  async createStock(stockDto: UpdateStockDto, session?): Promise<{ stock: Stock; isCreated: boolean }> {
     // const session = await this.connection.startSession();
+    let isCreated = false;
     try {
       // session.startTransaction();
 
@@ -111,7 +123,8 @@ export class StockUseCases {
         };
 
         stock = await this.stockRepository.create(stockToSave, session);
-        this.eventEmitter.emit('stock.created', new StockCreatedEvent(stock.id));
+        // this.eventEmitter.emit('stock.created', new StockCreatedEvent(stock.id));
+        isCreated = true;
       } else {
         // update existing stock
         const stockDB = await this.stockRepository.getByVariantAndProductAndCostPriceWithQuantity(stockDto.product, variantId, stockDto.costPrice);
@@ -130,7 +143,8 @@ export class StockUseCases {
           };
 
           stock = await this.stockRepository.create(stockToSave, session);
-          this.eventEmitter.emit('stock.created', new StockCreatedEvent(stock.id));
+          // this.eventEmitter.emit('stock.created', new StockCreatedEvent(stock.id));
+          isCreated = true;
         } else {
           const diff = stockDB.quantity + stockDto.quantity;
           if (diff <= 0) {
@@ -142,7 +156,7 @@ export class StockUseCases {
 
       // await session.commitTransaction();
 
-      return stock;
+      return { stock, isCreated };
     } catch (error) {
       // await session.abortTransaction();
       throw error;
