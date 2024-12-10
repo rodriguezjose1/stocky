@@ -30,6 +30,9 @@ export class UserModel extends Document {
   @Prop({ type: String, default: '' })
   address: string;
 
+  @Prop({ type: String, default: '' })
+  dni: string;
+
   @Prop({ type: [SchemaTypes.ObjectId], ref: 'RoleModel' })
   roles: Types.ObjectId[];
 }

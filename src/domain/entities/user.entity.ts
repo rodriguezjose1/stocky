@@ -14,6 +14,7 @@ export class User {
     public address: string,
     public active: boolean,
     public lastConnection: Date,
+    public dni: string,
   ) {}
 }
 

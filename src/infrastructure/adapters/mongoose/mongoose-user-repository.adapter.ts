@@ -124,6 +124,7 @@ export class MongooseUserRepositoryAdapter implements UserRepositoryPort {
       userModel.address,
       userModel.active,
       userModel.last_connection,
+      userModel.dni,
     );
   }
 }
