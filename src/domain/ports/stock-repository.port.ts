@@ -12,5 +12,5 @@ export interface StockRepositoryPort {
   decrementStock(id: string, quantity: number): Promise<Stock | null>;
   getStockByVariantIdAndProductId(variantId: string, productId: string): Promise<Stock[]>;
   getByVariantAndProductAndCostPriceWithQuantity(productId: string, variantId: string, costPrice: number): Promise<Stock | null>;
-  getQuantityByVariantId(variantId: string): Promise<number>;
+  getQuantityByVariantId(productId: string, variantId: string): Promise<number>;
 }

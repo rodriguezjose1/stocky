@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional } from 'class-validator';
+import { IsInt, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class User {
   constructor(
@@ -28,4 +28,13 @@ export class GetResellersFilterDto {
   @IsOptional()
   @Type(() => Number)
   limit?: number = 20; // Límite de semanas a devolver
+}
+
+export class ChangePasswordDto {
+  @IsString()
+  currentPassword: string;
+
+  @IsString()
+  @MinLength(4)
+  newPassword: string;
 }

@@ -7,6 +7,14 @@ export const userErrors = {
     code: 'USER_ALREADY_EXISTS',
     message: 'User already exists',
   },
+  userNotFound: {
+    code: 'USER_NOT_FOUND',
+    message: 'User not found',
+  },
+  currentPasswordIsIncorrect: {
+    code: 'CURRENT_PASSWORD_IS_INCORRECT',
+    message: 'Current password is incorrect',
+  },
 };
 
 export const productErrors = {

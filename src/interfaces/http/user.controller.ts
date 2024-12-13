@@ -1,15 +1,20 @@
 // interfaces/http/user.controller.ts
-import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, Query, Req } from '@nestjs/common';
 import { UserUseCases } from '../../application/use-cases/user.use-cases';
-import { GetResellersFilterDto, User } from '../../domain/entities/user.entity';
+import { ChangePasswordDto, GetResellersFilterDto, User } from '../../domain/entities/user.entity';
 import { JwtAuthGuard } from 'src/infrastructure/auth/guards/jwt-auth.guard';
 import { Roles } from 'src/infrastructure/auth/decorators/roles.decorator';
 import { RolesGuard } from 'src/infrastructure/auth/guards/roles.guard';
 import { BasicAuthGuard } from 'src/infrastructure/auth/guards/basic-auth.guard';
+import { ChangePasswordUseCases } from 'src/application/use-cases/change-password.use-cases';
+import { Role } from 'src/domain/enums/role.enum';
 
 @Controller('users')
 export class UserController {
-  constructor(private userUseCases: UserUseCases) {}
+  constructor(
+    private userUseCases: UserUseCases,
+    private changePasswordUseCases: ChangePasswordUseCases,
+  ) {}
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
@@ -49,6 +54,14 @@ export class UserController {
     return {
       user: newUser,
     };
+  }
+
+  @UseGuards(BasicAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SELLER)
+  @Put('change-password')
+  async changePassword(@Body() changePasswordDto: ChangePasswordDto, @Req() req) {
+    const userId = req.user.id;
+    await this.changePasswordUseCases.changePassword(userId, changePasswordDto);
   }
 
   @Put(':id')

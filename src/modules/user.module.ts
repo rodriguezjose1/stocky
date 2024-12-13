@@ -4,6 +4,7 @@ import { UserUseCases } from '../application/use-cases/user.use-cases';
 import { MongooseUserRepositoryAdapter } from '../infrastructure/adapters/mongoose/mongoose-user-repository.adapter';
 import { UserController } from '../interfaces/http/user.controller';
 import { EncrypterModule } from 'src/infrastructure/adapters/encrypter/encrypter.module';
+import { ChangePasswordUseCases } from 'src/application/use-cases/change-password.use-cases';
 
 @Module({
   imports: [EncrypterModule],
@@ -13,8 +14,9 @@ import { EncrypterModule } from 'src/infrastructure/adapters/encrypter/encrypter
       useClass: MongooseUserRepositoryAdapter,
     },
     UserUseCases,
+    ChangePasswordUseCases,
   ],
   controllers: [UserController],
-  exports: [UserUseCases],
+  exports: [UserUseCases, ChangePasswordUseCases],
 })
 export class UserModule {}

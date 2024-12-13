@@ -40,7 +40,7 @@ export class MongooseUserRepositoryAdapter implements UserRepositoryPort {
   }
 
   async findByIdAuth(id: string): Promise<User | null> {
-    const user = await this.userModel.findById(id).populate({ path: 'roles' }).exec();
+    const user = await this.userModel.findById(id).select('+password').populate({ path: 'roles' }).exec();
     return user ? this.mapToDomain(user) : null;
   }
 

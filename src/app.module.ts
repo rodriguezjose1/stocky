@@ -20,13 +20,12 @@ import { StockModule } from './modules/stock.module';
 import { UploadImageModule } from './modules/upload-image.module';
 import { UserModule } from './modules/user.module';
 import { VariantModule } from './modules/variant.module';
-
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: process.env.NODE_ENV === 'test' ? `.env_${process.env.NODE_ENV}` : undefined }),
     DatabaseModule.forRootAsync(),
     EventEmitterModule.forRoot(),
-    ...(process.env.NODE_ENV === 'production' ? [SentryModule.forRoot()] : []),
+    ...(process.env.NODE_ENV !== 'test' ? [SentryModule.forRoot()] : []),
     AuthModule,
     LoggerModule,
     AsyncEventsModule,

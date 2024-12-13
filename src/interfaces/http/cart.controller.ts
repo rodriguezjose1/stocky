@@ -46,8 +46,8 @@ export class CartController {
   @UseGuards(BasicAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.SELLER)
   @Put('/:cartId/update-quantity/:variantId')
-  async updateProductQuantity(@Param('cartId') cartId: string, @Param('variantId') variantId: string, @Body('quantity') quantity: number) {
-    const cart = await this.cartUseCases.updateProductQuantity(cartId, variantId, quantity);
+  async updateProductQuantity(@Param('cartId') cartId: string, @Param('variantId') variantId: string, @Body('quantity') quantity: number, @Body('productId') productId: string) {
+    const cart = await this.cartUseCases.updateProductQuantity(cartId, productId, variantId, quantity);
     return {
       cart,
     };

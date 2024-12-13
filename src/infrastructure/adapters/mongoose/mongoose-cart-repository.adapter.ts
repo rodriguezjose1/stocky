@@ -32,7 +32,7 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
   async addProduct(cartId: string, product: Product, variant: Variant, quantity: number): Promise<Cart> {
     const cart = await this.getCartById(cartId);
 
-    const cartItem = cart.items.find((item) => item.variant._id.toString() === variant.id);
+    const cartItem = cart.items.find((item) => item.product._id.toString() === product.id && item.variant._id.toString() === variant.id);
     if (cartItem) {
       cartItem.quantity += quantity;
     } else {
@@ -69,10 +69,15 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
     return this.updateCart(cart);
   }
 
-  // Update the quantity of a product in the cart
-  async updateQuantity(cartId: string, variantId: string, quantity: number): Promise<Cart> {
+  async getVariantInCart(cartId: string, variantId: string): Promise<Cart> {
     const cart = await this.getCartById(cartId);
-    const cartItem = cart.items.find((item) => item.variant._id.toString() === variantId);
+    return cart.items.find((item) => item.variant._id.toString() === variantId);
+  }
+
+  // Update the quantity of a product in the cart
+  async updateQuantity(cartId: string, productId: string, variantId: string, quantity: number): Promise<Cart> {
+    const cart = await this.getCartById(cartId);
+    const cartItem = cart.items.find((item) => item.product._id.toString() === productId && item.variant._id.toString() === variantId);
     if (cartItem) {
       cartItem.quantity = quantity;
     }

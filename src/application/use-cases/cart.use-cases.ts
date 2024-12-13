@@ -32,7 +32,7 @@ export class CartUseCases {
     if (!variant) {
       throw new BadRequestException('Variant not found');
     }
-    const quantityInStock = await this.stockUseCases.getQuantityByVariantId(variantId);
+    const quantityInStock = await this.stockUseCases.getQuantityByVariantId(productId, variantId);
 
     if (quantity > quantityInStock) {
       throw new BadRequestException('Insufficient stock');
@@ -44,14 +44,14 @@ export class CartUseCases {
     return this.cartRepository.removeProduct(cartId, variantId);
   }
 
-  async updateProductQuantity(cartId: string, variantId: string, quantity: number): Promise<Cart> {
-    const quantityInStock = await this.stockUseCases.getQuantityByVariantId(variantId);
+  async updateProductQuantity(cartId: string, productId: string, variantId: string, quantity: number): Promise<Cart> {
+    const quantityInStock = await this.stockUseCases.getQuantityByVariantId(productId, variantId);
 
     if (quantity > quantityInStock) {
       throw new BadRequestException('Insufficient stock');
     }
 
-    return this.cartRepository.updateQuantity(cartId, variantId, quantity);
+    return this.cartRepository.updateQuantity(cartId, productId, variantId, quantity);
   }
 
   async getCartById(cartId: string): Promise<Cart> {

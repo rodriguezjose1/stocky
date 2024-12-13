@@ -221,7 +221,7 @@ export class StockUseCases {
 
   public async checkStock(details: SaleDetail[]): Promise<void> {
     for (const detail of details) {
-      const quantity = await this.stockRepository.getQuantityByVariantId(detail.variantId);
+      const quantity = await this.stockRepository.getQuantityByVariantId(detail.productId, detail.variantId);
 
       if (quantity < detail.quantity) {
         throw new InsufficientStockException(detail.productId, detail.quantity, quantity);
@@ -229,7 +229,7 @@ export class StockUseCases {
     }
   }
 
-  public async getQuantityByVariantId(variantId: string): Promise<number> {
-    return this.stockRepository.getQuantityByVariantId(variantId);
+  public async getQuantityByVariantId(productId: string, variantId: string): Promise<number> {
+    return this.stockRepository.getQuantityByVariantId(productId, variantId);
   }
 }

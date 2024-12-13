@@ -105,10 +105,11 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
     return stocks ? stocks.map((stock) => this.mapToEntity(stock)) : null;
   }
 
-  async getQuantityByVariantId(variantId: string): Promise<number> {
+  async getQuantityByVariantId(productId: string, variantId: string): Promise<number> {
     const stock = await this.stockModel.aggregate([
       {
         $match: {
+          product: new Types.ObjectId(productId),
           variant: new Types.ObjectId(variantId),
         },
       },
