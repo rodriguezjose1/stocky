@@ -43,22 +43,9 @@ export class ProductUseCases {
     // TODO: move to dao and fix this
     const categories = await this.categoryUseCases.getCategoriesBy({ _id: { $in: categoryIds.map((id) => new Types.ObjectId(id)) } });
 
-    let sizeTypeId;
-    if (categories[0].sizeTypes.length === 1) {
-      sizeTypeId = categories[0].sizeTypes[0];
-    } else {
-      if (!product.sizeType) {
-        throw new BadRequestException(productErrors.sizeTypeRequired);
-      }
-      if (!categories[0].sizeTypes.includes(product.sizeType)) {
-        throw new BadRequestException(productErrors.invalidSizeType);
-      }
-      sizeTypeId = product.sizeType;
-    }
+    product.sizeType = await this.getSizeType(product, categories);
 
-    product.sizeType = sizeTypeId;
-
-    const productAttributeSubtypeSize = await this.productAttributesSubtypeUseCases.getProductAttributeSubtypeById(sizeTypeId);
+    const productAttributeSubtypeSize = await this.productAttributesSubtypeUseCases.getProductAttributeSubtypeById(product.sizeType);
     const sizes = await this.productAttributesUseCases.getProductAttributes('size', productAttributeSubtypeSize.value);
     product.sizes = sizes.map((size) => size.label || size.value);
 
@@ -80,6 +67,32 @@ export class ProductUseCases {
   }
 
   async updateProduct(id: string, product: Partial<Product>): Promise<Product | null> {
+    const productDB = await this.productRepository.findById(id);
+    if (!productDB) {
+      throw new BadRequestException(productErrors.productNotFound);
+    }
+
+    if (!this.areArraysEqual(product.categories, productDB.categories)) {
+      const categories = await this.categoryUseCases.getCategoriesBy({ _id: { $in: product.categories.map((id) => new Types.ObjectId(id)) } });
+
+      if (!categories.length) {
+        throw new BadRequestException(productErrors.categoryNotFound);
+      }
+
+      product.sizeType = await this.getSizeType(product, categories);
+
+      const categoryPaths = this.buildCategoryPaths(categories);
+      product.categoriesFilter = categoryPaths;
+
+      const productAttributeSubtypeSize = await this.productAttributesSubtypeUseCases.getProductAttributeSubtypeById(product.sizeType);
+      const sizes = await this.productAttributesUseCases.getProductAttributes('size', productAttributeSubtypeSize.value);
+      product.sizes = sizes.map((size) => size.label || size.value);
+    }
+
+    if (product.colors) {
+      product.colors = this.getUniqueColors(productDB.colors, product.colors);
+    }
+
     return this.productRepository.update(id, product);
   }
 
@@ -103,7 +116,7 @@ export class ProductUseCases {
     return this.productRepository.increasePrices(data);
   }
 
-  private buildCategoryPaths(categories: Category[]): string[][] {
+  private buildCategoryPaths(categories: Category[] | string[]): string[][] {
     const paths: string[][] = [];
 
     categories.forEach((category) => {
@@ -118,5 +131,39 @@ export class ProductUseCases {
     const path: string[] = category.ancestors.map((ancestor) => ancestor.id); // Agregar los ancestros
     path.push(category.id); // Agregar la categoría actual
     return path;
+  }
+
+  private areArraysEqual(incomingCategories, currentCategories): boolean {
+    if (incomingCategories.length !== currentCategories.length) return false;
+
+    const strArr1 = incomingCategories.map((item: any) => item.toString());
+    const strArr2 = currentCategories.map((item: any) => item.toString());
+
+    return strArr1.every((value, index) => value === strArr2[index]);
+  }
+
+  private getUniqueColors(colors: string[], newColors: string[]): string[] {
+    const uniqueColors = new Set(colors);
+
+    newColors.forEach((color) => uniqueColors.add(color));
+
+    return Array.from(uniqueColors);
+  }
+
+  private async getSizeType(product, categories) {
+    let sizeTypeId;
+    if (categories[0].sizeTypes.length === 1) {
+      sizeTypeId = categories[0].sizeTypes[0];
+    } else {
+      if (!product.sizeType) {
+        throw new BadRequestException(productErrors.sizeTypeRequired);
+      }
+      if (!categories[0].sizeTypes.includes(product.sizeType)) {
+        throw new BadRequestException(productErrors.invalidSizeType);
+      }
+      sizeTypeId = product.sizeType;
+    }
+
+    return sizeTypeId;
   }
 }

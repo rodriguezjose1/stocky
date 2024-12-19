@@ -26,4 +26,12 @@ export const productErrors = {
     code: 'INVALID_SIZE_TYPE',
     message: 'The type of size is not included in the possible values',
   },
+  productNotFound: {
+    code: 'PRODUCT_NOT_FOUND',
+    message: 'Product not found',
+  },
+  categoryNotFound: {
+    code: 'CATEGORY_NOT_FOUND',
+    message: 'Category not found',
+  },
 };
