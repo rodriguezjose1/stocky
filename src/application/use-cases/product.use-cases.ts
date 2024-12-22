@@ -66,13 +66,33 @@ export class ProductUseCases {
     return createdProduct;
   }
 
-  async updateProduct(id: string, product: Partial<Product>): Promise<Product | null> {
+  async updateProduct(id: string, product: Partial<Product>, user): Promise<Product | null> {
     const productDB = await this.productRepository.findById(id);
     if (!productDB) {
       throw new BadRequestException(productErrors.productNotFound);
     }
 
-    if (!this.areArraysEqual(product.categories, productDB.categories)) {
+    if (product.prices?.cost !== productDB.prices?.cost) {
+      const calculatedPrices = await this.calculatePrices({
+        costPrice: product.prices.cost,
+        percentageReseller: productDB.percentages.reseller,
+        percentageRetail: productDB.percentages.retail,
+      });
+
+      product.prices.reseller = calculatedPrices.reseller;
+      product.prices.retail = calculatedPrices.retail;
+
+      this.productRepository.savePriceHistory({
+        productId: productDB.id,
+        previousPrice: productDB.prices,
+        newPrice: product.prices,
+        modfifiedAt: new Date(),
+        modifiedBy: user ? user.id : null,
+        percentage: this.calculatePercentageIncrease(productDB.prices.cost, product.prices.cost),
+      });
+    }
+
+    if (product.categories && !this.areArraysEqual(product.categories, productDB.categories)) {
       const categories = await this.categoryUseCases.getCategoriesBy({ _id: { $in: product.categories.map((id) => new Types.ObjectId(id)) } });
 
       if (!categories.length) {
@@ -134,7 +154,7 @@ export class ProductUseCases {
   }
 
   private areArraysEqual(incomingCategories, currentCategories): boolean {
-    if (incomingCategories.length !== currentCategories.length) return false;
+    if (incomingCategories?.length !== currentCategories?.length) return false;
 
     const strArr1 = incomingCategories.map((item: any) => item.toString());
     const strArr2 = currentCategories.map((item: any) => item.toString());
@@ -165,5 +185,14 @@ export class ProductUseCases {
     }
 
     return sizeTypeId;
+  }
+
+  private calculatePercentageIncrease(initialAmount: number, newAmount: number): number {
+    if (initialAmount === 0) {
+      throw new Error('The initial amount cannot be zero.');
+    }
+    const increase = newAmount - initialAmount;
+    const percentage = (increase / initialAmount) * 100;
+    return percentage;
   }
 }

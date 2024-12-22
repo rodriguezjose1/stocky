@@ -1,5 +1,5 @@
-import { Controller, Get, Query } from '@nestjs/common';
-import { GetProductAttributesQuery } from 'src/domain/entities/product-attribute.entity';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { GetProductAttributesQuery, PostProductAttributeDto } from 'src/domain/entities/product-attribute.entity';
 import { ProductAttributeUseCases } from '../../application/use-cases/product-attribute.use-cases';
 import { ProductAttributeSubtypeUseCases } from 'src/application/use-cases/product-attribute-subtype.use-cases';
 import { GetProductAttributeSubtypesQuery } from 'src/domain/entities/product-attribute-subtype.entity';
@@ -27,5 +27,10 @@ export class ProductAttributeController {
     return {
       productAttributeSubtypes,
     };
+  }
+
+  @Post('')
+  async createProductAttribute(@Body() productAttribute: PostProductAttributeDto) {
+    return this.productAttributeService.createProductAttribute(productAttribute);
   }
 }

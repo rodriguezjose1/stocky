@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection, Model } from 'mongoose';
-import { ProductAttribute } from 'src/domain/entities/product-attribute.entity';
+import { PostProductAttributeDto, ProductAttribute } from 'src/domain/entities/product-attribute.entity';
 import { ProductAttributeRepositoryPort } from '../../../domain/ports/product-attribute-repository.port';
 import { ProductAttributeModel, ProductAttributeSchema } from '../../models/product-attribute.model';
 
@@ -36,6 +36,11 @@ export class MongooseProductAttributeRepositoryAdapter implements ProductAttribu
   async getByValue(value: string): Promise<ProductAttribute> {
     const productAttribute = await this.productAttributeModel.findOne({ value }).exec();
     return productAttribute ? this.mapToEntity(productAttribute) : null;
+  }
+
+  async create(productAttribute: PostProductAttributeDto): Promise<ProductAttribute> {
+    const productAttributeModel = await this.productAttributeModel.create(productAttribute);
+    return this.mapToEntity(productAttributeModel);
   }
 
   mapToEntity(productAttributeModel: ProductAttributeModel): ProductAttribute {

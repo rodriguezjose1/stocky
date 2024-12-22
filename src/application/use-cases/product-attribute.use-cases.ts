@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { ProductAttribute } from '../../domain/entities/product-attribute.entity';
+import { PostProductAttributeDto, ProductAttribute } from '../../domain/entities/product-attribute.entity';
 import { ProductAttributeRepositoryPort } from '../../domain/ports/product-attribute-repository.port';
 
 @Injectable()
@@ -19,5 +19,14 @@ export class ProductAttributeUseCases {
 
   async getProductAttributeByValue(value: string): Promise<ProductAttribute> {
     return this.productAttributeRepository.getByValue(value);
+  }
+
+  async createProductAttribute(productAttribute: PostProductAttributeDto): Promise<ProductAttribute> {
+    productAttribute.value = this.getValue(productAttribute.label);
+    return this.productAttributeRepository.create(productAttribute);
+  }
+
+  private getValue(input: string): string {
+    return input.toLowerCase().replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
   }
 }

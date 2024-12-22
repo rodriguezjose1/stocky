@@ -21,9 +21,13 @@ export class StockListener {
     }
 
     if (stock.quantity > 0) {
-      await this.productUseCases.updateProduct(stock.product, {
-        hasStock: true,
-      });
+      await this.productUseCases.updateProduct(
+        stock.product,
+        {
+          hasStock: true,
+        },
+        null,
+      );
     }
   }
 
@@ -38,9 +42,13 @@ export class StockListener {
     }
 
     if (stock.quantity > 0 && !product.hasStock) {
-      await this.productUseCases.updateProduct(stock.product, {
-        hasStock: true,
-      });
+      await this.productUseCases.updateProduct(
+        stock.product,
+        {
+          hasStock: true,
+        },
+        null,
+      );
     }
   }
 
@@ -59,9 +67,13 @@ export class StockListener {
     });
 
     if (total === 0) {
-      await this.productUseCases.updateProduct(event.productId, {
-        hasStock: false,
-      });
+      await this.productUseCases.updateProduct(
+        event.productId,
+        {
+          hasStock: false,
+        },
+        null,
+      );
     }
   }
 }

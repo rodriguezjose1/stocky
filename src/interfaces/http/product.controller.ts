@@ -67,9 +67,11 @@ export class ProductController {
     };
   }
 
+  @UseGuards(BasicAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @Put(':id')
-  async updateProduct(@Param('id') id: string, @Body() product: Partial<Product>) {
-    return this.productUseCases.updateProduct(id, product);
+  async updateProduct(@Param('id') id: string, @Body() product: Partial<Product>, @Req() req) {
+    return this.productUseCases.updateProduct(id, product, req.user);
   }
 
   @Delete(':id')

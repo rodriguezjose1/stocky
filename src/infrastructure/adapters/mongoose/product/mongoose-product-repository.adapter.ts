@@ -9,6 +9,7 @@ import { FilterProduct } from './filter-product';
 import { StockModel, StockSchema } from 'src/infrastructure/models/stock.model';
 import { PriceHistoryModel, PriceHistorySchema } from 'src/infrastructure/models/price-history.model';
 import { roundUpTo100 } from 'src/common/utils/math.utils';
+import { PriceHistory } from 'src/domain/entities/price-history.entity';
 
 @Injectable()
 export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
@@ -196,6 +197,10 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
     });
 
     return this.mapToEntity(updated);
+  }
+
+  savePriceHistory(priceHistory: PriceHistory): Promise<PriceHistory> {
+    return this.priceHistoryModel.create(priceHistory);
   }
 
   private mapToModel(product: Partial<Product>): Partial<ProductModel> {
