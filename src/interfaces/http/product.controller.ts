@@ -1,20 +1,20 @@
 // interfaces/http/product.controller.ts
-import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards, Req } from '@nestjs/common';
-import { ProductUseCases } from '../../application/use-cases/product.use-cases';
-import {
-  ReqGetProductsDto,
-  Product,
-  CreateProductDto,
-  FilterProductsDto,
-  GetProductByIdQueryDto,
-  FilterProductsByCodeOrNameDto,
-  CalculatePricesDto,
-  IncreasePrices,
-} from '../../domain/entities/product.entity';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
+import { Role } from 'src/domain/enums/role.enum';
+import { Roles } from 'src/infrastructure/auth/decorators/roles.decorator';
 import { BasicAuthGuard } from 'src/infrastructure/auth/guards/basic-auth.guard';
 import { RolesGuard } from 'src/infrastructure/auth/guards/roles.guard';
-import { Roles } from 'src/infrastructure/auth/decorators/roles.decorator';
-import { Role } from 'src/domain/enums/role.enum';
+import { ProductUseCases } from '../../application/use-cases/product.use-cases';
+import {
+  CalculatePricesDto,
+  CreateProductDto,
+  FilterProductsByCodeOrNameDto,
+  FilterProductsDto,
+  GetProductByIdQueryDto,
+  IncreasePrices,
+  ReqGetProductsDto,
+  UpdateProductDto,
+} from '../../domain/entities/product.entity';
 
 @Controller('products')
 export class ProductController {
@@ -70,7 +70,7 @@ export class ProductController {
   @UseGuards(BasicAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @Put(':id')
-  async updateProduct(@Param('id') id: string, @Body() product: Partial<Product>, @Req() req) {
+  async updateProduct(@Param('id') id: string, @Body() product: UpdateProductDto, @Req() req) {
     return this.productUseCases.updateProduct(id, product, req.user);
   }
 

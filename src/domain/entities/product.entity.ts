@@ -1,5 +1,5 @@
 import { Transform, Type } from 'class-transformer';
-import { ArrayMinSize, IsArray, IsBoolean, IsEnum, IsInt, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { ArrayMinSize, IsArray, IsBoolean, IsEnum, IsInt, IsNumber, IsObject, IsOptional, IsString, Min, ValidateNested } from 'class-validator';
 import { Category } from './category.entity';
 import { User } from './user.entity';
 
@@ -42,6 +42,59 @@ export class CreateProductDto {
     public sizes: string[],
     public colors: string[],
   ) {}
+}
+
+export class PricesDTO {
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  cost: number;
+
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  retail: number;
+
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  reseller: number;
+}
+
+export class UpdateProductDto {
+  @IsString()
+  name: string;
+
+  @IsString()
+  description: string;
+
+  @IsString()
+  code: string;
+
+  @IsArray()
+  categories: string[];
+
+  @IsObject()
+  attributes: Attributes;
+
+  @IsArray()
+  pictures: Image[];
+
+  @ValidateNested()
+  @Type(() => PricesDTO)
+  prices: PricesDTO;
+
+  @IsObject()
+  percentages: Percentages;
+
+  @IsString()
+  sizeType: string;
+
+  // @IsArray()
+  // sizes: string[];
+
+  @IsArray()
+  colors: string[];
 }
 
 export class Product {
