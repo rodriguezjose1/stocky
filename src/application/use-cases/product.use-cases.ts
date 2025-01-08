@@ -72,7 +72,7 @@ export class ProductUseCases {
       throw new BadRequestException(productErrors.productNotFound);
     }
 
-    if (product.prices?.cost !== productDB.prices?.cost) {
+    if (product.prices && product.prices.cost !== productDB.prices.cost) {
       const calculatedPrices = await this.calculatePrices({
         costPrice: product.prices.cost,
         percentageReseller: productDB.percentages.reseller,
