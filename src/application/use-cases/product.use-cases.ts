@@ -113,7 +113,7 @@ export class ProductUseCases {
       product.colors = this.getUniqueColors(productDB.colors, product.colors);
     }
 
-    if (!product.pictures.length) {
+    if (!product.pictures?.length) {
       product.pictures = productDB.pictures;
     }
 

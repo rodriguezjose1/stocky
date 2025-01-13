@@ -1,4 +1,4 @@
-import { Controller, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Controller, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadImageUseCase } from '../../application/use-cases/upload-image.use-cases';
 
@@ -9,6 +9,9 @@ export class UploadImageController {
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadImage(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('File not uploaded');
+    }
     const fileUrl = await this.uploadImageUseCase.execute(file);
     return { message: 'Image uploaded successfully', url: fileUrl };
   }
