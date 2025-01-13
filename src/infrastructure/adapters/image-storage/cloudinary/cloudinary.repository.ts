@@ -8,7 +8,12 @@ export class ImageCloudinaryRepository implements ImageRepository {
   constructor(private readonly cloudinary: CloudinaryConfigService) {}
 
   async save(file: Express.Multer.File): Promise<string> {
-    const uploadResult = await this.cloudinary.uploadImage(file);
-    return uploadResult.secure_url; // Retorna la URL segura de la imagen
+    try {
+      const uploadResult = await this.cloudinary.uploadImage(file);
+      return uploadResult.secure_url; // Retorna la URL segura de la imagen
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw new Error('Error uploading image');
+    }
   }
 }
