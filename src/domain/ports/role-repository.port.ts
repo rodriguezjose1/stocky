@@ -6,4 +6,5 @@ export interface RoleRepositoryPort {
   create(role: Role): Promise<Role>;
   update(id: string, role: Partial<Role>): Promise<Role | null>;
   delete(id: string): Promise<boolean>;
+  findByName(name: string): Promise<Role>;
 }

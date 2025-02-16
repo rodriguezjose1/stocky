@@ -163,11 +163,12 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
     return products.map((product) => this.mapToEntity(product));
   }
 
-  async calculatePrices(costPrice, percentageReseller, percentageRetail) {
+  async calculatePrices(costPrice, percentageReseller, percentageRetail, percentageWholesale) {
     const resellerWithoutRound = costPrice + costPrice * (percentageReseller / 100);
     const reseller = roundUpTo100(resellerWithoutRound);
     const retail = roundUpTo100(resellerWithoutRound + resellerWithoutRound * (percentageRetail / 100));
-    return { reseller, retail, costPrice };
+    const wholesale = roundUpTo100(costPrice + costPrice * (percentageWholesale / 100));
+    return { reseller, retail, wholesale, costPrice };
   }
 
   async increasePrices({ productsIds, percentageIncrease, user }): Promise<Product[]> {
@@ -180,12 +181,13 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
   async increasePrice(product: ProductModel, percentageIncrease, user): Promise<Product> {
     const reseller = roundUpTo100(product.prices.reseller + (product.prices.reseller * percentageIncrease) / 100);
     const retail = roundUpTo100(product.prices.retail + (product.prices.retail * percentageIncrease) / 100);
+    const wholesale = roundUpTo100(product.prices.wholesale + (product.prices.wholesale * percentageIncrease) / 100);
 
-    if (reseller < 0 || retail < 0) {
+    if (reseller < 0 || retail < 0 || wholesale < 0) {
       throw new Error('El precio no puede ser negativo');
     }
 
-    const updatedProduct = { ...product, prices: { ...product.prices, reseller, retail } };
+    const updatedProduct = { ...product, prices: { ...product.prices, reseller, retail, wholesale } };
     const updated = await this.productModel.findOneAndUpdate({ _id: product._id }, { $set: { prices: updatedProduct.prices } }, { new: true }).exec();
     await this.priceHistoryModel.create({
       productId: product._id,
@@ -210,6 +212,10 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
       categories_filter: (product.categoriesFilter as any) || undefined,
       categories: (product.categories as any) || undefined,
       has_stock: product.hasStock,
+      wholesale_data: {
+        is_wholesaler: product.wholesaleData.isWholesaler,
+        minimum_quantity: product.wholesaleData.minimumQuantity,
+      },
     };
   }
 
@@ -255,6 +261,7 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
       productModel.sizes,
       productModel.colors,
       productModel.createdAt,
+      { isWholesaler: productModel.wholesale_data?.is_wholesaler || false, minimumQuantity: productModel.wholesale_data?.minimum_quantity || 0 },
     );
   }
 }

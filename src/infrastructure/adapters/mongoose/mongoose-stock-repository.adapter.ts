@@ -135,6 +135,7 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
           retail: product.prices.retail,
           reseller: product.prices.reseller,
           cost: product.prices.cost,
+          wholesale: product.prices.wholesale,
         },
       };
       variant = {

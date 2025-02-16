@@ -5,9 +5,10 @@ import { MongooseUserRepositoryAdapter } from '../infrastructure/adapters/mongoo
 import { UserController } from '../interfaces/http/user.controller';
 import { EncrypterModule } from 'src/infrastructure/adapters/encrypter/encrypter.module';
 import { ChangePasswordUseCases } from 'src/application/use-cases/change-password.use-cases';
+import { RoleModule } from './role.module';
 
 @Module({
-  imports: [EncrypterModule],
+  imports: [EncrypterModule, RoleModule],
   providers: [
     {
       provide: 'UserRepositoryPort',

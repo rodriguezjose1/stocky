@@ -15,6 +15,7 @@ export class Cart {
     public items: any[],
     public totalReseller: number,
     public totalRetail: number,
+    public totalWholesale: number,
     public active: boolean,
   ) {}
 }

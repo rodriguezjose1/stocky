@@ -20,11 +20,18 @@ export interface Prices {
   cost?: number;
   retail: number;
   reseller: number;
+  wholesale?: number;
 }
 
 export interface Percentages {
   reseller: number;
   retail: number;
+  wholesale?: number;
+}
+
+export interface WholesaleData {
+  isWholesaler: boolean;
+  minimumQuantity: number;
 }
 
 export class CreateProductDto {
@@ -41,6 +48,7 @@ export class CreateProductDto {
     public sizeType: string,
     public sizes: string[],
     public colors: string[],
+    public wholesaleData?: WholesaleData,
   ) {}
 }
 
@@ -59,6 +67,12 @@ export class PricesDTO {
   @Min(0)
   @Type(() => Number)
   reseller: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  wholesale: number;
 }
 
 export class UpdateProductDto {
@@ -116,6 +130,7 @@ export class Product {
     public sizes?: string[],
     public colors?: string[],
     public createdAt?: Date,
+    public wholesaleData?: WholesaleData,
   ) {}
 }
 
@@ -239,6 +254,10 @@ export class FilterProductsDto {
   @Type(() => Number)
   @Min(1)
   limit?: number = 20;
+
+  @IsBoolean()
+  @Transform(({ value }) => value === 'true')
+  isWholesaler: boolean = false;
 }
 
 export class GetProductByIdQueryDto extends FilterProductsDto {
@@ -280,6 +299,11 @@ export class CalculatePricesDto {
   @Type(() => Number)
   @Min(0)
   percentageRetail: number;
+
+  @IsNumber()
+  @Type(() => Number)
+  @Min(0)
+  percentageWholesale: number;
 }
 
 export class IncreasePrices {

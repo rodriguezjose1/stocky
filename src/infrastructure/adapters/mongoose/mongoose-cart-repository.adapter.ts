@@ -44,6 +44,7 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
           prices: {
             retail: product.prices.retail,
             reseller: product.prices.reseller,
+            wholesale: product.prices.wholesale,
           },
           pictures: product.pictures,
         },
@@ -110,10 +111,12 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
     if (cart.items.length === 0) {
       cart.totalReseller = 0;
       cart.totalRetail = 0;
+      cart.totalWholesale = 0;
       return;
     }
     cart.totalReseller = cart.items.reduce((total, item) => total + item.product.prices.reseller * item.quantity, 0);
     cart.totalRetail = cart.items.reduce((total, item) => total + item.product.prices.retail * item.quantity, 0);
+    cart.totalWholesale = cart.items.reduce((total, item) => total + item.product.prices.wholesale * item.quantity, 0);
   }
 
   async updateCart(cart: any): Promise<Cart> {
@@ -142,6 +145,7 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
       })),
       totalReseller: cart.total_reseller,
       totalRetail: cart.total_retail,
+      totalWholesale: cart.total_wholesale,
       active: cart.active,
     };
   }

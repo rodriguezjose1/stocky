@@ -208,6 +208,7 @@ export class StockUseCases {
           cost: stock.costPrice,
           retail: product.prices.retail,
           reseller: product.prices.reseller,
+          wholesale: product.prices.wholesale,
         },
       });
 

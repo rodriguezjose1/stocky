@@ -30,6 +30,7 @@ export interface Prices {
   cost?: number;
   retail: number;
   reseller: number;
+  wholesale?: number;
 }
 
 @Schema({ _id: false })
@@ -42,11 +43,15 @@ export class PricesSchema {
 
   @Prop({ required: true })
   reseller: number;
+
+  @Prop({ required: false })
+  wholesale?: number;
 }
 
 interface Percentages {
   reseller: number;
   retail: number;
+  wholesale?: number;
 }
 
 @Schema({ _id: false })
@@ -56,6 +61,23 @@ class PercentagesSchema {
 
   @Prop({ required: true })
   reseller: number;
+
+  @Prop({ required: false })
+  wholesale?: number;
+}
+
+@Schema({ _id: false })
+class WholesaleDataSchema {
+  @Prop({ type: Boolean, required: true })
+  is_wholesaler: boolean;
+
+  @Prop({ type: Number, required: true })
+  minimum_quantity: number;
+}
+
+interface WholesaleData {
+  is_wholesaler: boolean;
+  minimum_quantity: number;
 }
 
 @Schema({ timestamps: true, collection: 'products' })
@@ -99,6 +121,9 @@ export class ProductModel extends Document {
 
   @Prop({ type: [String], default: [] })
   colors: string[];
+
+  @Prop({ type: WholesaleDataSchema, required: true })
+  wholesale_data: WholesaleData;
 
   stocks: any;
   quantity: any;

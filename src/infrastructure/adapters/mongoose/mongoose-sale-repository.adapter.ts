@@ -152,6 +152,7 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
             {
               retail: detail.prices.retail,
               reseller: detail.prices.reseller,
+              wholesale: detail.prices.wholesale,
             },
             {
               productName: detail.variant_data.product_name,

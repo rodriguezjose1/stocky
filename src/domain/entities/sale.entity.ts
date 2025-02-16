@@ -26,6 +26,7 @@ export class Prices {
     public cost?: number,
     public retail?: number,
     public reseller?: number,
+    public wholesale?: number,
   ) {}
 }
 

@@ -11,7 +11,7 @@ export interface ProductRepositoryPort {
   filterProducts(filterDto: FilterProductsDto): Promise<ResGetProductsDto>;
   findByIdAdmin(id: string, filter): Promise<Product | null>;
   findByCodeOrName(filter): Promise<ResGetProductsDto>;
-  calculatePrices(costPrice, percentageReseller, percentageRetail): any;
+  calculatePrices(costPrice, percentageReseller, percentageRetail, percentageWholesale): any;
   increasePrices(data: IncreasePrices): Promise<Product[]>;
   savePriceHistory(priceHistory: any): Promise<any>;
 }

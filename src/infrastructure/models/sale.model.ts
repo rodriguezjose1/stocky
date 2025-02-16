@@ -25,6 +25,7 @@ export interface Prices {
   cost?: number;
   retail?: number;
   reseller?: number;
+  wholesale?: number;
 }
 
 @Schema({ _id: false })
@@ -37,6 +38,9 @@ export class PricesSchema {
 
   @Prop({})
   reseller?: number;
+
+  @Prop({})
+  wholesale?: number;
 }
 
 @Schema()

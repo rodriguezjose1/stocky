@@ -53,6 +53,7 @@ export class SalesUseCase {
         const prices: Prices = {
           retail: product.prices.retail,
           reseller: product.prices.reseller,
+          wholesale: product.prices.wholesale,
         };
         const variantData = {
           productName: product.name,

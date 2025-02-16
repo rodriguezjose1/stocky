@@ -56,10 +56,12 @@ export class ProductUseCases {
       costPrice: product.prices.cost,
       percentageReseller: product.percentages.reseller,
       percentageRetail: product.percentages.retail,
+      percentageWholesale: product.percentages.wholesale,
     });
 
     product.prices.reseller = calculatePrices.reseller;
     product.prices.retail = calculatePrices.retail;
+    product.prices.wholesale = calculatePrices.wholesale;
 
     const createdProduct = await this.productRepository.create({ ...product, categories: categoryIds, categoriesFilter: categoryPaths });
 
@@ -77,10 +79,12 @@ export class ProductUseCases {
         costPrice: product.prices.cost,
         percentageReseller: productDB.percentages.reseller,
         percentageRetail: productDB.percentages.retail,
+        percentageWholesale: productDB.percentages.wholesale,
       });
 
       product.prices.reseller = calculatedPrices.reseller;
       product.prices.retail = calculatedPrices.retail;
+      product.prices.wholesale = calculatedPrices.wholesale;
 
       this.productRepository.savePriceHistory({
         productId: productDB.id,
@@ -132,8 +136,8 @@ export class ProductUseCases {
     return this.productRepository.findByCodeOrName(filter);
   }
 
-  async calculatePrices({ costPrice, percentageReseller, percentageRetail }) {
-    return this.productRepository.calculatePrices(costPrice, percentageReseller, percentageRetail);
+  async calculatePrices({ costPrice, percentageReseller, percentageRetail, percentageWholesale }) {
+    return this.productRepository.calculatePrices(costPrice, percentageReseller, percentageRetail, percentageWholesale);
   }
 
   async increasePrices(data: IncreasePrices) {

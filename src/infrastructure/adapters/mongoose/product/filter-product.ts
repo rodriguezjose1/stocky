@@ -25,6 +25,7 @@ export class FilterProduct {
       hasStock,
       page = 1,
       limit = 20,
+      isWholesaler,
     } = filterDto;
 
     const match: any = {};
@@ -65,6 +66,10 @@ export class FilterProduct {
     // Filtro por marca
     if (brand) {
       match['attributes.brand'] = { $in: brand.split(',').map((b) => b.toLowerCase()) };
+    }
+
+    if (isWholesaler) {
+      match['wholesale_data.is_wholesaler'] = isWholesaler;
     }
 
     const aggregatePipeline: any[] = [{ $match: match }];
@@ -165,6 +170,7 @@ export class FilterProduct {
         colors: { $first: '$colors' },
         sizeType: { $first: '$size_type' },
         createdAt: { $first: '$createdAt' },
+        wholesale_data: { $first: '$wholesale_data' },
       },
     });
 
@@ -190,6 +196,7 @@ export class FilterProduct {
         colors: { $ifNull: ['$colors', []] },
         size_type: '$sizeType',
         createdAt: '$createdAt',
+        wholesale_data: '$wholesale_data',
       },
     });
 
