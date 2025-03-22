@@ -26,6 +26,11 @@ export class AddProductToCartDTO {
     public productId: string,
     public variantId: string,
     public quantity: number,
+    public isWholesalePackage?: boolean,
+    public wholesaleVariants?: {
+      variantId: string;
+      quantity: number;
+    }[]
   ) {}
 }
 

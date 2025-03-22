@@ -71,13 +71,17 @@ class WholesaleDataSchema {
   @Prop({ type: Boolean, required: true })
   is_wholesaler: boolean;
 
-  @Prop({ type: Number, required: true })
-  minimum_quantity: number;
+  @Prop({ type: [Number], required: true })
+  predefined_quantities: number[];
+
+  @Prop({ type: String, enum: ['simple', 'complex'], required: true })
+  package_type: string;
 }
 
 interface WholesaleData {
   is_wholesaler: boolean;
-  minimum_quantity: number;
+  predefined_quantities: number[];
+  package_type: string;
 }
 
 @Schema({ timestamps: true, collection: 'products' })

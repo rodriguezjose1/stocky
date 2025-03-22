@@ -47,6 +47,18 @@ export class CartItem extends Document {
 
   @Prop()
   quantity: number;
+
+  @Prop({ type: Boolean, default: false })
+  is_wholesale_package: boolean;
+
+  @Prop({ type: [{
+    variant: { type: VariantSchema },
+    quantity: Number
+  }] })
+  wholesale_variants: {
+    variant: VariantModel;
+    quantity: number;
+  }[];
 }
 
 export const CartItemSchema = SchemaFactory.createForClass(CartItem);

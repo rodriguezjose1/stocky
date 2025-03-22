@@ -31,7 +31,22 @@ export interface Percentages {
 
 export interface WholesaleData {
   isWholesaler: boolean;
-  minimumQuantity: number;
+  predefinedQuantities: number[];
+  packageType: 'simple' | 'complex';
+}
+
+export class WholesaleDataDTO {
+  @IsBoolean()
+  isWholesaler: boolean;
+
+  @IsArray()
+  @ArrayMinSize(1, { message: 'predefinedQuantities must have at least one quantity' })
+  @IsNumber({}, { each: true })
+  @Min(1, { each: true })
+  predefinedQuantities: number[];
+
+  @IsEnum(['simple', 'complex'])
+  packageType: 'simple' | 'complex';
 }
 
 export class CreateProductDto {
@@ -104,11 +119,13 @@ export class UpdateProductDto {
   @IsString()
   sizeType: string;
 
-  // @IsArray()
-  // sizes: string[];
-
   @IsArray()
   colors: string[];
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => WholesaleDataDTO)
+  wholesaleData?: WholesaleDataDTO;
 }
 
 export class Product {
@@ -258,6 +275,10 @@ export class FilterProductsDto {
   @IsBoolean()
   @Transform(({ value }) => value === 'true')
   isWholesaler: boolean = false;
+
+  @IsOptional()
+  @IsEnum(['simple', 'complex'])
+  wholesalePackageType?: 'simple' | 'complex';
 }
 
 export class GetProductByIdQueryDto extends FilterProductsDto {

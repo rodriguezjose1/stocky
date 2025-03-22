@@ -29,14 +29,19 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
   }
 
   // Add a product to the cart
-  async addProduct(cartId: string, product: Product, variant: Variant, quantity: number): Promise<Cart> {
+  async addProduct(cartId: string, product: Product, variant: Variant, quantity: number, isWholesalePackage?: boolean, wholesaleVariants?: any[]): Promise<Cart> {
     const cart = await this.getCartById(cartId);
 
-    const cartItem = cart.items.find((item) => item.product._id.toString() === product.id && item.variant._id.toString() === variant.id);
+    const cartItem = cart.items.find((item) => 
+      item.product._id.toString() === product.id && 
+      item.variant._id.toString() === variant.id &&
+      item.is_wholesale_package === isWholesalePackage
+    );
+
     if (cartItem) {
       cartItem.quantity += quantity;
     } else {
-      cart.items.push({
+      const newItem = {
         product: {
           _id: product.id,
           name: product.name,
@@ -54,7 +59,21 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
           color: variant.color,
         },
         quantity,
-      });
+        is_wholesale_package: isWholesalePackage || false,
+      };
+
+      if (isWholesalePackage && wholesaleVariants) {
+        newItem['wholesale_variants'] = wholesaleVariants.map(wv => ({
+          variant: {
+            _id: wv.variantId,
+            size: wv.size,
+            color: wv.color,
+          },
+          quantity: wv.quantity,
+        }));
+      }
+
+      cart.items.push(newItem);
     }
 
     cart.id = cartId;

@@ -212,10 +212,11 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
       categories_filter: (product.categoriesFilter as any) || undefined,
       categories: (product.categories as any) || undefined,
       has_stock: product.hasStock,
-      wholesale_data: {
+      wholesale_data: product.wholesaleData ? {
         is_wholesaler: product.wholesaleData.isWholesaler,
-        minimum_quantity: product.wholesaleData.minimumQuantity,
-      },
+        predefined_quantities: product.wholesaleData.predefinedQuantities,
+        package_type: product.wholesaleData.packageType
+      } : undefined,
     };
   }
 
@@ -226,11 +227,15 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
         id: category._id.toString(),
         name: category.name,
         slug: category.slug,
-        // parent: category.parent?.toString(),
       }));
     } else {
       categories = productModel.categories?.map((category) => category.toString());
     }
+
+    const categoriesFilter = productModel.categories_filter?.map(row => 
+      row.map(id => id.toString())
+    );
+
     return new Product(
       productModel._id.toString(),
       productModel.name,
@@ -242,7 +247,7 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
       productModel.prices,
       productModel.percentages,
       productModel.has_stock,
-      undefined,
+      categoriesFilter,
       productModel.stocks
         ? productModel.stocks.map((stock) => ({
             id: stock._id.toString(),
@@ -261,7 +266,11 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
       productModel.sizes,
       productModel.colors,
       productModel.createdAt,
-      { isWholesaler: productModel.wholesale_data?.is_wholesaler || false, minimumQuantity: productModel.wholesale_data?.minimum_quantity || 0 },
+      productModel.wholesale_data ? {
+        isWholesaler: productModel.wholesale_data.is_wholesaler,
+        predefinedQuantities: productModel.wholesale_data.predefined_quantities,
+        packageType: productModel.wholesale_data.package_type as 'simple' | 'complex'
+      } : undefined
     );
   }
 }
