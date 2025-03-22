@@ -4,13 +4,14 @@ import mongoose from 'mongoose';
 import { SaleDetail, StocksUpdated } from 'src/domain/entities/sale.entity';
 import { Variant } from 'src/domain/entities/variant.entity';
 import { InsufficientStockException } from 'src/domain/exceptions/insufficient-stock.exception';
-import { ReqGetStocksDto, ResGetStocksDto, Stock, UpdateStockDto } from '../../domain/entities/stock.entity';
+import { ReqGetStocksDto, ResGetStocksDto, Stock, UpdateStockDto, IncrementStockDto, DecrementStockDto } from '../../domain/entities/stock.entity';
 import { StockRepositoryPort } from '../../domain/ports/stock-repository.port';
 import { VariantUseCases } from './variant.use-cases';
 import { ProductUseCases } from './product.use-cases';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { StockCreatedEvent, StockDecrementedEvent, StockIncrementedEvent } from 'src/async-events/events/stock.events';
 import { DEFAULT_ERROR, QUANTITY_LESS_THAN_CURRENT_TOTAL } from '../error.constants';
+import { StockMovementUseCases } from './stock-movement.use-cases';
 
 @Injectable()
 export class StockUseCases {
@@ -20,6 +21,7 @@ export class StockUseCases {
     private variantUseCases: VariantUseCases,
     private productUseCases: ProductUseCases,
     private eventEmitter: EventEmitter2,
+    private stockMovementUseCases: StockMovementUseCases,
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) {}
 
@@ -85,11 +87,8 @@ export class StockUseCases {
   }
 
   async createStock(stockDto: UpdateStockDto, session?): Promise<{ stock: Stock; isCreated: boolean }> {
-    // const session = await this.connection.startSession();
     let isCreated = false;
     try {
-      // session.startTransaction();
-
       if (!stockDto.date) {
         stockDto.date = new Date();
       }
@@ -120,11 +119,22 @@ export class StockUseCases {
           quantity: stockDto.quantity,
           costPrice: stockDto.costPrice,
           date: stockDto.date,
+          userId: stockDto.userId,
         };
 
         stock = await this.stockRepository.create(stockToSave, session);
-        // this.eventEmitter.emit('stock.created', new StockCreatedEvent(stock.id));
         isCreated = true;
+
+        // Track stock movement for new stock
+        await this.stockMovementUseCases.createIncrementMovement(
+          stockDto.product,
+          variantId,
+          0,
+          stockDto.quantity,
+          stockDto.costPrice,
+          'Initial stock creation',
+          stockDto.userId,
+        );
       } else {
         // update existing stock
         const stockDB = await this.stockRepository.getByVariantAndProductAndCostPriceWithQuantity(stockDto.product, variantId, stockDto.costPrice);
@@ -140,25 +150,33 @@ export class StockUseCases {
             quantity: stockDto.quantity,
             costPrice: stockDto.costPrice,
             date: stockDto.date,
+            userId: stockDto.userId,
           };
 
           stock = await this.stockRepository.create(stockToSave, session);
-          // this.eventEmitter.emit('stock.created', new StockCreatedEvent(stock.id));
           isCreated = true;
+
+          // Track stock movement for new stock with different cost price
+          await this.stockMovementUseCases.createIncrementMovement(
+            stockDto.product,
+            variantId,
+            0,
+            stockDto.quantity,
+            stockDto.costPrice,
+            'New stock with different cost price',
+            stockDto.userId,
+          );
         } else {
           const diff = stockDB.quantity + stockDto.quantity;
           if (diff <= 0) {
             throw new BadRequestException(QUANTITY_LESS_THAN_CURRENT_TOTAL);
           }
-          stock = await this.incrementStock(stockDB.id, { quantity: stockDto.quantity }, session);
+          stock = await this.incrementStock(stockDB.id, { quantity: stockDto.quantity, userId: stockDto.userId }, session);
         }
       }
 
-      // await session.commitTransaction();
-
       return { stock, isCreated };
     } catch (error) {
-      // await session.abortTransaction();
       console.log('create-stock-error', JSON.stringify(error));
       throw error;
     }
@@ -172,30 +190,40 @@ export class StockUseCases {
     return this.stockRepository.delete(id);
   }
 
-  async incrementStock(stockId, { quantity }, session?): Promise<Stock | null> {
-    const stock = await this.stockRepository.incrementStock(stockId, quantity, session);
+  async incrementStock(stockId: string, incrementDto: IncrementStockDto, session?): Promise<Stock | null> {
+    const stock = await this.stockRepository.incrementStock(stockId, incrementDto.quantity, session);
+    
+    // Track stock movement for increment
+    await this.stockMovementUseCases.createIncrementMovement(
+      stock.product,
+      stock.variant,
+      stock.quantity - incrementDto.quantity,
+      stock.quantity,
+      stock.costPrice,
+      'Stock increment',
+      incrementDto.userId,
+    );
+
     this.eventEmitter.emit('stock.incremented', new StockIncrementedEvent(stockId));
     return stock;
   }
 
-  async decrementStock(productId, variantId, { quantity: decrementAmount }): Promise<StocksUpdated[]> {
+  async decrementStock(productId: string, variantId: string, decrementDto: DecrementStockDto): Promise<StocksUpdated[]> {
     const decremented: StocksUpdated[] = [];
     const stocks = await this.stockRepository.getStockByVariantIdAndProductId(variantId, productId);
     const product = await this.productUseCases.getProductById(stocks[0].product);
 
-    let remaining = decrementAmount; // Cuánto stock queda por decrementar
+    let remaining = decrementDto.quantity;
 
     let quantitySaved = 0;
     for (const stock of stocks) {
-      if (remaining <= 0) break; // Si ya hemos decrementado suficiente, salimos
+      if (remaining <= 0) break;
 
       if (stock.quantity >= remaining) {
-        // Si este registro tiene suficiente stock para cubrir lo que queda
         stock.quantity -= remaining;
         quantitySaved = remaining;
-        remaining = 0; // Ya no necesitamos restar más
+        remaining = 0;
       } else {
-        // Si no tiene suficiente stock, restamos todo el stock disponible y seguimos
         remaining -= stock.quantity;
         quantitySaved = stock.quantity;
         stock.quantity = 0;
@@ -210,6 +238,17 @@ export class StockUseCases {
           reseller: product.prices.reseller,
         },
       });
+
+      // Track stock movement for decrement
+      await this.stockMovementUseCases.createDecrementMovement(
+        productId,
+        variantId,
+        stock.quantity + quantitySaved,
+        stock.quantity,
+        stock.costPrice,
+        'Stock decrement',
+        decrementDto.userId,
+      );
 
       // Guardamos los cambios en la base de datos
       await this.stockRepository.update(stock.id, { quantity: stock.quantity });

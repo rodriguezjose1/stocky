@@ -2,6 +2,16 @@ import { IsInt, IsOptional, Min } from 'class-validator';
 import { Variant } from './variant.entity';
 import { Type } from 'class-transformer';
 
+export interface IncrementStockDto {
+  quantity: number;
+  userId: string;
+}
+
+export interface DecrementStockDto {
+  quantity: number;
+  userId: string;
+}
+
 export class Stock {
   constructor(
     public id: string,
@@ -10,6 +20,7 @@ export class Stock {
     public quantity: number,
     public costPrice: number,
     public date: Date,
+    public userId?: string,
   ) {}
 }
 
@@ -20,6 +31,7 @@ export class UpdateStockDto {
     public quantity: number,
     public costPrice: number,
     public date: Date,
+    public userId?: string,
   ) {}
 }
 

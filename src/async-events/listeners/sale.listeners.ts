@@ -5,6 +5,7 @@ import { SalesUseCase } from 'src/application/use-cases/sale.use-cases';
 import { StockUseCases } from 'src/application/use-cases/stock.use-cases';
 import { SaleStatus } from 'src/domain/entities/sale.entity';
 import { SaleCreatedEvent, SaleUpdatedEvent } from '../events/sale.events';
+import { SYSTEM_USER_ID } from 'src/domain/constants/system.constants';
 
 @Injectable()
 export class SaleListener {
@@ -30,6 +31,7 @@ export class SaleListener {
     for (const detail of sale.details) {
       const decremented = await this.stockUseCases.decrementStock(detail.productId, detail.variantId, {
         quantity: detail.quantity,
+        userId: SYSTEM_USER_ID.toString(),
       });
 
       stocksUpdated.push(...decremented);
@@ -60,6 +62,7 @@ export class SaleListener {
       for (const stockUpdated of sale.stocksUpdated) {
         await this.stockUseCases.incrementStock(stockUpdated.stock, {
           quantity: stockUpdated.quantity,
+          userId: SYSTEM_USER_ID.toString(),
         });
       }
     }

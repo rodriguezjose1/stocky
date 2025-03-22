@@ -143,7 +143,15 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
         color: variant.color,
       };
     }
-    return new Stock(stockModel._id.toString(), product, variant, stockModel.quantity, stockModel.cost_price, stockModel.date);
+    return new Stock(
+      stockModel._id.toString(),
+      product,
+      variant,
+      stockModel.quantity,
+      stockModel.cost_price,
+      stockModel.date,
+      stockModel.user_id?.toString(),
+    );
   }
 
   private mapToModel(stock: Partial<Stock>): Partial<StockModel> {
@@ -153,6 +161,7 @@ export class MongooseStockRepositoryAdapter implements StockRepositoryPort {
       cost_price: stock.costPrice,
       quantity: stock.quantity,
       date: stock.date,
+      user_id: stock.userId ? new Types.ObjectId(stock.userId) : undefined,
     };
   }
 }

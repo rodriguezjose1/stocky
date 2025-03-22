@@ -1,9 +1,12 @@
 // interfaces/http/stock.controller.ts
-import { Controller, Get, Post, Put, Delete, Param, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { StockUseCases } from '../../application/use-cases/stock.use-cases';
 import { ReqGetStocksDto, ResGetStocksDto, Stock, UpdateStockDto } from '../../domain/entities/stock.entity';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { User } from '../decorators/user.decorator';
 
 @Controller('stock')
+@UseGuards(JwtAuthGuard)
 export class StockController {
   constructor(private stockUseCases: StockUseCases) {}
 
@@ -27,8 +30,11 @@ export class StockController {
   }
 
   @Post()
-  async createStock(@Body() stock: UpdateStockDto) {
-    const newStock = await this.stockUseCases.createStock(stock);
+  async createStock(@Body() stock: UpdateStockDto, @User() user: any) {
+    const newStock = await this.stockUseCases.createStock({
+      ...stock,
+      userId: user.id,
+    });
 
     return {
       stock: newStock,
@@ -36,8 +42,12 @@ export class StockController {
   }
 
   @Post('multiple')
-  async createStockMultiple(@Body() stock: UpdateStockDto[]) {
-    const newStocks = await this.stockUseCases.createStockMultiple(stock);
+  async createStockMultiple(@Body() stocks: UpdateStockDto[], @User() user: any) {
+    const stocksWithUserId = stocks.map(stock => ({
+      ...stock,
+      userId: user.id,
+    }));
+    const newStocks = await this.stockUseCases.createStockMultiple(stocksWithUserId);
 
     return {
       stocks: newStocks,
@@ -45,8 +55,11 @@ export class StockController {
   }
 
   @Put(':id')
-  async updateStock(@Param('id') id: string, @Body() stock: Partial<Stock>) {
-    return this.stockUseCases.updateStock(id, stock);
+  async updateStock(@Param('id') id: string, @Body() stock: Partial<Stock>, @User() user: any) {
+    return this.stockUseCases.updateStock(id, {
+      ...stock,
+      userId: user.id,
+    });
   }
 
   @Delete(':id')

@@ -17,6 +17,9 @@ export class StockModel extends Document {
 
   @Prop({ default: new Date() })
   date: Date;
+
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'UserModel' })
+  user_id: Types.ObjectId;
 }
 
 export const StockSchema = SchemaFactory.createForClass(StockModel);
