@@ -11,7 +11,7 @@ export class PurchaseListener {
     private purchaseUseCases: PurchasesUseCase,
   ) {}
 
-  @OnEvent('stock.created')
+  // @OnEvent('stock.created')
   async handlePurchaseCreated(event: PurchaseCreatedEvent) {
     console.log('Purchase created:', event.purchaseId);
     const purchase = await this.purchaseUseCases.findById(event.purchaseId);
