@@ -3,9 +3,16 @@ export class StockCreatedEvent {
 }
 
 export class StockIncrementedEvent {
-  constructor(public readonly stockId: string) {}
+  constructor(
+    public readonly stockId: string,
+    public readonly productId: string,
+    public readonly quantity: number,
+  ) {}
 }
 
 export class StockDecrementedEvent {
-  constructor(public readonly productId: string) {}
+  constructor(
+    public readonly productId: string,
+    public readonly quantity: number,
+  ) {}
 }

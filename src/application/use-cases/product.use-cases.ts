@@ -96,6 +96,7 @@ export class ProductUseCases {
       });
     }
 
+    let isUpdatedCategories = false;
     if (product.categories && !this.areArraysEqual(product.categories, productDB.categories)) {
       const categories = await this.categoryUseCases.getCategoriesBy({ _id: { $in: product.categories.map((id) => new Types.ObjectId(id)) } });
 
@@ -108,6 +109,13 @@ export class ProductUseCases {
       const categoryPaths = this.buildCategoryPaths(categories);
       product.categoriesFilter = categoryPaths;
 
+      const productAttributeSubtypeSize = await this.productAttributesSubtypeUseCases.getProductAttributeSubtypeById(product.sizeType);
+      const sizes = await this.productAttributesUseCases.getProductAttributes('size', productAttributeSubtypeSize.value);
+      product.sizes = sizes.map((size) => size.label || size.value);
+      isUpdatedCategories = true;
+    }
+
+    if (product.sizeType && !isUpdatedCategories) {
       const productAttributeSubtypeSize = await this.productAttributesSubtypeUseCases.getProductAttributeSubtypeById(product.sizeType);
       const sizes = await this.productAttributesUseCases.getProductAttributes('size', productAttributeSubtypeSize.value);
       product.sizes = sizes.map((size) => size.label || size.value);

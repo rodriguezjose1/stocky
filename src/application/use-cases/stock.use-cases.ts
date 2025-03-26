@@ -147,7 +147,7 @@ export class StockUseCases {
           isCreated = true;
         } else {
           const diff = stockDB.quantity + stockDto.quantity;
-          if (diff <= 0) {
+          if (diff < 0) {
             throw new BadRequestException(QUANTITY_LESS_THAN_CURRENT_TOTAL);
           }
           stock = await this.incrementStock(stockDB.id, { quantity: stockDto.quantity }, session);
@@ -174,7 +174,7 @@ export class StockUseCases {
 
   async incrementStock(stockId, { quantity }, session?): Promise<Stock | null> {
     const stock = await this.stockRepository.incrementStock(stockId, quantity, session);
-    this.eventEmitter.emit('stock.incremented', new StockIncrementedEvent(stockId));
+    this.eventEmitter.emit('stock.incremented', new StockIncrementedEvent(stockId, stock.product, quantity));
     return stock;
   }
 
@@ -216,7 +216,7 @@ export class StockUseCases {
       await this.stockRepository.update(stock.id, { quantity: stock.quantity });
     }
 
-    this.eventEmitter.emit('stock.decremented', new StockDecrementedEvent(product.id));
+    this.eventEmitter.emit('stock.decremented', new StockDecrementedEvent(product.id, decrementAmount));
 
     return decremented;
   }

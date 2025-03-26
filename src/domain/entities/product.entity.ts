@@ -91,34 +91,44 @@ export class PricesDTO {
 }
 
 export class UpdateProductDto {
+  @IsOptional()
   @IsString()
   name: string;
 
+  @IsOptional()
   @IsString()
   description: string;
 
+  @IsOptional()
   @IsString()
   code: string;
 
+  @IsOptional()
   @IsArray()
   categories: string[];
 
+  @IsOptional()
   @IsObject()
   attributes: Attributes;
 
+  @IsOptional()
   @IsArray()
   pictures: Image[];
 
+  @IsOptional()
   @ValidateNested()
   @Type(() => PricesDTO)
   prices: PricesDTO;
 
+  @IsOptional()
   @IsObject()
   percentages: Percentages;
 
+  @IsOptional()
   @IsString()
   sizeType: string;
 
+  @IsOptional()
   @IsArray()
   colors: string[];
 
