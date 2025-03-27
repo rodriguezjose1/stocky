@@ -37,6 +37,12 @@ export interface WholesaleData {
 
 export class WholesaleDataDTO {
   @IsBoolean()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value === 'true';
+    }
+    return value;
+  })
   isWholesaler: boolean;
 
   @IsArray()
@@ -50,21 +56,71 @@ export class WholesaleDataDTO {
 }
 
 export class CreateProductDto {
-  constructor(
-    public id: string,
-    public name: string,
-    public description: string,
-    public code: string,
-    public categories: string[],
-    public attributes: Attributes,
-    public pictures: Image[],
-    public prices: Prices,
-    public percentages: Percentages,
-    public sizeType: string,
-    public sizes: string[],
-    public colors: string[],
-    public wholesaleData?: WholesaleData,
-  ) {}
+  id: string;
+
+  @IsString()
+  name: string;
+
+  @IsString()
+  description: string;
+
+  @IsString()
+  code: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  categories: string[];
+
+  @IsObject()
+  attributes: Attributes;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  pictures: Image[];
+
+  prices: Prices;
+
+  @ValidateNested()
+  @Type(() => PercentagesDTO)
+  @IsObject()
+  percentages: Percentages;
+
+  @IsString()
+  sizeType: string;
+
+  sizes: string[];
+
+  @IsArray()
+  @IsString({ each: true })
+  colors: string[];
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => WholesaleDataDTO)
+  wholesaleData?: WholesaleData;
+}
+
+export class ImageDTO {
+  @IsString()
+  url: string;
+
+  @IsString()
+  alt_text: string;
+}
+
+export class PercentagesDTO {
+  @IsNumber()
+  @Min(0)
+  reseller: number;
+
+  @IsNumber()
+  @Min(0)
+  retail: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  wholesale?: number = 0;
 }
 
 export class PricesDTO {
@@ -283,7 +339,12 @@ export class FilterProductsDto {
   limit?: number = 20;
 
   @IsBoolean()
-  @Transform(({ value }) => value === 'true')
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value === 'true';
+    }
+    return value;
+  })
   isWholesaler: boolean = false;
 
   @IsOptional()

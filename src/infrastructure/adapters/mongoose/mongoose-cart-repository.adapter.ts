@@ -1,10 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
-import { Types } from 'mongoose';
-import { Connection, Model } from 'mongoose';
+import { Connection, Model, Types } from 'mongoose';
 import { Cart } from 'src/domain/entities/cart.entity';
-import { Product } from 'src/domain/entities/product.entity';
-import { Variant } from 'src/domain/entities/variant.entity';
 import { ICartRepository } from 'src/domain/ports/cart-repository.port';
 import { CartModel, CartSchema } from 'src/infrastructure/models/cart.model.model';
 import { StockModel, StockSchema } from 'src/infrastructure/models/stock.model';
@@ -29,54 +26,10 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
   }
 
   // Add a product to the cart
-  async addProduct(cartId: string, product: Product, variant: Variant, quantity: number, isWholesalePackage?: boolean, wholesaleVariants?: any[]): Promise<Cart> {
-    const cart = await this.getCartById(cartId);
-
-    const cartItem = cart.items.find((item) => 
-      item.product._id.toString() === product.id && 
-      item.variant._id.toString() === variant.id &&
-      item.is_wholesale_package === isWholesalePackage
-    );
-
-    if (cartItem) {
-      cartItem.quantity += quantity;
-    } else {
-      const newItem = {
-        product: {
-          _id: product.id,
-          name: product.name,
-          code: product.code,
-          prices: {
-            retail: product.prices.retail,
-            reseller: product.prices.reseller,
-            wholesale: product.prices.wholesale,
-          },
-          pictures: product.pictures,
-        },
-        variant: {
-          _id: variant.id,
-          size: variant.size,
-          color: variant.color,
-        },
-        quantity,
-        is_wholesale_package: isWholesalePackage || false,
-      };
-
-      if (isWholesalePackage && wholesaleVariants) {
-        newItem['wholesale_variants'] = wholesaleVariants.map(wv => ({
-          variant: {
-            _id: wv.variantId,
-            size: wv.size,
-            color: wv.color,
-          },
-          quantity: wv.quantity,
-        }));
-      }
-
-      cart.items.push(newItem);
-    }
-
-    cart.id = cartId;
+  async addProduct(
+    cart,
+  ): Promise<Cart> {
+    cart.id = cart._id.toString();
     this.calculateTotal(cart);
     return this.updateCart(this.mapToModel(cart));
   }
@@ -112,12 +65,20 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
   }
 
   async getCartByUser(userId: string): Promise<Cart> {
-    const cart = await this.cartModel.findOne({ userId, active: true }).exec();
+    const cart: Cart = await this.cartModel.findOne({ userId, active: true }).lean();
 
     if (cart && cart.items.length > 0) {
       const calls = cart.items.map(async (item, i) => {
-        const stock = await this.stockModel.findOne({ product: item.product._id, variant: item.variant.id }).exec();
-        cart.items[i].stock = stock;
+        if (item.is_wholesale_package) {
+          const calls = item.wholesale_variants.map(async (wv, j) => {
+            const stock = await this.stockModel.findOne({ product: item.product._id, variant: wv.variant._id }).exec();
+            item.wholesale_variants[j].stock = stock;
+          });
+          await Promise.all(calls);
+        } else {
+          const stock = await this.stockModel.findOne({ product: item.product._id, variant: item.variant._id }).exec();
+          item.stock = stock;
+        }
       });
       await Promise.all(calls);
     }
@@ -149,6 +110,7 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
       items: cart.items,
       total_reseller: cart.totalReseller,
       total_retail: cart.totalRetail,
+      total_wholesale: cart.totalWholesale,
       active: cart.active,
     };
   }

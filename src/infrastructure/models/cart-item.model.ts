@@ -34,12 +34,12 @@ interface IProductBrief {
   pictures: Image[];
 }
 
-@Schema()
+@Schema({ _id: false })
 export class CartItem extends Document {
   @Prop({ type: ProductBriefSchema })
   product: IProductBrief;
 
-  @Prop({ type: VariantSchema })
+  @Prop({ type: VariantSchema, default: null })
   variant: VariantModel;
 
   @Prop({ type: SchemaTypes.ObjectId, ref: 'StockModel' })
@@ -51,12 +51,15 @@ export class CartItem extends Document {
   @Prop({ type: Boolean, default: false })
   is_wholesale_package: boolean;
 
+  @Prop({ type: Number, default: 0 })
+  predefined_quantity: number;
+
   @Prop({ type: [{
     variant: { type: VariantSchema },
     quantity: Number
-  }] })
+  }], default: [] })
   wholesale_variants: {
-    variant: VariantModel;
+    variant: VariantModel; 
     quantity: number;
   }[];
 }

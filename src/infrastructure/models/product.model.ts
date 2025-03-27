@@ -68,13 +68,13 @@ class PercentagesSchema {
 
 @Schema({ _id: false })
 class WholesaleDataSchema {
-  @Prop({ type: Boolean, required: true })
+  @Prop({ type: Boolean, default: false })
   is_wholesaler: boolean;
 
-  @Prop({ type: [Number], required: true })
+  @Prop({ type: [Number], default: [] })
   predefined_quantities: number[];
 
-  @Prop({ type: String, enum: ['simple', 'complex'], required: true })
+  @Prop({ type: String, enum: ['simple', 'complex'], default: 'simple' })
   package_type: string;
 }
 
@@ -126,7 +126,7 @@ export class ProductModel extends Document {
   @Prop({ type: [String], default: [] })
   colors: string[];
 
-  @Prop({ type: WholesaleDataSchema, required: true })
+  @Prop({ type: WholesaleDataSchema, required: true, default: { is_wholesaler: false, predefined_quantities: [], package_type: 'simple' } })
   wholesale_data: WholesaleData;
 
   stocks: any;
