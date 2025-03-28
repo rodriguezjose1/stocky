@@ -36,8 +36,13 @@ export class CartController {
   @Roles(Role.ADMIN, Role.SELLER)
   // delete product
   @Delete('/:cartId/remove-product/:variantId')
-  async deleteProduct(@Param('cartId') cartId: string, @Param('variantId') variantId: string) {
-    const cart = await this.cartUseCases.removeProductFromCart(cartId, variantId);
+  async deleteProduct(
+    @Param('cartId') cartId: string,
+    @Param('variantId') variantId: string,
+    @Body('productId') productId: string,
+    @Body('isWholesalePackage') isWholesalePackage: boolean
+  ) {
+    const cart = await this.cartUseCases.removeProductFromCart(cartId, variantId, productId, isWholesalePackage);
     return {
       cart,
     };
@@ -46,8 +51,15 @@ export class CartController {
   @UseGuards(BasicAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.SELLER)
   @Put('/:cartId/update-quantity/:variantId')
-  async updateProductQuantity(@Param('cartId') cartId: string, @Param('variantId') variantId: string, @Body('quantity') quantity: number, @Body('productId') productId: string) {
-    const cart = await this.cartUseCases.updateProductQuantity(cartId, productId, variantId, quantity);
+  async updateProductQuantity(
+    @Param('cartId') cartId: string,
+    @Param('variantId') variantId: string,
+    @Body('quantity') quantity: number,
+    @Body('isWholesalePackage') isWholesalePackage: boolean,
+    @Body('productId') productId: string,
+    @Body('predefinedQuantity') predefinedQuantity: number,
+  ) {
+    const cart = await this.cartUseCases.updateProductQuantity(cartId, productId, variantId, quantity, isWholesalePackage, predefinedQuantity);
     return {
       cart,
     };

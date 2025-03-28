@@ -70,6 +70,7 @@ export class CartUseCases {
         const wholesaleVariants = this.getWholesaleVariants(product, cart, variant, predefinedQuantity, quantity);
         cartItem.wholesale_variants = wholesaleVariants;
         cartItem.quantity = wholesaleVariants.reduce((acc, v) => acc + v.quantity, 0);
+        cartItem.predefined_quantity = predefinedQuantity;
       } else {
         cartItem.quantity += quantity;
       }
@@ -169,18 +170,79 @@ export class CartUseCases {
     }
   }
 
-  async removeProductFromCart(cartId: string, variantId: string): Promise<Cart> {
-    return this.cartRepository.removeProduct(cartId, variantId);
+  async removeProductFromCart(cartId: string, variantId: string, productId: string, isWholesalePackage: boolean): Promise<Cart> {
+    const cart = await this.cartRepository.getCartById(cartId);
+    if (isWholesalePackage) {
+      const cartItem = cart.items.find((item) => item.product._id.toString() === productId && item.is_wholesale_package);
+      if (!cartItem) {
+        throw new BadRequestException('El producto no es un paquete mayorista');
+      }
+
+      // delete from wholesale_variants
+      cartItem.wholesale_variants = cartItem.wholesale_variants.filter((v) => v.variant._id.toString() !== variantId);
+    } else {
+      // delete from normal product
+      cart.items = cart.items.filter((item) => item.product._id.toString() !== productId || item.variant?._id.toString() !== variantId);
+    }
+    return this.cartRepository.removeProduct(cart);
   }
 
-  async updateProductQuantity(cartId: string, productId: string, variantId: string, quantity: number): Promise<Cart> {
+  async updateProductQuantity(cartId: string, productId: string, variantId: string, quantity: number, isWholesalePackage: boolean, predefinedQuantity: number): Promise<Cart> {
     const quantityInStock = await this.stockUseCases.getQuantityByVariantId(productId, variantId);
 
-    if (quantity > quantityInStock) {
+    const cart = await this.cartRepository.getCartById(cartId);
+
+    // Calculate total quantity for specific variant in wholesale packages
+    const totalQuantityInWholesaleVariants = cart.items.reduce((acc, item) => {
+      if (item.product._id.toString() === productId && item.is_wholesale_package) {
+        const variant = item.wholesale_variants.find(v => v.variant._id.toString() === variantId);
+        return acc + (variant?.quantity || 0);
+      }
+      return acc;
+    }, 0);
+  
+
+    // check sum quantities of same product into wholesale variants and normal product
+    const totalQuantityInNormalProduct = cart.items.reduce((acc, item) => {
+      if (item.product._id.toString() === productId && !item.is_wholesale_package) {
+        return acc + item.quantity;
+      }
+      return acc;
+    }, 0);
+
+    const totalQuantity = totalQuantityInWholesaleVariants + totalQuantityInNormalProduct;
+    if (totalQuantity + quantity > quantityInStock) {
       throw new BadRequestException('Insufficient stock');
     }
 
-    return this.cartRepository.updateQuantity(cartId, productId, variantId, quantity);
+    let cartItem;
+    if (isWholesalePackage) {
+      cartItem = cart.items.find((item) => item.product._id.toString() === productId && item.is_wholesale_package);
+      if (!cartItem) {
+        throw new BadRequestException('El producto no es un paquete mayorista');
+      }
+      
+      // find wholesale variant and update quantity
+      const wholesaleVariant = cartItem.wholesale_variants.find((v) => v.variant._id.toString() === variantId);
+      if (!wholesaleVariant) {
+        throw new BadRequestException('La variante no es un paquete mayorista');
+      }
+
+      wholesaleVariant.quantity = quantity;
+      cartItem.quantity = cartItem.wholesale_variants.reduce((acc, v) => acc + v.quantity, 0);
+
+    } else {
+      // find cart item and update quantity
+      cartItem = cart.items.find((item) => item.product._id.toString() === productId && item.variant?._id.toString() === variantId);
+      if (!cartItem) {
+        throw new BadRequestException('El producto no es un paquete mayorista');
+      }
+
+      cartItem.quantity = quantity;
+    }
+
+    cartItem.predefined_quantity = predefinedQuantity;
+    return this.cartRepository.updateQuantity(cart);
   }
 
   async getCartById(cartId: string): Promise<Cart> {

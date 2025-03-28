@@ -35,11 +35,11 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
   }
 
   // Remove a product from the cart
-  async removeProduct(cartId: string, variantId: string): Promise<Cart> {
-    const cart = await this.getCartById(cartId);
-    cart.items = cart.items.filter((item) => item.variant._id.toString() !== variantId);
+  async removeProduct(cartToUpdate): Promise<Cart> {
+    const cart = await this.getCartById(cartToUpdate);
     this.calculateTotal(cart);
-    return this.updateCart(cart);
+    cartToUpdate.id = cartToUpdate._id.toString();
+    return this.updateCart(this.mapToModel(cartToUpdate));
   }
 
   async getVariantInCart(cartId: string, variantId: string): Promise<Cart> {
@@ -48,15 +48,10 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
   }
 
   // Update the quantity of a product in the cart
-  async updateQuantity(cartId: string, productId: string, variantId: string, quantity: number): Promise<Cart> {
-    const cart = await this.getCartById(cartId);
-    const cartItem = cart.items.find((item) => item.product._id.toString() === productId && item.variant._id.toString() === variantId);
-    if (cartItem) {
-      cartItem.quantity = quantity;
-    }
-    this.calculateTotal(cart);
-    cart.id = cartId;
-    return this.updateCart(this.mapToModel(cart));
+  async updateQuantity(cartToUpdate): Promise<Cart> {
+    this.calculateTotal(cartToUpdate);
+    cartToUpdate.id = cartToUpdate._id.toString();
+    return this.updateCart(this.mapToModel(cartToUpdate));
   }
 
   // Get a cart by its ID
