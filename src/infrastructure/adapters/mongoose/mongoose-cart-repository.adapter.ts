@@ -4,15 +4,18 @@ import { Connection, Model, Types } from 'mongoose';
 import { Cart } from 'src/domain/entities/cart.entity';
 import { ICartRepository } from 'src/domain/ports/cart-repository.port';
 import { CartModel, CartSchema } from 'src/infrastructure/models/cart.model.model';
+import { ProductModel, ProductSchema } from 'src/infrastructure/models/product.model';
 import { StockModel, StockSchema } from 'src/infrastructure/models/stock.model';
 
 @Injectable()
 export class MongooseCartRepositoryAdapter implements ICartRepository {
   private cartModel = Model<any>;
   private stockModel = Model<any>;
+  private productModel = Model<any>;
   constructor(@InjectConnection() private connection: Connection) {
     this.cartModel = this.connection.model(CartModel.name, CartSchema);
     this.stockModel = this.connection.model(StockModel.name, StockSchema);
+    this.productModel = this.connection.model(ProductModel.name, ProductSchema);
   }
 
   // Create a new cart for a user
@@ -30,14 +33,14 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
     cart,
   ): Promise<Cart> {
     cart.id = cart._id.toString();
-    this.calculateTotal(cart);
+    await this.calculateTotal(cart);
     return this.updateCart(this.mapToModel(cart));
   }
 
   // Remove a product from the cart
   async removeProduct(cartToUpdate): Promise<Cart> {
     const cart = await this.getCartById(cartToUpdate);
-    this.calculateTotal(cart);
+    await this.calculateTotal(cart);
     cartToUpdate.id = cartToUpdate._id.toString();
     return this.updateCart(this.mapToModel(cartToUpdate));
   }
@@ -49,7 +52,7 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
 
   // Update the quantity of a product in the cart
   async updateQuantity(cartToUpdate): Promise<Cart> {
-    this.calculateTotal(cartToUpdate);
+    await this.calculateTotal(cartToUpdate);
     cartToUpdate.id = cartToUpdate._id.toString();
     return this.updateCart(this.mapToModel(cartToUpdate));
   }
@@ -82,16 +85,37 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
   }
 
   // Helper function to calculate the total price of the cart
-  private calculateTotal(cart: Cart): void {
+  private async calculateTotal(cart: Cart): Promise<void> {
+    const productIds = cart.items.map((item) => item.product._id);
+    const products = await this.productModel.find({ _id: { $in: productIds } }).lean();
+    // Create a map of products indexed by product ID for easier access
+    const productsMap = products.reduce((map, product) => {
+      map[product._id.toString()] = product;
+      return map;
+    }, {});
+    
     if (cart.items.length === 0) {
       cart.totalReseller = 0;
       cart.totalRetail = 0;
       cart.totalWholesale = 0;
       return;
     }
-    cart.totalReseller = cart.items.reduce((total, item) => total + item.product.prices.reseller * item.quantity, 0);
-    cart.totalRetail = cart.items.reduce((total, item) => total + item.product.prices.retail * item.quantity, 0);
-    cart.totalWholesale = cart.items.reduce((total, item) => total + item.product.prices.wholesale || 0 * item.quantity, 0);
+    cart.totalReseller = cart.items.reduce((total, item) => {
+        return total + productsMap[item.product._id.toString()].prices.reseller * item.quantity;
+    }, 0);
+    cart.totalRetail = cart.items.reduce((total, item) => {
+      return total + productsMap[item.product._id.toString()].prices.retail * item.quantity;
+    }, 0);
+    cart.totalWholesale = cart.items.reduce((total, item) => {
+      if (item.is_wholesale_package) {
+        if (item.predefined_quantity === 6) {
+          return total + (productsMap[item.product._id.toString()].prices.wholesale.half_dozen || 0) * item.quantity;
+        } else {
+          return total + (productsMap[item.product._id.toString()].prices.wholesale.dozen || 0) * item.quantity;
+        }
+      }
+      return total;
+    }, 0);
   }
 
   async updateCart(cart: any): Promise<Cart> {

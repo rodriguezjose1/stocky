@@ -93,19 +93,19 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
           ...(size ? { 'variant.size': size } : {}),
           ...(minCostPrice || maxCostPrice
             ? {
-                cost_price: {
-                  ...(minCostPrice ? { $gte: minCostPrice } : {}),
-                  ...(maxCostPrice ? { $lte: maxCostPrice } : {}),
-                },
-              }
+              cost_price: {
+                ...(minCostPrice ? { $gte: minCostPrice } : {}),
+                ...(maxCostPrice ? { $lte: maxCostPrice } : {}),
+              },
+            }
             : {}),
           ...(minQuantity || maxQuantity
             ? {
-                quantity: {
-                  ...(minQuantity ? { $gte: minQuantity } : {}),
-                  ...(maxQuantity ? { $lte: maxQuantity } : {}),
-                },
-              }
+              quantity: {
+                ...(minQuantity ? { $gte: minQuantity } : {}),
+                ...(maxQuantity ? { $lte: maxQuantity } : {}),
+              },
+            }
             : {}),
         },
       },
@@ -167,7 +167,10 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
     const resellerWithoutRound = costPrice + costPrice * (percentageReseller / 100);
     const reseller = roundUpTo100(resellerWithoutRound);
     const retail = roundUpTo100(resellerWithoutRound + resellerWithoutRound * (percentageRetail / 100));
-    const wholesale = roundUpTo100(costPrice + costPrice * (percentageWholesale / 100));
+    const wholesale = {
+      half_dozen: roundUpTo100(percentageWholesale.half_dozen > 0 ? costPrice + costPrice * (percentageWholesale.half_dozen / 100) : 0),
+      dozen: roundUpTo100(percentageWholesale.dozen > 0 ? costPrice + costPrice * (percentageWholesale.dozen / 100) : 0 ),
+    }
     return { reseller, retail, wholesale, costPrice };
   }
 
@@ -181,9 +184,12 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
   async increasePrice(product: ProductModel, percentageIncrease, user): Promise<Product> {
     const reseller = roundUpTo100(product.prices.reseller + (product.prices.reseller * percentageIncrease) / 100);
     const retail = roundUpTo100(product.prices.retail + (product.prices.retail * percentageIncrease) / 100);
-    const wholesale = roundUpTo100(product.prices.wholesale + (product.prices.wholesale * percentageIncrease) / 100);
+    const wholesale = {
+      half_dozen: roundUpTo100(product.prices.wholesale.half_dozen + (product.prices.wholesale.half_dozen * percentageIncrease) / 100),
+      dozen: roundUpTo100(product.prices.wholesale.dozen + (product.prices.wholesale.dozen * percentageIncrease) / 100),
+    };
 
-    if (reseller < 0 || retail < 0 || wholesale < 0) {
+    if (reseller < 0 || retail < 0 || wholesale.half_dozen < 0 || wholesale.dozen < 0) {
       throw new Error('El precio no puede ser negativo');
     }
 
@@ -214,7 +220,6 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
       has_stock: product.hasStock,
       wholesale_data: product.wholesaleData ? {
         is_wholesaler: product.wholesaleData.isWholesaler,
-        predefined_quantities: product.wholesaleData.predefinedQuantities,
         package_type: product.wholesaleData.packageType
       } : undefined,
     };
@@ -232,7 +237,7 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
       categories = productModel.categories?.map((category) => category.toString());
     }
 
-    const categoriesFilter = productModel.categories_filter?.map(row => 
+    const categoriesFilter = productModel.categories_filter?.map(row =>
       row.map(id => id.toString())
     );
 
@@ -250,16 +255,16 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
       categoriesFilter,
       productModel.stocks
         ? productModel.stocks.map((stock) => ({
-            id: stock._id.toString(),
-            quantity: stock.quantity,
-            variant: {
-              id: stock.variant._id.toString(),
-              color: stock.variant.color,
-              size: stock.variant.size,
-            },
-            costPrice: stock.cost_price,
-            date: stock.date,
-          }))
+          id: stock._id.toString(),
+          quantity: stock.quantity,
+          variant: {
+            id: stock.variant._id.toString(),
+            color: stock.variant.color,
+            size: stock.variant.size,
+          },
+          costPrice: stock.cost_price,
+          date: stock.date,
+        }))
         : undefined,
       productModel.quantity,
       productModel.size_type?.toString() || undefined,
@@ -268,7 +273,6 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
       productModel.createdAt,
       productModel.wholesale_data ? {
         isWholesaler: productModel.wholesale_data.is_wholesaler,
-        predefinedQuantities: productModel.wholesale_data.predefined_quantities,
         packageType: productModel.wholesale_data.package_type as 'simple' | 'complex'
       } : undefined
     );

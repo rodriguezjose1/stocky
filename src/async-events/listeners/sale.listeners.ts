@@ -28,9 +28,18 @@ export class SaleListener {
     const stocksUpdated = [];
 
     for (const detail of sale.details) {
-      const decremented = await this.stockUseCases.decrementStock(detail.productId, detail.variantId, {
-        quantity: detail.quantity,
-      });
+      let decremented;
+      if (!detail.isWholesalePackage) {
+        decremented = await this.stockUseCases.decrementStock(detail.productId, detail.variantId, {
+          quantity: detail.quantity,
+        });
+      } else {
+        for (const wholesaleVariant of detail.wholesaleVariants) {
+          decremented = await this.stockUseCases.decrementStock(detail.productId, wholesaleVariant.variant.variantId, {
+            quantity: wholesaleVariant.quantity,
+          });
+        }
+      }
 
       stocksUpdated.push(...decremented);
     }

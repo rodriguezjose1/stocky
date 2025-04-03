@@ -5,6 +5,8 @@ import { ICartRepository } from 'src/domain/ports/cart-repository.port';
 import { ProductUseCases } from './product.use-cases';
 import { StockUseCases } from './stock.use-cases';
 import { VariantUseCases } from './variant.use-cases';
+import { productErrors } from '../error.constants';
+import { packageTypes } from '../constants.use-cases';
 
 @Injectable()
 export class CartUseCases {
@@ -31,9 +33,22 @@ export class CartUseCases {
     isWholesalePackage,
     predefinedQuantity
   }: AddProductToCartDTO): Promise<Cart> {
+    const cart = await this.cartRepository.getCartById(cartId);
+    if (!cart) {
+      throw new BadRequestException('Cart not found');
+    }
+
     const product = await this.productUseCases.getProductById(productId);
     if (!product) {
       throw new BadRequestException('Product not found');
+    }
+
+    if (product.wholesaleData.packageType === packageTypes.simple) {
+      isWholesalePackage = false;
+    }
+
+    if (isWholesalePackage && !product.wholesaleData.isWholesaler && product.wholesaleData.packageType === packageTypes.complex) {
+      throw new BadRequestException(productErrors.wholesalePackageNotAllowed);
     }
 
     const variant = await this.variantUseCases.getVariantById(variantId);
@@ -45,10 +60,6 @@ export class CartUseCases {
     if (quantity > quantityInStock) {
       throw new BadRequestException('Insufficient stock');
     }
-
-    // Obtener el carrito actual
-    const cart = await this.cartRepository.getCartById(cartId);
-
     // checkear si el producto normal existe
 
     let cartItem = cart.items.find((item) =>
@@ -56,7 +67,8 @@ export class CartUseCases {
       (item.variant?._id.toString() === variant.id || !item.variant)
     );
 
-    if (cartItem && !isWholesalePackage && cartItem.is_wholesale_package) {
+    // si el producto normal existe y no es mayorista, buscar el paquete mayorista
+    if (cartItem && !isWholesalePackage && cartItem.is_wholesale_package && product.wholesaleData.packageType === packageTypes.complex) {
       cartItem = cart.items.find((item) =>
         item.product._id.toString() === product.id &&
         (item.variant?._id.toString() === variant.id || !item.variant) &&
@@ -64,9 +76,8 @@ export class CartUseCases {
       );
     }
 
-    // producto normal si existe y no es mayorista
     if (cartItem) {
-      if (isWholesalePackage) {
+      if (isWholesalePackage && product.wholesaleData.packageType === packageTypes.complex) {
         const wholesaleVariants = this.getWholesaleVariants(product, cart, variant, predefinedQuantity, quantity);
         cartItem.wholesale_variants = wholesaleVariants;
         cartItem.quantity = wholesaleVariants.reduce((acc, v) => acc + v.quantity, 0);
@@ -95,11 +106,13 @@ export class CartUseCases {
         quantity,
       };
 
-      if (isWholesalePackage) {
-        newItem.variant = null;
+      if (product.wholesaleData.isWholesaler) {
         newItem.is_wholesale_package = true;
-        newItem.predefined_quantity = predefinedQuantity;
-        newItem.wholesale_variants = this.getWholesaleVariants(product, cart, variant, predefinedQuantity, quantity);
+        if (product.wholesaleData.packageType === packageTypes.complex) {
+          newItem.variant = null;
+          newItem.predefined_quantity = predefinedQuantity;
+          newItem.wholesale_variants = this.getWholesaleVariants(product, cart, variant, predefinedQuantity, quantity);
+        }
       }
 
       cart.items.push(newItem);
@@ -118,12 +131,6 @@ export class CartUseCases {
     if (productItems.length === 0) {
       if (!predefinedQuantity) {
         throw new BadRequestException('Debe especificar la cantidad predefinida para el paquete mayorista');
-      }
-
-      if (!product.wholesaleData.predefinedQuantities.includes(predefinedQuantity)) {
-        throw new BadRequestException(
-          `La cantidad predefinida ${predefinedQuantity} debe ser una de las cantidades permitidas: ${product.wholesaleData.predefinedQuantities.join(', ')}`
-        );
       }
     }
 
@@ -178,11 +185,16 @@ export class CartUseCases {
         throw new BadRequestException('El producto no es un paquete mayorista');
       }
 
-      // delete from wholesale_variants
-      cartItem.wholesale_variants = cartItem.wholesale_variants.filter((v) => v.variant._id.toString() !== variantId);
+      if (variantId === 'null' || variantId === null) {
+        cart.items = cart.items.filter((item) => item.product._id.toString() !== productId );
+      } else {
+        // delete from wholesale_variants
+        cartItem.wholesale_variants = cartItem.wholesale_variants.filter((v) => v.variant._id.toString() !== variantId);
+        cartItem.quantity = cartItem.wholesale_variants.reduce((acc, v) => acc + v.quantity, 0);
+      }
     } else {
       // delete from normal product
-      cart.items = cart.items.filter((item) => item.product._id.toString() !== productId || item.variant?._id.toString() !== variantId);
+      cart.items = cart.items.filter((item) => item.product._id.toString() !== productId && item.variant?._id.toString() !== variantId);
     }
     return this.cartRepository.removeProduct(cart);
   }

@@ -58,7 +58,15 @@ class StocksUpdated {
 interface IStocksUpated {
   stock: Types.ObjectId;
   quantity: number;
-  prices: Prices;
+  prices: {
+    cost?: number;
+    retail?: number;
+    reseller?: number;
+    wholesale?: number | {
+      half_dozen: number;
+      dozen: number;
+    };
+  };
 }
 
 const StocksUpdatedSchema = SchemaFactory.createForClass(StocksUpdated);
@@ -86,23 +94,39 @@ interface VariantAttribute {
 }
 
 @Schema({ _id: false })
-class VarianDataSchema {
-  @Prop({ type: String, required: true })
-  product_name: string;
+export class VariantDataSchema {
+  @Prop({ type: String })
+  product_name?: string;
 
-  @Prop({ type: String, required: true })
-  product_code: string;
+  @Prop({ type: String })
+  product_code?: string;
 
-  @Prop({ type: [VariantAttributeSchema], required: true })
-  variant_attributes: VariantAttribute[];
+  @Prop({ type: SchemaTypes.ObjectId, required: true })
+  variant_id: Types.ObjectId;
+
+  @Prop({ type: [VariantAttributeSchema] })
+  variant_attributes?: VariantAttribute[];
 }
 
 interface VariantData {
   product_name: string;
   product_code: string;
+  variant_id: Types.ObjectId;
   variant_attributes: VariantAttribute[];
 }
+@Schema({ _id: false })
+export class WholesaleVariantSchema {
+  @Prop({ type: VariantDataSchema })
+  variant: VariantData;
 
+  @Prop({ required: true })
+  quantity: number;
+}
+
+interface WholesaleVariant {
+  variant: VariantData;
+  quantity: number;
+}
 @Schema()
 export class SaleDetailSchema {
   @Prop({ type: SchemaTypes.ObjectId, required: true })
@@ -111,7 +135,7 @@ export class SaleDetailSchema {
   @Prop({ type: SchemaTypes.ObjectId, required: true })
   variant: Types.ObjectId;
 
-  @Prop({ type: VarianDataSchema })
+  @Prop({ type: VariantDataSchema, default: null })
   variant_data: VariantData;
 
   @Prop({ required: true })
@@ -119,6 +143,17 @@ export class SaleDetailSchema {
 
   @Prop({ type: PricesSchema, required: true })
   prices: Prices;
+
+  @Prop({ type: Boolean, default: false })
+  is_wholesale_package: boolean;
+
+  @Prop({ type: Number, default: 0 })
+  predefined_quantity: number;
+
+  @Prop({
+    type: [WholesaleVariantSchema], default: []
+  })
+  wholesale_variants: WholesaleVariant[];
 }
 
 const SaleDetailSchemaFactory = SchemaFactory.createForClass(SaleDetailSchema);

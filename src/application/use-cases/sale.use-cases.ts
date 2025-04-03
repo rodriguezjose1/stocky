@@ -31,7 +31,7 @@ export class SalesUseCase {
     private productAttributeUseCases: ProductAttributeUseCases,
     private porductAttributeSubtypeUseCases: ProductAttributeSubtypeUseCases,
     @Inject(ERROR_HANDLER_PORT) private errorHandler: ErrorHandlerPort,
-  ) {}
+  ) { }
 
   async createSale(saleData: CreateSaleDto, userReq?: any) {
     try {
@@ -40,40 +40,62 @@ export class SalesUseCase {
         if (cart.userId.toString() !== userReq.id) {
           throw new BadRequestException('Cart does not belong to user');
         }
-        saleData.details = cart.items.map((item) => new SaleDetail(item.product._id, item.variant._id, item.quantity));
+        saleData.details = cart.items.map((item) => {
+          if (item.variant) {
+            return new SaleDetail(item.product._id, item.variant._id, item.quantity);
+          } else {
+            return new SaleDetail(item.product._id, null, item.quantity, null, null, true, item.predefinedQuantity, item.wholesaleVariants);
+          }
+        });
       }
 
       await this.stockUseCases.checkStock(saleData.details);
 
+      let prices: Prices;
       const details: SaleDetail[] = [];
       const calls = saleData.details.map(async (detail, i) => {
         const product: Product = await this.productUseCases.getProductById(detail.productId);
-        const variant: Variant = await this.variantUseCases.getVariantById(detail.variantId);
-        const productAttributeColor = await this.productAttributeUseCases.getProductAttributeByValue(variant.color);
-        const prices: Prices = {
-          retail: product.prices.retail,
-          reseller: product.prices.reseller,
-          wholesale: product.prices.wholesale,
-        };
-        const variantData = {
-          productName: product.name,
-          productCode: product.code,
-          variantAttributes: [
-            {
-              name: 'color',
-              keyLabel: 'Color',
-              value: variant.color,
-              label: productAttributeColor.label,
-            },
-            {
-              name: 'size',
-              keyLabel: 'Talle',
-              value: variant.size,
-              label: variant.size,
-            },
-          ],
-        };
-        details[i] = new SaleDetail(detail.productId, detail.variantId, detail.quantity, prices, variantData);
+        if (!detail.isWholesalePackage) {
+          const variant: Variant = await this.variantUseCases.getVariantById(detail.variantId);
+          const productAttributeColor = await this.productAttributeUseCases.getProductAttributeByValue(variant.color);
+          prices = {
+            retail: product.prices.retail,
+            reseller: product.prices.reseller,
+            wholesale: 0,
+          };
+          const variantData = {
+            productName: product.name,
+            productCode: product.code,
+            variantAttributes: [
+              {
+                name: 'color',
+                keyLabel: 'Color',
+                value: variant.color,
+                label: productAttributeColor.label,
+              },
+              {
+                name: 'size',
+                keyLabel: 'Talle',
+                value: variant.size,
+                label: variant.size,
+              },
+            ],
+          };
+          details[i] = new SaleDetail(detail.productId, detail.variantId, detail.quantity, prices, variantData);
+        } else {
+          prices = {
+            retail: product.prices.retail,
+            reseller: product.prices.reseller,
+          };
+          if (detail.predefinedQuantity === 6) {
+            prices.wholesale = product.prices.wholesale.half_dozen * detail.quantity;
+          } else {
+            prices.wholesale = product.prices.wholesale.dozen * detail.quantity;
+          }
+          
+
+          details[i] = new SaleDetail(detail.productId, null, detail.quantity, prices, null, true, detail.predefinedQuantity, detail.wholesaleVariants);
+        }
       });
       await Promise.all(calls);
 

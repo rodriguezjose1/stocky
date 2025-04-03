@@ -200,19 +200,36 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
       details:
         sale.details?.map((detail) => ({
           product: new Types.ObjectId(detail.productId),
-          variant: new Types.ObjectId(detail.variantId),
-          variant_data: {
+          variant: detail.variantId ? new Types.ObjectId(detail.variantId) : null,
+          variant_data: detail.variantData.productCode ? {
             product_name: detail.variantData.productName,
             product_code: detail.variantData.productCode,
+            variant_id: new Types.ObjectId(detail.variantId),
             variant_attributes: detail.variantData.variantAttributes.map((attribute) => ({
               name: attribute.name,
               value: attribute.value,
               label: attribute.label,
               key_label: attribute.keyLabel,
             })),
-          },
+          } : null,
           quantity: detail.quantity,
           prices: detail.prices,
+          is_wholesale_package: detail.isWholesalePackage || false,
+          predefined_quantity: detail.predefinedQuantity || 0,
+          wholesale_variants: detail.wholesaleVariants.length ? detail.wholesaleVariants.map((variant) => ({
+            variant: {
+              product_name: variant.variant.productName,
+              product_code: variant.variant.productCode,
+              variant_id: new Types.ObjectId(variant.variant.variantId),
+              variant_attributes: variant.variant.variantAttributes.map((attribute) => ({
+                name: attribute.name,
+                value: attribute.value,
+                label: attribute.label,
+                key_label: attribute.keyLabel,
+              })),
+            },
+            quantity: variant.quantity,
+          })) : [],
         })) || undefined,
       stocks_updated:
         sale.stocksUpdated?.map((stockUpdated) => ({

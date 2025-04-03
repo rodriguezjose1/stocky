@@ -17,7 +17,7 @@ export class ProductUseCases {
     private productAttributesUseCases: ProductAttributeUseCases,
     private productAttributesSubtypeUseCases: ProductAttributeSubtypeUseCases,
     private categoryUseCases: CategoryUseCases,
-  ) {}
+  ) { }
 
   async getProductsByCategory(categoryId: string): Promise<Product[]> {
     const products = await this.productRepository.getByCategory(categoryId);
@@ -51,6 +51,8 @@ export class ProductUseCases {
 
     // Construir el categoryPaths
     const categoryPaths = this.buildCategoryPaths(categories);
+
+    this.validateWholesaleData(product);
 
     const calculatePrices = await this.calculatePrices({
       costPrice: product.prices.cost,
@@ -211,4 +213,29 @@ export class ProductUseCases {
     const percentage = (increase / initialAmount) * 100;
     return percentage;
   }
+
+  private validateWholesaleData(product) {
+    if (product.wholesaleData && product.wholesaleData.isWholesaler) {
+      if (!product.wholesaleData.packageType) {
+        throw new BadRequestException(productErrors.wholesalePackageTypeRequired);
+      }
+      if (product.percentages.wholesale.dozen === 0 && product.percentages.wholesale.half_dozen === 0) {
+        throw new BadRequestException(productErrors.wholesalePercentagesRequired);
+      }
+    }
+
+    if (product.wholesaleData && !product.wholesaleData.isWholesaler) {
+      product.percentages.wholesale.half_dozen = 0;
+      product.percentages.wholesale.dozen = 0;
+      product.wholesaleData.packageType = null;
+    }
+
+    if (!product.wholesaleData) {
+      product.percentages.wholesale = {
+        half_dozen: 0,
+        dozen: 0,
+      };
+    }
+  }
+
 }

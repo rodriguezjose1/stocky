@@ -20,22 +20,27 @@ export interface Prices {
   cost?: number;
   retail: number;
   reseller: number;
-  wholesale?: number;
+  wholesale?: WholesalePercentage;
 }
 
 export interface Percentages {
   reseller: number;
   retail: number;
-  wholesale?: number;
+  wholesale?: WholesalePercentage;
 }
 
 export interface WholesaleData {
   isWholesaler: boolean;
-  predefinedQuantities: number[];
   packageType: 'simple' | 'complex';
 }
 
+export interface WholesalePercentage {
+  half_dozen: number;
+  dozen: number;
+}
+
 export class WholesaleDataDTO {
+  @IsOptional()
   @IsBoolean()
   @Transform(({ value }) => {
     if (typeof value === 'string') {
@@ -43,16 +48,15 @@ export class WholesaleDataDTO {
     }
     return value;
   })
-  isWholesaler: boolean;
+  isWholesaler: boolean = false;
 
-  @IsArray()
-  @ArrayMinSize(1, { message: 'predefinedQuantities must have at least one quantity' })
-  @IsNumber({}, { each: true })
-  @Min(1, { each: true })
-  predefinedQuantities: number[];
-
-  @IsEnum(['simple', 'complex'])
-  packageType: 'simple' | 'complex';
+  @IsOptional()
+  @IsEnum(['simple', 'complex', null])
+  @Transform(({ value }) => {
+    if (value === 'null' || value === null) return null;
+    return value;
+  })
+  packageType: 'simple' | 'complex' | null = null;
 }
 
 export class CreateProductDto {
@@ -108,6 +112,16 @@ export class ImageDTO {
   alt_text: string;
 }
 
+export class WholesalePercentageDTO {
+  @IsNumber()
+  @Min(0)
+  half_dozen: number;
+
+  @IsNumber()
+  @Min(0)
+  dozen: number;
+}
+
 export class PercentagesDTO {
   @IsNumber()
   @Min(0)
@@ -118,9 +132,9 @@ export class PercentagesDTO {
   retail: number;
 
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  wholesale?: number = 0;
+  @ValidateNested()
+  @Type(() => WholesalePercentageDTO)
+  wholesale?: WholesalePercentage;
 }
 
 export class PricesDTO {
@@ -142,8 +156,8 @@ export class PricesDTO {
   @IsOptional()
   @IsNumber()
   @Min(0)
-  @Type(() => Number)
-  wholesale: number;
+  @Type(() => WholesalePercentageDTO)
+  wholesale: WholesalePercentage;
 }
 
 export class UpdateProductDto {

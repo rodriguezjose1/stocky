@@ -37,6 +37,12 @@ export class SaleDetail {
     public quantity: number,
     public prices?: Prices,
     public variantData?: VariantData,
+    public isWholesalePackage?: boolean,
+    public predefinedQuantity?: number,
+    public wholesaleVariants?: {
+      variant: VariantData;
+      quantity: number;
+    }[],
   ) {}
 }
 
@@ -54,16 +60,25 @@ interface VariantAttribute {
 }
 
 interface VariantData {
-  productName: string;
-  productCode: string;
-  variantAttributes: VariantAttribute[];
+  productName?: string;
+  productCode?: string;
+  variantId?: string;
+  variantAttributes?: VariantAttribute[];
 }
 
 export class StocksUpdated {
   constructor(
     public stock: string,
     public quantity: number,
-    public prices?: Prices,
+    public prices?: {
+      cost?: number;
+      retail?: number;
+      reseller?: number;
+      wholesale?: number | {
+        half_dozen: number;
+        dozen: number;
+      };
+    },
   ) {}
 }
 

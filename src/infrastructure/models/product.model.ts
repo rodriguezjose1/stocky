@@ -26,11 +26,25 @@ export class ImageSchema {
   alt_text: string;
 }
 
+interface WholesalePercentage {
+  half_dozen: number;
+  dozen: number;
+}
+
+@Schema({ _id: false })
+class WholesalePercentageSchema {
+  @Prop({ required: true })
+  half_dozen: number;
+
+  @Prop({ required: true })
+  dozen: number;
+}
+
 export interface Prices {
   cost?: number;
   retail: number;
   reseller: number;
-  wholesale?: number;
+  wholesale?: WholesalePercentage;
 }
 
 @Schema({ _id: false })
@@ -44,14 +58,14 @@ export class PricesSchema {
   @Prop({ required: true })
   reseller: number;
 
-  @Prop({ required: false })
-  wholesale?: number;
+  @Prop({ required: false, type: WholesalePercentageSchema })
+  wholesale?: WholesalePercentage;
 }
 
 interface Percentages {
   reseller: number;
   retail: number;
-  wholesale?: number;
+  wholesale?: WholesalePercentage;
 }
 
 @Schema({ _id: false })
@@ -62,8 +76,8 @@ class PercentagesSchema {
   @Prop({ required: true })
   reseller: number;
 
-  @Prop({ required: false })
-  wholesale?: number;
+  @Prop({ required: false, type: WholesalePercentageSchema })
+  wholesale?: WholesalePercentage;
 }
 
 @Schema({ _id: false })
@@ -71,16 +85,12 @@ class WholesaleDataSchema {
   @Prop({ type: Boolean, default: false })
   is_wholesaler: boolean;
 
-  @Prop({ type: [Number], default: [] })
-  predefined_quantities: number[];
-
-  @Prop({ type: String, enum: ['simple', 'complex'], default: 'simple' })
+  @Prop({ type: String, enum: ['simple', 'complex', null], default: null, })
   package_type: string;
 }
 
 interface WholesaleData {
   is_wholesaler: boolean;
-  predefined_quantities: number[];
   package_type: string;
 }
 
@@ -126,7 +136,7 @@ export class ProductModel extends Document {
   @Prop({ type: [String], default: [] })
   colors: string[];
 
-  @Prop({ type: WholesaleDataSchema, required: true, default: { is_wholesaler: false, predefined_quantities: [], package_type: 'simple' } })
+  @Prop({ type: WholesaleDataSchema, required: true, default: { is_wholesaler: false, package_type: null } })
   wholesale_data: WholesaleData;
 
   stocks: any;
