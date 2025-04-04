@@ -44,7 +44,7 @@ export class SalesUseCase {
           if (item.variant) {
             return new SaleDetail(item.product._id, item.variant._id, item.quantity);
           } else {
-            return new SaleDetail(item.product._id, null, item.quantity, null, null, true, item.predefinedQuantity, item.wholesaleVariants);
+            return new SaleDetail(item.product._id, null, item.quantity, null, null, true, item.predefined_quantity, item.wholesale_variants);
           }
         });
       }
@@ -92,9 +92,34 @@ export class SalesUseCase {
           } else {
             prices.wholesale = product.prices.wholesale.dozen * detail.quantity;
           }
-          
 
-          details[i] = new SaleDetail(detail.productId, null, detail.quantity, prices, null, true, detail.predefinedQuantity, detail.wholesaleVariants);
+          // wholesale variants to variantData
+          const wholesaleVariantsData = detail.wholesaleVariants.map((v) => {
+            return {
+              variant: {
+                productName: product.name,
+                productCode: product.code,
+                variantId: v.variant._id,
+                variantAttributes: [
+                  {
+                    name: 'color',
+                    keyLabel: 'Color',
+                    value: v.variant.color,
+                    label: v.variant.color,
+                  },
+                  {
+                    name: 'size',
+                    keyLabel: 'Talle',
+                    value: v.variant.size,
+                    label: v.variant.size,
+                  },
+                ],
+              },
+              quantity: v.quantity,
+            };
+          });
+
+          details[i] = new SaleDetail(detail.productId, null, detail.quantity, prices, null, true, detail.predefinedQuantity, wholesaleVariantsData);
         }
       });
       await Promise.all(calls);

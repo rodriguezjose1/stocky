@@ -12,7 +12,7 @@ export class SaleListener {
     private stockUseCases: StockUseCases,
     private saleUseCases: SalesUseCase,
     private cartUseCases: CartUseCases,
-  ) {}
+  ) { }
 
   @OnEvent('sale.created')
   async handleSaleCreated(event: SaleCreatedEvent) {
@@ -33,20 +33,28 @@ export class SaleListener {
         decremented = await this.stockUseCases.decrementStock(detail.productId, detail.variantId, {
           quantity: detail.quantity,
         });
+        stocksUpdated.push(...decremented);
       } else {
         for (const wholesaleVariant of detail.wholesaleVariants) {
           decremented = await this.stockUseCases.decrementStock(detail.productId, wholesaleVariant.variant.variantId, {
             quantity: wholesaleVariant.quantity,
           });
+          stocksUpdated.push(...decremented);
         }
       }
-
-      stocksUpdated.push(...decremented);
     }
 
-    await this.cartUseCases.updateCart({ _id: sale.cartId, active: false });
+    try {
+      await this.cartUseCases.updateCart({ _id: sale.cartId, active: false });
+    } catch (error) {
+      console.log('Error updating cart:', error);
+    }
 
-    await this.saleUseCases.updateSale(event.saleId, { stocksUpdated });
+    try {
+      await this.saleUseCases.updateSale(event.saleId, { stocksUpdated });
+    } catch (error) {
+      console.log('Error updating sale:', error);
+    }
 
     // TODO: fix this with correct data
     // notify to admin to accept o reject the sale

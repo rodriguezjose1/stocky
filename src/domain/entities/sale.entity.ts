@@ -64,6 +64,10 @@ interface VariantData {
   productCode?: string;
   variantId?: string;
   variantAttributes?: VariantAttribute[];
+  // fix this
+  _id?: string;
+  color?: string;
+  size?: string;
 }
 
 export class StocksUpdated {

@@ -144,12 +144,13 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
       saleModel.date,
       saleModel.status,
       saleModel.details.map(
-        (detail) =>
-          new SaleDetail(
-            detail.product.toString(),
-            detail.variant.toString(),
-            detail.quantity,
-            {
+        (detail) => {
+          if (detail.variant) {
+            return new SaleDetail(
+              detail.product.toString(),
+              detail.variant?.toString() || null,
+              detail.quantity,
+              {
               retail: detail.prices.retail,
               reseller: detail.prices.reseller,
               wholesale: detail.prices.wholesale,
@@ -164,8 +165,39 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
                 keyLabel: attribute.key_label,
               })),
             },
-          ),
-      ),
+          );
+        } else {
+          return new SaleDetail(  
+            detail.product.toString(),
+            null,
+            detail.quantity,
+            {
+              retail: detail.prices.retail,
+              reseller: detail.prices.reseller,
+              wholesale: detail.prices.wholesale,
+            },
+            null,
+            true,
+            detail.predefined_quantity,
+            detail.wholesale_variants.map((v) => ({
+              variant: {
+                productName: v.variant.product_name,
+                productCode: v.variant.product_code,
+                variantId: v.variant.variant_id.toString(),
+                variantAttributes: v.variant.variant_attributes.map((variantAttribute) => {
+                  return {
+                    name: variantAttribute.name,
+                    value: variantAttribute.value,
+                    label: variantAttribute.label,
+                    keyLabel: variantAttribute.key_label,
+                  };
+                }),
+              },
+              quantity: v.quantity,
+            })),
+          );
+        }
+      }),
       saleModel.stocks_updated.map((stockUpdated) => new StocksUpdated(stockUpdated.stock.toString(), stockUpdated.quantity, stockUpdated.prices)),
       {
         id: saleModel.user.id,
@@ -179,17 +211,37 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
 
   private mapDetailsToDomain(details: SaleDetailSchema[]): SaleDetail[] {
     return details.map(
-      (detail) =>
-        new SaleDetail(detail.product.toString(), detail.variant.toString(), detail.quantity, detail.prices, {
-          productName: detail.variant_data.product_name,
-          productCode: detail.variant_data.product_code,
-          variantAttributes: detail.variant_data.variant_attributes.map((attribute) => ({
+      (detail) => {
+        if (detail.variant) {
+          return new SaleDetail(detail.product.toString(), detail.variant.toString(), detail.quantity, detail.prices, {
+            productName: detail.variant_data.product_name,
+            productCode: detail.variant_data.product_code,
+            variantAttributes: detail.variant_data.variant_attributes.map((attribute) => ({
             name: attribute.name,
             value: attribute.value,
             label: attribute.label,
-            keyLabel: attribute.key_label,
-          })),
-        }),
+              keyLabel: attribute.key_label,
+            })),
+          });
+        } else {
+          return new SaleDetail(detail.product.toString(), null, detail.quantity, detail.prices, null, true, detail.predefined_quantity, detail.wholesale_variants.map((v) => ({
+            variant: {
+              productName: v.variant.product_name,
+              productCode: v.variant.product_code,
+              variantId: v.variant.variant_id.toString(),
+              variantAttributes: v.variant.variant_attributes.map((variantAttribute) => {
+                return {
+                  name: variantAttribute.name,
+                  value: variantAttribute.value,
+                  label: variantAttribute.label,
+                  keyLabel: variantAttribute.key_label,
+                };
+              }),
+            },
+            quantity: v.quantity,
+          })));
+        }
+      }
     );
   }
 
@@ -201,7 +253,7 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
         sale.details?.map((detail) => ({
           product: new Types.ObjectId(detail.productId),
           variant: detail.variantId ? new Types.ObjectId(detail.variantId) : null,
-          variant_data: detail.variantData.productCode ? {
+          variant_data: detail.variantData?.productCode ? {
             product_name: detail.variantData.productName,
             product_code: detail.variantData.productCode,
             variant_id: new Types.ObjectId(detail.variantId),
@@ -216,7 +268,7 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
           prices: detail.prices,
           is_wholesale_package: detail.isWholesalePackage || false,
           predefined_quantity: detail.predefinedQuantity || 0,
-          wholesale_variants: detail.wholesaleVariants.length ? detail.wholesaleVariants.map((variant) => ({
+          wholesale_variants: detail.wholesaleVariants?.length ? detail.wholesaleVariants.map((variant) => ({
             variant: {
               product_name: variant.variant.productName,
               product_code: variant.variant.productCode,

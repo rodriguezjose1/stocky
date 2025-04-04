@@ -223,10 +223,18 @@ export class StockUseCases {
 
   public async checkStock(details: SaleDetail[]): Promise<void> {
     for (const detail of details) {
-      const quantity = await this.stockRepository.getQuantityByVariantId(detail.productId, detail.variantId);
-
-      if (quantity < detail.quantity) {
-        throw new InsufficientStockException(detail.productId, detail.quantity, quantity);
+      if (detail.variantId !== null) {
+        const quantity = await this.stockRepository.getQuantityByVariantId(detail.productId, detail.variantId);
+        if (quantity < detail.quantity) {
+          throw new InsufficientStockException(detail.productId, detail.quantity, quantity);
+        }
+      } else {
+        for (const variant of detail.wholesaleVariants) {
+          const quantity = await this.stockRepository.getQuantityByVariantId(detail.productId, variant.variant._id);
+          if (quantity < variant.quantity) {
+            throw new InsufficientStockException(detail.productId, variant.quantity, quantity);
+          }
+        }
       }
     }
   }

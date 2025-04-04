@@ -51,8 +51,26 @@ class StocksUpdated {
   @Prop({ required: true })
   quantity: number;
 
-  @Prop({ type: PricesSchema })
-  prices: Prices;
+  @Prop({
+    type: {
+      cost: Number,
+      retail: Number,
+      reseller: Number,
+      wholesale: {
+        half_dozen: Number,
+        dozen: Number,
+      }
+    }
+  })
+  prices: {
+    cost?: number;
+    retail?: number;
+    reseller?: number;
+    wholesale?: {
+      half_dozen: number;
+      dozen: number;
+    };
+  };
 }
 
 interface IStocksUpated {
@@ -132,7 +150,7 @@ export class SaleDetailSchema {
   @Prop({ type: SchemaTypes.ObjectId, required: true })
   product: Types.ObjectId;
 
-  @Prop({ type: SchemaTypes.ObjectId, required: true })
+  @Prop({ type: SchemaTypes.ObjectId, default: null })
   variant: Types.ObjectId;
 
   @Prop({ type: VariantDataSchema, default: null })
