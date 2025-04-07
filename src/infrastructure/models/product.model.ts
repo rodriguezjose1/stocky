@@ -12,7 +12,7 @@ class AttributeSchema {
   brand: string;
 }
 
-interface Image {
+export interface Image {
   url: string;
   alt_text: string;
 }
@@ -81,7 +81,7 @@ class PercentagesSchema {
 }
 
 @Schema({ _id: false })
-class WholesaleDataSchema {
+export class WholesaleDataSchema {
   @Prop({ type: Boolean, default: false })
   is_wholesaler: boolean;
 
@@ -89,7 +89,7 @@ class WholesaleDataSchema {
   package_type: string;
 }
 
-interface WholesaleData {
+export interface WholesaleData {
   is_wholesaler: boolean;
   package_type: string;
 }

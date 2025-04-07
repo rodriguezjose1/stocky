@@ -1,8 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, SchemaTypes, Types } from 'mongoose';
-import { Image } from 'src/domain/entities/product.entity';
-import { Prices } from 'src/domain/entities/sale.entity';
-import { ImageSchema, PricesSchema } from './product.model';
+import { Image, ImageSchema, Prices, PricesSchema, WholesaleData, WholesaleDataSchema } from './product.model';
 import { VariantModel, VariantSchema } from './variant.model';
 
 @Schema({ _id: false })
@@ -21,6 +19,9 @@ export class ProductBrief extends Document {
 
   @Prop({ type: [ImageSchema] })
   pictures: Image[];
+  
+  @Prop({ type: WholesaleDataSchema, default: { is_wholesaler: false, package_type: null } })
+  wholesale_data: WholesaleData;
 }
 
 export const ProductBriefSchema = SchemaFactory.createForClass(ProductBrief);
@@ -32,6 +33,7 @@ interface IProductBrief {
   code: string;
   prices: Prices;
   pictures: Image[];
+  wholesale_data: WholesaleData;
 }
 
 @Schema({ _id: false })

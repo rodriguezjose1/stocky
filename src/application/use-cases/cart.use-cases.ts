@@ -97,6 +97,10 @@ export class CartUseCases {
             wholesale: product.prices.wholesale,
           },
           pictures: product.pictures,
+          wholesale_data: {
+            is_wholesaler: product.wholesaleData.isWholesaler,
+            package_type: product.wholesaleData.packageType,
+          },
         },
         variant: {
           _id: variant.id,
@@ -185,12 +189,11 @@ export class CartUseCases {
         throw new BadRequestException('El producto no es un paquete mayorista');
       }
 
-      if (variantId === 'null' || variantId === null) {
-        cart.items = cart.items.filter((item) => item.product._id.toString() !== productId );
-      } else {
-        // delete from wholesale_variants
+      if (cartItem.product.wholesale_data.package_type === packageTypes.complex && variantId !== 'null') {
         cartItem.wholesale_variants = cartItem.wholesale_variants.filter((v) => v.variant._id.toString() !== variantId);
         cartItem.quantity = cartItem.wholesale_variants.reduce((acc, v) => acc + v.quantity, 0);
+      } else {
+        cart.items = cart.items.filter((item) => item.product._id.toString() !== productId);
       }
     } else {
       // delete from normal product
@@ -204,15 +207,17 @@ export class CartUseCases {
 
     const cart = await this.cartRepository.getCartById(cartId);
 
-    // Calculate total quantity for specific variant in wholesale packages
-    const totalQuantityInWholesaleVariants = cart.items.reduce((acc, item) => {
-      if (item.product._id.toString() === productId && item.is_wholesale_package) {
-        const variant = item.wholesale_variants.find(v => v.variant._id.toString() === variantId);
-        return acc + (variant?.quantity || 0);
-      }
-      return acc;
-    }, 0);
-  
+    let totalQuantityInWholesaleVariants = 0;
+    if (isWholesalePackage) {
+      // Calculate total quantity for specific variant in wholesale packages
+      totalQuantityInWholesaleVariants = cart.items.reduce((acc, item) => {
+        if (item.product._id.toString() === productId && item.is_wholesale_package) {
+          const variant = item.wholesale_variants.find(v => v.variant._id.toString() === variantId);
+          return acc + (variant?.quantity || 0);
+        }
+        return acc;
+      }, 0);
+    }
 
     // check sum quantities of same product into wholesale variants and normal product
     const totalQuantityInNormalProduct = cart.items.reduce((acc, item) => {
@@ -233,16 +238,19 @@ export class CartUseCases {
       if (!cartItem) {
         throw new BadRequestException('El producto no es un paquete mayorista');
       }
-      
-      // find wholesale variant and update quantity
-      const wholesaleVariant = cartItem.wholesale_variants.find((v) => v.variant._id.toString() === variantId);
-      if (!wholesaleVariant) {
-        throw new BadRequestException('La variante no es un paquete mayorista');
+
+      if (cartItem.product.wholesale_data.package_type === packageTypes.complex) {
+        // find wholesale variant and update quantity
+        const wholesaleVariant = cartItem.wholesale_variants.find((v) => v.variant._id.toString() === variantId);
+        if (!wholesaleVariant) {
+          throw new BadRequestException('La variante no es un paquete mayorista');
+        }
+
+        wholesaleVariant.quantity = quantity;
+        cartItem.quantity = cartItem.wholesale_variants.reduce((acc, v) => acc + v.quantity, 0);
+      } else {
+        cart.items = cart.items.filter((item) => item.product._id.toString() !== productId);
       }
-
-      wholesaleVariant.quantity = quantity;
-      cartItem.quantity = cartItem.wholesale_variants.reduce((acc, v) => acc + v.quantity, 0);
-
     } else {
       // find cart item and update quantity
       cartItem = cart.items.find((item) => item.product._id.toString() === productId && item.variant?._id.toString() === variantId);
