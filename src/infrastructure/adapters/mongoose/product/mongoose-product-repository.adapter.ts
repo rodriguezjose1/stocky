@@ -167,9 +167,10 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
     const resellerWithoutRound = costPrice + costPrice * (percentageReseller / 100);
     const reseller = roundUpTo100(resellerWithoutRound);
     const retail = roundUpTo100(resellerWithoutRound + resellerWithoutRound * (percentageRetail / 100));
+    console.log(percentageWholesale.half_dozen > 0 ? costPrice + costPrice * (percentageWholesale.half_dozen / 100) : 0);
     const wholesale = {
       half_dozen: roundUpTo100(percentageWholesale.half_dozen > 0 ? costPrice + costPrice * (percentageWholesale.half_dozen / 100) : 0),
-      dozen: roundUpTo100(percentageWholesale.dozen > 0 ? costPrice + costPrice * (percentageWholesale.dozen / 100) : 0 ),
+      dozen: roundUpTo100(percentageWholesale.dozen > 0 ? costPrice + costPrice * (percentageWholesale.dozen / 100) : 0),
     }
     return { reseller, retail, wholesale, costPrice };
   }

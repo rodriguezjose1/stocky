@@ -43,11 +43,8 @@ export class CartUseCases {
       throw new BadRequestException('Product not found');
     }
 
-    if (product.wholesaleData.packageType === packageTypes.simple) {
-      isWholesalePackage = false;
-    }
 
-    if (isWholesalePackage && !product.wholesaleData.isWholesaler && product.wholesaleData.packageType === packageTypes.complex) {
+    if (isWholesalePackage && !product.wholesaleData.isWholesaler) {
       throw new BadRequestException(productErrors.wholesalePackageNotAllowed);
     }
 
@@ -62,26 +59,46 @@ export class CartUseCases {
     }
     // checkear si el producto normal existe
 
-    let cartItem = cart.items.find((item) =>
+    let cartItemNormal = cart.items.find((item) =>
       item.product._id.toString() === product.id &&
-      (item.variant?._id.toString() === variant.id || !item.variant)
+      item.variant?._id.toString() === variant.id &&
+      !item.is_wholesale_package
     );
 
+    let cartItemWholesaleSimple = cart.items.find((item) =>
+      item.product._id.toString() === product.id &&
+      item.variant?._id.toString() === variant.id &&
+      item.product.wholesale_data.package_type === packageTypes.simple &&
+      item.is_wholesale_package
+    );
+
+    let cartItemWholesaleComplex = cart.items.find((item) =>
+      item.product._id.toString() === product.id &&
+      item.product.wholesale_data.package_type === packageTypes.complex &&
+      item.is_wholesale_package
+    );
+
+    let cartItem = cartItemNormal || cartItemWholesaleSimple || cartItemWholesaleComplex;
+
     // si el producto normal existe y no es mayorista, buscar el paquete mayorista
-    if (cartItem && !isWholesalePackage && cartItem.is_wholesale_package && product.wholesaleData.packageType === packageTypes.complex) {
-      cartItem = cart.items.find((item) =>
-        item.product._id.toString() === product.id &&
-        (item.variant?._id.toString() === variant.id || !item.variant) &&
-        !item.is_wholesale_package
-      );
-    }
+    // if (cartItem && !isWholesalePackage && cartItem.is_wholesale_package && product.wholesaleData.packageType === packageTypes.complex) {
+    //   cartItem = cart.items.find((item) =>
+    //     item.product._id.toString() === product.id &&
+    //     (item.variant?._id.toString() === variant.id || !item.variant) &&
+    //     !item.is_wholesale_package
+    //   );
+    // }
 
     if (cartItem) {
-      if (isWholesalePackage && product.wholesaleData.packageType === packageTypes.complex) {
-        const wholesaleVariants = this.getWholesaleVariants(product, cart, variant, predefinedQuantity, quantity);
-        cartItem.wholesale_variants = wholesaleVariants;
-        cartItem.quantity = wholesaleVariants.reduce((acc, v) => acc + v.quantity, 0);
-        cartItem.predefined_quantity = predefinedQuantity;
+      if (isWholesalePackage) {
+        if (product.wholesaleData.packageType === packageTypes.complex) {
+          const wholesaleVariants = this.getWholesaleVariants(product, cart, variant, predefinedQuantity, quantity);
+          cartItem.wholesale_variants = wholesaleVariants;
+          cartItem.quantity = wholesaleVariants.reduce((acc, v) => acc + v.quantity, 0);
+          cartItem.predefined_quantity = predefinedQuantity;
+        } else {
+          cartItem.quantity += quantity;
+        }
       } else {
         cartItem.quantity += quantity;
       }
@@ -110,12 +127,15 @@ export class CartUseCases {
         quantity,
       };
 
-      if (product.wholesaleData.isWholesaler) {
+      if (isWholesalePackage) {
         newItem.is_wholesale_package = true;
         if (product.wholesaleData.packageType === packageTypes.complex) {
           newItem.variant = null;
           newItem.predefined_quantity = predefinedQuantity;
           newItem.wholesale_variants = this.getWholesaleVariants(product, cart, variant, predefinedQuantity, quantity);
+        } else {
+          newItem.predefined_quantity = predefinedQuantity;
+          newItem.quantity += quantity;
         }
       }
 

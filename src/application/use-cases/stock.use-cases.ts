@@ -159,7 +159,7 @@ export class StockUseCases {
       return { stock, isCreated };
     } catch (error) {
       // await session.abortTransaction();
-      console.log('create-stock-error', JSON.stringify(error));
+      console.log('create-stock-error', error);
       throw error;
     }
   }

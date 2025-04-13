@@ -4,6 +4,7 @@ import { Connection, Model } from 'mongoose';
 import { Variant } from 'src/domain/entities/variant.entity';
 import { VariantRepositoryPort } from '../../../domain/ports/variant-repository.port';
 import { VariantModel, VariantSchema } from '../../models/variant.model';
+import * as mongoose from 'mongoose';
 
 export interface Filter {
   size: string;
