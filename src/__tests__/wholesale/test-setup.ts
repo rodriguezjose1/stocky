@@ -1,28 +1,35 @@
+import { ConfigModule } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
+import * as mongoose from 'mongoose';
+import { Connection } from 'mongoose';
+import { CartUseCases } from '../../application/use-cases/cart.use-cases';
+import { CategoryUseCases } from '../../application/use-cases/category.use-cases';
+import { ProductAttributeSubtypeUseCases } from '../../application/use-cases/product-attribute-subtype.use-cases';
 import { ProductUseCases } from '../../application/use-cases/product.use-cases';
 import { StockUseCases } from '../../application/use-cases/stock.use-cases';
+import { UserUseCases } from '../../application/use-cases/user.use-cases';
+import { VariantUseCases } from '../../application/use-cases/variant.use-cases';
+import { MongooseCategoryRepositoryAdapter } from '../../infrastructure/adapters/mongoose/mongoose-category-repository.adapter';
+import { MongooseProductAttributeSubtypeRepositoryAdapter } from '../../infrastructure/adapters/mongoose/mongoose-product-subtype-repository.adapter';
+import { MongooseStockRepositoryAdapter } from '../../infrastructure/adapters/mongoose/mongoose-stock-repository.adapter';
+import { FilterProduct } from '../../infrastructure/adapters/mongoose/product/filter-product';
+import { MongooseProductRepositoryAdapter } from '../../infrastructure/adapters/mongoose/product/mongoose-product-repository.adapter';
+import { MongooseVariantRepositoryAdapter } from '../../infrastructure/adapters/mongoose/mongoose-variant-repository.adapter';
+import { CategoryModule } from '../../modules/category.module';
+import { ProductAttributeSubtypeModule } from '../../modules/product-attribute-subtype.module';
+import { ProductAttributeModule } from '../../modules/product-attribute.module';
 import { ProductModule } from '../../modules/product.module';
 import { StockModule } from '../../modules/stock.module';
-import { MongooseProductRepositoryAdapter } from '../../infrastructure/adapters/mongoose/product/mongoose-product-repository.adapter';
-import { MongooseStockRepositoryAdapter } from '../../infrastructure/adapters/mongoose/mongoose-stock-repository.adapter';
 import { VariantModule } from '../../modules/variant.module';
-import { CategoryModule } from '../../modules/category.module';
-import { ProductAttributeModule } from '../../modules/product-attribute.module';
-import { ProductAttributeSubtypeModule } from '../../modules/product-attribute-subtype.module';
-import { EventEmitterModule } from '@nestjs/event-emitter';
-import { MongooseModule } from '@nestjs/mongoose';
-import { ConfigModule } from '@nestjs/config';
-import { Connection } from 'mongoose';
-import { FilterProduct } from '../../infrastructure/adapters/mongoose/product/filter-product';
-import { getConnectionToken } from '@nestjs/mongoose';
-import { ProductAttributeSubtypeUseCases } from '../../application/use-cases/product-attribute-subtype.use-cases';
-import { CategoryUseCases } from '../../application/use-cases/category.use-cases';
-import { MongooseProductAttributeSubtypeRepositoryAdapter } from '../../infrastructure/adapters/mongoose/mongoose-product-subtype-repository.adapter';
-import { MongooseCategoryRepositoryAdapter } from '../../infrastructure/adapters/mongoose/mongoose-category-repository.adapter';
 import { startInMemoryMongoReplicaSet, stopInMemoryMongoReplicaSet } from '../../test/utils/mongo-memory-server';
 import { MASTER_DATA, seedMasterData } from '../../test/utils/seed-master-data';
-import * as mongoose from 'mongoose';
-
+import { CartModule } from '../../modules/cart.module';
+import { MongooseCartRepositoryAdapter } from '../../infrastructure/adapters/mongoose/mongoose-cart-repository.adapter';
+import { UserModule } from '../../modules/user.module';
+import { MongooseUserRepositoryAdapter } from '../../infrastructure/adapters/mongoose/mongoose-user-repository.adapter';
+  
 // Datos de prueba predefinidos
 export const TEST_DATA = {
   product: {
@@ -76,11 +83,32 @@ export const TEST_DATA = {
     quantity: 100,
     costPrice: 100,
   },
+  user: {
+    // _id: new mongoose.Types.ObjectId('507f1f77bcf86cd799439016'),
+    id: new mongoose.Types.ObjectId('507f1f77bcf86cd799439016').toString(),
+    name: 'Test',
+    lastname: 'User',
+    password: 'password',
+    email: 'test@test.com',
+    roles: [],
+    phone: '1234567890',
+    createdAt: new Date(),
+    address: 'Test Address',
+    active: true,
+    updatedAt: new Date(),
+    document: '12345678',
+    birthdate: new Date('1990-01-01'),
+    lastConnection: new Date(),
+    dni: '12345678'
+  }
 };
 
 export interface TestContext {
   productUseCases: ProductUseCases;
   stockUseCases: StockUseCases;
+  cartUseCases: CartUseCases;
+  userUseCases: UserUseCases;
+  variantUseCases: VariantUseCases;
   mongoConnection: Connection;
   createdProductId?: string;
   createdStockId?: string;
@@ -104,6 +132,8 @@ export async function setupTestModule(): Promise<TestContext> {
       CategoryModule,
       ProductAttributeModule,
       ProductAttributeSubtypeModule,
+      CartModule,
+      UserModule,
     ],
     providers: [
       {
@@ -122,6 +152,18 @@ export async function setupTestModule(): Promise<TestContext> {
         provide: 'CategoryRepositoryPort',
         useClass: MongooseCategoryRepositoryAdapter,
       },
+      {
+        provide: 'CartRepositoryPort',
+        useClass: MongooseCartRepositoryAdapter,
+      },
+      {
+        provide: 'UserRepositoryPort',
+        useClass: MongooseUserRepositoryAdapter,
+      },
+      {
+        provide: 'VariantRepositoryPort',
+        useClass: MongooseVariantRepositoryAdapter,
+      },
       FilterProduct,
       ProductAttributeSubtypeUseCases,
       CategoryUseCases,
@@ -130,11 +172,17 @@ export async function setupTestModule(): Promise<TestContext> {
 
   const productUseCases = moduleFixture.get<ProductUseCases>(ProductUseCases);
   const stockUseCases = moduleFixture.get<StockUseCases>(StockUseCases);
+  const cartUseCases = moduleFixture.get<CartUseCases>(CartUseCases);
+  const userUseCases = moduleFixture.get<UserUseCases>(UserUseCases);
+  const variantUseCases = moduleFixture.get<VariantUseCases>(VariantUseCases);
   const mongoConnection = moduleFixture.get<Connection>(getConnectionToken());
 
   return {
     productUseCases,
     stockUseCases,
+    cartUseCases,
+    userUseCases,
+    variantUseCases,
     mongoConnection,
   };
 }

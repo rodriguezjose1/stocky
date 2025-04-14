@@ -39,8 +39,7 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
 
   // Remove a product from the cart
   async removeProduct(cartToUpdate): Promise<Cart> {
-    const cart = await this.getCartById(cartToUpdate);
-    await this.calculateTotal(cart);
+    await this.calculateTotal(cartToUpdate);
     cartToUpdate.id = cartToUpdate._id.toString();
     return this.updateCart(this.mapToModel(cartToUpdate));
   }

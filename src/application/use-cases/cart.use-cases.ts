@@ -125,6 +125,7 @@ export class CartUseCases {
           color: variant.color,
         },
         quantity,
+        is_wholesale_package: isWholesalePackage || false
       };
 
       if (isWholesalePackage) {
