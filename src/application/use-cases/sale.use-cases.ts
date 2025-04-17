@@ -84,8 +84,8 @@ export class SalesUseCase {
           details[i] = new SaleDetail(detail.productId, detail.variantId, detail.quantity, prices, variantData);
         } else {
           prices = {
-            retail: product.prices.retail,
-            reseller: product.prices.reseller,
+            retail: 0,
+            reseller: 0,
           };
           if (detail.predefinedQuantity === 6) {
             prices.wholesale = product.prices.wholesale.half_dozen * detail.quantity;

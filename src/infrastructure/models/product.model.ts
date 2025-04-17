@@ -33,10 +33,10 @@ interface WholesalePercentage {
 
 @Schema({ _id: false })
 class WholesalePercentageSchema {
-  @Prop({ required: true })
+  @Prop({ required: true, default: 0 })
   half_dozen: number;
 
-  @Prop({ required: true })
+  @Prop({ required: true, default: 0 })
   dozen: number;
 }
 
@@ -85,7 +85,7 @@ export class WholesaleDataSchema {
   @Prop({ type: Boolean, default: false })
   is_wholesaler: boolean;
 
-  @Prop({ type: String, enum: ['simple', 'complex', null], default: null, })
+  @Prop({ type: String, enum: ['simple', 'complex', null], default: null })
   package_type: string;
 }
 
@@ -126,7 +126,7 @@ export class ProductModel extends Document {
   @Prop({ type: Boolean, required: true, default: false })
   has_stock: boolean;
 
-  @Prop({ type: SchemaTypes.ObjectId, required: true, default: false })
+  @Prop({ type: SchemaTypes.ObjectId, required: true })
   size_type: Types.ObjectId;
 
   // TODO: move sizes and colors to other table to avoid add specifc fields

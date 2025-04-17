@@ -1,6 +1,9 @@
 import { TEST_DATA, TestContext, cleanupTestModule, logAfterEach, setupBeforeEach, setupTestModule } from '../wholesale/test-setup';
 import { Types } from 'mongoose';
 import { User } from '../../domain/entities/user.entity';
+import { setupCartWithProductForEditQuantity } from './helpers/edit-quantity.setup';
+import { setupSimpleProduct } from './helpers/simple-product.setup';
+import { setupCompositeProduct } from './helpers/composite-product.setup';
 
 describe('Cart Management', () => {
   let context: TestContext;
@@ -164,5 +167,111 @@ describe('Cart Management', () => {
     expect(updatedCart.total_reseller).toBe(0);
     expect(updatedCart.total_retail).toBe(0);
     expect(updatedCart.total_wholesale).toBe(0);
+  });
+
+  it('should edit product quantity in cart', async () => {
+    // Preparación usando el helper específico
+    const { cart, cartWithProduct } = await setupCartWithProductForEditQuantity(
+      context,
+      user,
+      productId,
+      variantId,
+      2 // cantidad inicial
+    );
+    
+    // TEST: Editar la cantidad del producto
+    const newQuantity = 5;
+    const updatedCart: any = await context.cartUseCases.updateProductQuantity(
+      cart.id,
+      productId,
+      variantId,
+      newQuantity,
+      false,
+      0
+    );
+    
+    // Verificaciones del test
+    expect(updatedCart.items).toHaveLength(1);
+    expect(updatedCart.items[0].quantity).toBe(newQuantity);
+    expect(updatedCart.total_reseller).toBeGreaterThan(cartWithProduct.total_reseller);
+    expect(updatedCart.total_retail).toBeGreaterThan(cartWithProduct.total_retail);
+    expect(updatedCart.total_wholesale).toBe(cartWithProduct.total_wholesale);
+    
+    // Verificar que los totales se actualizaron proporcionalmente
+    const expectedTotalRatio = newQuantity / cartWithProduct.items[0].quantity;
+    const actualTotalRatio = updatedCart.total_retail / cartWithProduct.total_retail;
+    expect(actualTotalRatio).toBeCloseTo(expectedTotalRatio, 2);
+  });
+
+  it('should edit quantity of a simple product in cart', async () => {
+    // Preparación usando el helper específico para productos simples
+    const { cart, cartWithProduct, productId, variantId } = await setupSimpleProduct(
+      context,
+      user,
+      2 // cantidad inicial
+    );
+    
+    // TEST: Editar la cantidad del producto
+    const newQuantity = 5;
+    const updatedCart: any = await context.cartUseCases.updateProductQuantity(
+      cart.id,
+      productId,
+      variantId,
+      newQuantity,
+      false,
+      0
+    );
+    
+    // Verificaciones del test
+    expect(updatedCart.items).toHaveLength(1);
+    expect(updatedCart.items[0].quantity).toBe(newQuantity);
+    expect(updatedCart.total_reseller).toBeGreaterThan(cartWithProduct.total_reseller);
+    expect(updatedCart.total_retail).toBeGreaterThan(cartWithProduct.total_retail);
+    expect(updatedCart.total_wholesale).toBe(cartWithProduct.total_wholesale);
+    
+    // Verificar que los totales se actualizaron proporcionalmente
+    const expectedTotalRatio = newQuantity / cartWithProduct.items[0].quantity;
+    const actualTotalRatio = updatedCart.total_retail / cartWithProduct.total_retail;
+    expect(actualTotalRatio).toBeCloseTo(expectedTotalRatio, 2);
+  });
+
+  it('should edit quantity of a composite product in cart', async () => {
+    // Preparación usando el helper específico para productos compuestos
+    const { cart, cartWithProduct, productId, variantId } = await setupCompositeProduct(
+      context,
+      user,
+      2 // cantidad inicial
+    );
+    
+    // TEST: Editar la cantidad del producto compuesto
+    const newQuantity = 3;
+    const updatedCart: any = await context.cartUseCases.updateProductQuantity(
+      cart.id,
+      productId,
+      variantId,
+      newQuantity,
+      true, // isWholesalePackage
+      6 // predefinedQuantity
+    );
+    
+    // Verificaciones del test
+    expect(updatedCart.items).toHaveLength(1);
+    expect(updatedCart.items[0].quantity).toBe(newQuantity);
+    expect(updatedCart.items[0].is_wholesale_package).toBe(true);
+    expect(updatedCart.items[0].predefined_quantity).toBe(6);
+    
+    // Verificar que los totales se actualizaron proporcionalmente
+    const expectedTotalRatio = newQuantity / cartWithProduct.items[0].quantity;
+    const actualTotalRatio = updatedCart.total_wholesale / cartWithProduct.total_wholesale;
+    expect(actualTotalRatio).toBeCloseTo(expectedTotalRatio, 2);
+    
+    // Verificar la estructura del producto
+    const cartItem = updatedCart.items[0];
+    expect(cartItem.product).toBeDefined();
+    expect(cartItem.product.wholesale_data).toBeDefined();
+    expect(cartItem.product.wholesale_data.package_type).toBe('complex');
+    expect(cartItem.wholesale_variants).toBeDefined();
+    expect(cartItem.wholesale_variants).toHaveLength(1);
+    expect(cartItem.wholesale_variants[0].quantity).toBe(3);
   });
 });

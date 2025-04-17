@@ -7,11 +7,13 @@ import { Connection } from 'mongoose';
 import { CartUseCases } from '../../application/use-cases/cart.use-cases';
 import { CategoryUseCases } from '../../application/use-cases/category.use-cases';
 import { ProductAttributeSubtypeUseCases } from '../../application/use-cases/product-attribute-subtype.use-cases';
+import { ProductAttributeUseCases } from '../../application/use-cases/product-attribute.use-cases';
 import { ProductUseCases } from '../../application/use-cases/product.use-cases';
 import { StockUseCases } from '../../application/use-cases/stock.use-cases';
 import { UserUseCases } from '../../application/use-cases/user.use-cases';
 import { VariantUseCases } from '../../application/use-cases/variant.use-cases';
 import { MongooseCategoryRepositoryAdapter } from '../../infrastructure/adapters/mongoose/mongoose-category-repository.adapter';
+import { MongooseProductAttributeRepositoryAdapter } from '../../infrastructure/adapters/mongoose/mongoose-product-attribute-repository.adapter';
 import { MongooseProductAttributeSubtypeRepositoryAdapter } from '../../infrastructure/adapters/mongoose/mongoose-product-subtype-repository.adapter';
 import { MongooseStockRepositoryAdapter } from '../../infrastructure/adapters/mongoose/mongoose-stock-repository.adapter';
 import { FilterProduct } from '../../infrastructure/adapters/mongoose/product/filter-product';
@@ -108,6 +110,9 @@ export interface TestContext {
   stockUseCases: StockUseCases;
   cartUseCases: CartUseCases;
   userUseCases: UserUseCases;
+  productAttributeUseCases: ProductAttributeUseCases;
+  productAttributeSubtypeUseCases: ProductAttributeSubtypeUseCases;
+  categoryUseCases: CategoryUseCases;
   variantUseCases: VariantUseCases;
   mongoConnection: Connection;
   createdProductId?: string;
@@ -149,6 +154,10 @@ export async function setupTestModule(): Promise<TestContext> {
         useClass: MongooseProductAttributeSubtypeRepositoryAdapter,
       },
       {
+        provide: 'ProductAttributeRepositoryPort',
+        useClass: MongooseProductAttributeRepositoryAdapter,
+      },
+      {
         provide: 'CategoryRepositoryPort',
         useClass: MongooseCategoryRepositoryAdapter,
       },
@@ -166,6 +175,7 @@ export async function setupTestModule(): Promise<TestContext> {
       },
       FilterProduct,
       ProductAttributeSubtypeUseCases,
+      ProductAttributeUseCases,
       CategoryUseCases,
     ],
   }).compile();
@@ -176,12 +186,18 @@ export async function setupTestModule(): Promise<TestContext> {
   const userUseCases = moduleFixture.get<UserUseCases>(UserUseCases);
   const variantUseCases = moduleFixture.get<VariantUseCases>(VariantUseCases);
   const mongoConnection = moduleFixture.get<Connection>(getConnectionToken());
+  const productAttributeUseCases = moduleFixture.get<ProductAttributeUseCases>(ProductAttributeUseCases);
+  const productAttributeSubtypeUseCases = moduleFixture.get<ProductAttributeSubtypeUseCases>(ProductAttributeSubtypeUseCases);
+  const categoryUseCases = moduleFixture.get<CategoryUseCases>(CategoryUseCases);
 
   return {
     productUseCases,
     stockUseCases,
     cartUseCases,
     userUseCases,
+    productAttributeUseCases,
+    productAttributeSubtypeUseCases,
+    categoryUseCases,
     variantUseCases,
     mongoConnection,
   };
@@ -243,10 +259,10 @@ export const logAfterEach = async (context: TestContext) => {
       size: variant.size
     }));
 
-    console.log('\n=== Estado de la base de datos después del test ===');
-    console.log('Products:', JSON.stringify(cleanProducts, null, 2));
-    console.log('Stocks:', JSON.stringify(cleanStocks, null, 2));
-    console.log('Variants:', JSON.stringify(cleanVariants, null, 2));
+    // console.log('\n=== Estado de la base de datos después del test ===');
+    // console.log('Products:', JSON.stringify(cleanProducts, null, 2));
+    // console.log('Stocks:', JSON.stringify(cleanStocks, null, 2));
+    // console.log('Variants:', JSON.stringify(cleanVariants, null, 2));
   } catch (error) {
     console.error('Error al registrar el estado de la base de datos:', error);
   }

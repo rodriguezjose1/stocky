@@ -20,4 +20,8 @@ export class ProductAttributeSubtypeUseCases {
   async getProductAttributeSubtypeByValue(value: string): Promise<ProductAttributeSubtype> {
     return this.productAttributeSubtypeRepository.getByValue(value);
   }
+
+  async createProductAttributeSubtype(data: { type: string; label_type: string; value: string }): Promise<ProductAttributeSubtype> {
+    return this.productAttributeSubtypeRepository.create(data);
+  }
 }

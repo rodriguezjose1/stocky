@@ -219,6 +219,14 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
       categories_filter: (product.categoriesFilter as any) || undefined,
       categories: (product.categories as any) || undefined,
       has_stock: product.hasStock,
+      prices: {
+        retail: product.prices?.retail || 0,
+        reseller: product.prices?.reseller || 0,
+        wholesale: {
+          half_dozen: product.prices?.wholesale?.half_dozen || 0,
+          dozen: product.prices?.wholesale?.dozen || 0
+        }
+      },
       wholesale_data: product.wholesaleData ? {
         is_wholesaler: product.wholesaleData.isWholesaler,
         package_type: product.wholesaleData.packageType

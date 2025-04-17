@@ -12,6 +12,11 @@ export class MongooseCategoryRepositoryAdapter implements CategoryRepositoryPort
     this.categoryModel = this.connection.model(CategoryModel.name, CategorySchema);
   }
 
+  async getAll(): Promise<Category[]> {
+    const categories = await this.categoryModel.find().exec();
+    return categories.map((category) => this.mapToEntity(category));
+  }
+
   async getCategoriesDropdown(): Promise<Category[]> {
     const categories = await this.categoryModel.find().populate('children').exec();
     return categories.map((category) => this.mapToEntity(category));
@@ -20,6 +25,23 @@ export class MongooseCategoryRepositoryAdapter implements CategoryRepositoryPort
   async getCategoriesBy(query): Promise<Category[]> {
     const categories = await this.categoryModel.find(query).exec();
     return categories.map((category) => this.mapToEntity(category));
+  }
+
+  async getById(id: string): Promise<Category> {
+    const category = await this.categoryModel.findById(id).exec();
+    return this.mapToEntity(category);
+  }
+
+  async create(data: { name: string; code: string; active: boolean; sizeTypes?: string[] }): Promise<Category> {
+    const category = await this.categoryModel.create({
+      name: data.name,
+      slug: data.code.toLowerCase().replace(/\s+/g, '-'),
+      parent: null,
+      ancestors: [],
+      children: [],
+      size_types: data.sizeTypes || []
+    });
+    return this.mapToEntity(category);
   }
 
   private mapToEntity(categoryModel: CategoryModel): Category {

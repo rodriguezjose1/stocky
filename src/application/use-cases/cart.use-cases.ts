@@ -160,23 +160,23 @@ export class CartUseCases {
     }
 
     // Si ya existe un paquete, validar que la suma de todas las variantes no exceda la cantidad predefinida
-    if (productItems.length > 0) {
-      const wholesaleItem = productItems[0];
-      // Calcular la suma total de todas las variantes
-      const totalVariantsQuantity = wholesaleItem.wholesale_variants.reduce(
-        (sum, v) => sum + v.quantity,
-        0
-      );
+    // if (productItems.length > 0) {
+    //   const wholesaleItem = productItems[0];
+    //   // Calcular la suma total de todas las variantes
+    //   const totalVariantsQuantity = wholesaleItem.wholesale_variants.reduce(
+    //     (sum, v) => sum + v.quantity,
+    //     0
+    //   );
 
-      // Calcular la nueva suma total incluyendo la nueva variante
-      const newTotalVariantsQuantity = totalVariantsQuantity + quantity;
+    //   // Calcular la nueva suma total incluyendo la nueva variante
+    //   const newTotalVariantsQuantity = totalVariantsQuantity + quantity;
 
-      if (newTotalVariantsQuantity > wholesaleItem.predefined_quantity) {
-        throw new BadRequestException(
-          `La suma total de las variantes (${newTotalVariantsQuantity}) excede la cantidad predefinida elegida de ${wholesaleItem.predefined_quantity}`
-        );
-      }
-    }
+    //   if (newTotalVariantsQuantity > wholesaleItem.predefined_quantity) {
+    //     throw new BadRequestException(
+    //       `La suma total de las variantes (${newTotalVariantsQuantity}) excede la cantidad predefinida elegida de ${wholesaleItem.predefined_quantity}`
+    //     );
+    //   }
+    // }
 
     // Si ya existe un item mayorista, actualizar sus variantes
     if (productItems.length > 0) {
@@ -186,7 +186,7 @@ export class CartUseCases {
         v => v.variant._id.toString() === variant.id
       );
       if (existingVariant) {
-        existingVariant.quantity += quantity;
+        existingVariant.quantity = quantity;
       } else {
         wholesaleItem.wholesale_variants.push({
           variant: { ...variant, _id: variant.id },
@@ -283,7 +283,9 @@ export class CartUseCases {
     }
 
     cartItem.predefined_quantity = predefinedQuantity;
-    return this.cartRepository.updateQuantity(cart);
+
+    const updatedCart = await this.cartRepository.updateQuantity(cart);
+    return updatedCart;
   }
 
   async getCartById(cartId: string): Promise<Cart> {
