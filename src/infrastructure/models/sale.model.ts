@@ -145,7 +145,7 @@ interface WholesaleVariant {
   variant: VariantData;
   quantity: number;
 }
-@Schema()
+@Schema({ _id: false })
 export class SaleDetailSchema {
   @Prop({ type: SchemaTypes.ObjectId, required: true })
   product: Types.ObjectId;

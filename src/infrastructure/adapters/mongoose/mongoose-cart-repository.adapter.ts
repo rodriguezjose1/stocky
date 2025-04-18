@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection, Model, Types } from 'mongoose';
+import { packageTypes } from 'src/application/constants.use-cases';
 import { Cart } from 'src/domain/entities/cart.entity';
 import { ICartRepository } from 'src/domain/ports/cart-repository.port';
 import { CartModel, CartSchema } from 'src/infrastructure/models/cart.model.model';
@@ -29,19 +30,19 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
   }
 
   // Add a product to the cart
-  async addProduct(
-    cart,
-  ): Promise<Cart> {
+  async addProduct(cart): Promise<Cart> {
     cart.id = cart._id.toString();
     await this.calculateTotal(cart);
-    return this.updateCart(this.mapToModel(cart));
+    const updatedCart = await this.updateCart(this.mapToModel(cart));
+    return this.mapStockToCart(updatedCart);
   }
 
   // Remove a product from the cart
   async removeProduct(cartToUpdate): Promise<Cart> {
     await this.calculateTotal(cartToUpdate);
     cartToUpdate.id = cartToUpdate._id.toString();
-    return this.updateCart(this.mapToModel(cartToUpdate));
+    const updatedCart = await this.updateCart(this.mapToModel(cartToUpdate));
+    return this.mapStockToCart(updatedCart);
   }
 
   async getVariantInCart(cartId: string, variantId: string): Promise<Cart> {
@@ -53,7 +54,8 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
   async updateQuantity(cartToUpdate): Promise<Cart> {
     await this.calculateTotal(cartToUpdate);
     cartToUpdate.id = cartToUpdate._id.toString();
-    return this.updateCart(this.mapToModel(cartToUpdate));
+    const updatedCart = await this.updateCart(this.mapToModel(cartToUpdate));
+    return this.mapStockToCart(updatedCart);
   }
 
   // Get a cart by its ID
@@ -66,7 +68,7 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
 
     if (cart && cart.items.length > 0) {
       const calls = cart.items.map(async (item, i) => {
-        if (item.is_wholesale_package) {
+        if (item.is_wholesale_package && item.product.wholesale_data.package_type === packageTypes.complex) {
           const calls = item.wholesale_variants.map(async (wv, j) => {
             const stock = await this.stockModel.findOne({ product: item.product._id, variant: wv.variant._id }).exec();
             item.wholesale_variants[j].stock = stock;
@@ -147,5 +149,24 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
       totalWholesale: cart.total_wholesale,
       active: cart.active,
     };
+  }
+
+  private async mapStockToCart(cart: Cart): Promise<Cart> {
+    if (cart && cart.items.length > 0) {
+      const calls = cart.items.map(async (item, i) => {
+        if (item.is_wholesale_package && item.product.wholesale_data.package_type === packageTypes.complex) {
+          const calls = item.wholesale_variants.map(async (wv, j) => {
+            const stock = await this.stockModel.findOne({ product: item.product._id, variant: wv.variant._id }).exec();
+            item.wholesale_variants[j].stock = stock;
+          });
+          await Promise.all(calls);
+        } else {
+          const stock = await this.stockModel.findOne({ product: item.product._id, variant: item.variant._id }).exec();
+          item.stock = stock;
+        }
+      });
+      await Promise.all(calls);
+    }
+    return cart;
   }
 }

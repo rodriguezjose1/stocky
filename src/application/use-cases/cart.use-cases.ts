@@ -136,7 +136,6 @@ export class CartUseCases {
           newItem.wholesale_variants = this.getWholesaleVariants(product, cart, variant, predefinedQuantity, quantity);
         } else {
           newItem.predefined_quantity = predefinedQuantity;
-          newItem.quantity += quantity;
         }
       }
 
@@ -270,7 +269,7 @@ export class CartUseCases {
         wholesaleVariant.quantity = quantity;
         cartItem.quantity = cartItem.wholesale_variants.reduce((acc, v) => acc + v.quantity, 0);
       } else {
-        cart.items = cart.items.filter((item) => item.product._id.toString() !== productId);
+        cartItem.quantity = quantity;
       }
     } else {
       // find cart item and update quantity
