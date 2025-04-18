@@ -37,6 +37,12 @@ export class ProductUseCases {
   }
 
   async createProduct(product: CreateProductDto): Promise<Product> {
+    // Check if a product with the same code already exists
+    const existingProduct = await this.productRepository.findByCode(product.code);
+    if (existingProduct) {
+      throw new BadRequestException(productErrors.duplicateProductCode);
+    }
+
     const categoryIds = product.categories; // IDs de las categorías seleccionadas
 
     // Obtener las categorías y sus ancestros
@@ -132,6 +138,25 @@ export class ProductUseCases {
     }
 
     return this.productRepository.update(id, product);
+  }
+
+  async updatePartialProduct(id: string, product: Partial<Product>): Promise<Product | null> {
+    // Verificar si el producto existe
+    const existingProduct = await this.productRepository.findById(id);
+    if (!existingProduct) {
+      throw new BadRequestException(productErrors.productNotFound);
+    }
+
+    // Si se está actualizando el código, verificar que no exista otro producto con el mismo código
+    if (product.code && product.code !== existingProduct.code) {
+      const productWithSameCode = await this.productRepository.findByCode(product.code);
+      if (productWithSameCode) {
+        throw new BadRequestException(productErrors.duplicateProductCode);
+      }
+    }
+
+    // Utilizar el método updatePartial del repositorio que ahora maneja el mapeo correctamente
+    return this.productRepository.updatePartial(id, product);
   }
 
   async deleteProduct(id: string): Promise<boolean> {

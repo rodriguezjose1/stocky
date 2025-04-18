@@ -49,7 +49,7 @@ export interface Prices {
 
 @Schema({ _id: false })
 export class PricesSchema {
-  @Prop({ required: false })
+  @Prop({ required: true })
   cost?: number;
 
   @Prop({ required: true })

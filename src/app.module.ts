@@ -25,7 +25,7 @@ import { VariantModule } from './modules/variant.module';
     ConfigModule.forRoot({ isGlobal: true, envFilePath: process.env.NODE_ENV === 'test' ? `.env_${process.env.NODE_ENV}` : undefined }),
     DatabaseModule.forRootAsync(),
     EventEmitterModule.forRoot(),
-    ...(process.env.NODE_ENV !== 'test' ? [SentryModule.forRoot()] : []),
+    ...(process.env.NODE_ENV === 'production' ? [SentryModule.forRoot()] : []),
     AuthModule,
     LoggerModule,
     AsyncEventsModule,

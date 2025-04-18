@@ -10,10 +10,29 @@ import { PurchaseListener } from './listeners/purchase.listeners';
 import { SaleListener } from './listeners/sale.listeners';
 import { StockListener } from './listeners/stock.listeners';
 import { NotificationListener } from './listeners/notification.listeners';
+import { MailModule } from 'src/infrastructure/adapters/email-service/mail.module';
+import { ErrorNotificationService } from 'src/infrastructure/adapters/email-service/error-notification.service';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [PurchaseModule, StockModule, ProductModule, SaleModule, CartModule, NotificationModule],
-  providers: [PurchaseListener, ProductListener, SaleListener, StockListener, NotificationListener],
+  imports: [
+    PurchaseModule, 
+    StockModule, 
+    ProductModule, 
+    SaleModule, 
+    CartModule, 
+    NotificationModule, 
+    MailModule,
+    ConfigModule
+  ],
+  providers: [
+    PurchaseListener, 
+    ProductListener, 
+    SaleListener, 
+    StockListener, 
+    NotificationListener,
+    ErrorNotificationService
+  ],
   exports: [PurchaseListener, ProductListener, SaleListener, StockListener, NotificationListener],
 })
 export class AsyncEventsModule {}

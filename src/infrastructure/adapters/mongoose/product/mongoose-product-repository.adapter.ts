@@ -62,6 +62,11 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
     };
   }
 
+  async findByCode(code: string): Promise<Product | null> {
+    const product = await this.productModel.findOne({ code }).exec();
+    return product ? this.mapToEntity(product) : null;
+  }
+
   async findById(id: string): Promise<Product | null> {
     const product = await this.productModel.findById(id).exec();
     return product ? this.mapToEntity(product) : null;
@@ -153,6 +158,12 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
     return updatedProduct ? this.mapToEntity(updatedProduct) : null;
   }
 
+  async updatePartial(id: string, product: Partial<Product>): Promise<Product | null> {
+    const mappedProduct = this.mapToModel(product);
+    const updatedProduct = await this.productModel.findByIdAndUpdate(id, mappedProduct, { new: true }).exec();
+    return updatedProduct ? this.mapToEntity(updatedProduct) : null;
+  }
+
   async delete(id: string): Promise<boolean> {
     const result = await this.productModel.deleteOne({ _id: id }).exec();
     return result.deletedCount === 1;
@@ -213,25 +224,49 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
   }
 
   private mapToModel(product: Partial<Product>): Partial<ProductModel> {
-    return {
-      ...product,
-      size_type: new Types.ObjectId(product.sizeType),
-      categories_filter: (product.categoriesFilter as any) || undefined,
-      categories: (product.categories as any) || undefined,
-      has_stock: product.hasStock,
-      prices: {
-        retail: product.prices?.retail || 0,
-        reseller: product.prices?.reseller || 0,
-        wholesale: {
-          half_dozen: product.prices?.wholesale?.half_dozen || 0,
-          dozen: product.prices?.wholesale?.dozen || 0
-        }
-      },
-      wholesale_data: product.wholesaleData ? {
-        is_wholesaler: product.wholesaleData.isWholesaler,
-        package_type: product.wholesaleData.packageType
-      } : undefined,
-    };
+    // Crear un objeto base sin las propiedades que necesitan transformación
+    const { sizeType, categoriesFilter, categories, hasStock, prices, wholesaleData, ...rest } = product;
+    const mappedProduct: Partial<ProductModel> = { ...rest };
+
+    // Mapear campos específicos solo si existen
+    if (sizeType !== undefined) {
+      mappedProduct.size_type = new Types.ObjectId(sizeType);
+    }
+
+    if (categoriesFilter !== undefined) {
+      mappedProduct.categories_filter = categoriesFilter as any;
+    }
+
+    if (categories !== undefined) {
+      mappedProduct.categories = categories as any;
+    }
+
+    if (hasStock !== undefined) {
+      mappedProduct.has_stock = hasStock;
+    }
+
+    // Mapear precios solo si existen
+    if (prices) {
+      mappedProduct.prices = {
+        cost: prices.cost !== undefined ? prices.cost : undefined,
+        retail: prices.retail !== undefined ? prices.retail : undefined,
+        reseller: prices.reseller !== undefined ? prices.reseller : undefined,
+        wholesale: prices.wholesale ? {
+          half_dozen: prices.wholesale.half_dozen !== undefined ? prices.wholesale.half_dozen : 0,
+          dozen: prices.wholesale.dozen !== undefined ? prices.wholesale.dozen : 0
+        } : undefined
+      };
+    }
+
+    // Mapear wholesale_data solo si existe
+    if (wholesaleData) {
+      mappedProduct.wholesale_data = {
+        is_wholesaler: wholesaleData.isWholesaler !== undefined ? wholesaleData.isWholesaler : undefined,
+        package_type: wholesaleData.packageType !== undefined ? wholesaleData.packageType : undefined
+      };
+    }
+
+    return mappedProduct;
   }
 
   private mapToEntity(productModel: ProductModel, withPopulate = false): Product {

@@ -34,6 +34,10 @@ export const productErrors = {
     code: 'CATEGORY_NOT_FOUND',
     message: 'Category not found',
   },
+  duplicateProductCode: {
+    code: 'DUPLICATE_PRODUCT_CODE',
+    message: 'A product with this code already exists',
+  },
   wholesalePackageTypeRequired: {
     code: 'WHOLESALE_PACKAGE_TYPE_REQUIRED',
     message: 'The wholesale package type is required',
