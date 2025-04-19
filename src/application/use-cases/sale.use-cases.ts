@@ -42,7 +42,11 @@ export class SalesUseCase {
         }
         saleData.details = cart.items.map((item) => {
           if (item.variant) {
-            return new SaleDetail(item.product._id, item.variant._id, item.quantity);
+            if (item.is_wholesale_package) {
+              return new SaleDetail(item.product._id, item.variant._id, item.quantity, null, null, true);
+            } else {
+              return new SaleDetail(item.product._id, item.variant._id, item.quantity);
+            }
           } else {
             return new SaleDetail(item.product._id, null, item.quantity, null, null, true, item.predefined_quantity, item.wholesale_variants);
           }
@@ -55,14 +59,22 @@ export class SalesUseCase {
       const details: SaleDetail[] = [];
       const calls = saleData.details.map(async (detail, i) => {
         const product: Product = await this.productUseCases.getProductById(detail.productId);
-        if (!detail.isWholesalePackage) {
+        if (!detail.isWholesalePackage || (detail.isWholesalePackage && !detail.wholesaleVariants)) {
           const variant: Variant = await this.variantUseCases.getVariantById(detail.variantId);
           const productAttributeColor = await this.productAttributeUseCases.getProductAttributeByValue(variant.color);
-          prices = {
-            retail: product.prices.retail,
-            reseller: product.prices.reseller,
-            wholesale: 0,
-          };
+          if (detail.isWholesalePackage) {
+            prices = {
+              retail: 0,
+              reseller: 0,
+              wholesale: detail.quantity === 6 ? product.prices.wholesale.half_dozen : product.prices.wholesale.dozen,
+            };
+          } else {
+            prices = {
+              retail: product.prices.retail,
+              reseller: product.prices.reseller,
+              wholesale: 0,
+            };
+          }
           const variantData = {
             productName: product.name,
             productCode: product.code,
@@ -81,7 +93,7 @@ export class SalesUseCase {
               },
             ],
           };
-          details[i] = new SaleDetail(detail.productId, detail.variantId, detail.quantity, prices, variantData);
+          details[i] = new SaleDetail(detail.productId, detail.variantId, detail.quantity, prices, variantData, detail.isWholesalePackage);
         } else {
           prices = {
             retail: 0,
