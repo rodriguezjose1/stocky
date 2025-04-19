@@ -31,6 +31,18 @@ export class AddProductToCartDTO {
   ) {}
 }
 
+export class AddComplexWholesaleProductToCartDTO {
+  constructor(
+    public cartId: string,
+    public productId: string,
+    public predefinedQuantity: number,
+    public variants: {
+      variantId: string;
+      quantity: number;
+    }[]
+  ) {}
+}
+
 export class CreateCartDTO {
   constructor(public userId: string) {}
 }

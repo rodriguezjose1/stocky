@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Req, UseGuards } from '@nestjs/common';
 import { CartUseCases } from 'src/application/use-cases/cart.use-cases';
-import { AddProductToCartDTO } from 'src/domain/entities/cart.entity';
+import { AddComplexWholesaleProductToCartDTO, AddProductToCartDTO } from 'src/domain/entities/cart.entity';
 import { Role } from 'src/domain/enums/role.enum';
 import { Roles } from 'src/infrastructure/auth/decorators/roles.decorator';
 import { BasicAuthGuard } from 'src/infrastructure/auth/guards/basic-auth.guard';
@@ -26,6 +26,17 @@ export class CartController {
   @Post('add-product')
   async addProductToCart(@Body() body: AddProductToCartDTO) {
     const cart = await this.cartUseCases.addProductToCart(body);
+
+    return {
+      cart,
+    };
+  }
+
+  @UseGuards(BasicAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SELLER)
+  @Post('add-product/complex')
+  async addComplexWholesaleProductToCart(@Body() body: AddComplexWholesaleProductToCartDTO) {
+    const cart = await this.cartUseCases.addComplexWholesaleProductToCart(body);
 
     return {
       cart,

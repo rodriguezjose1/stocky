@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { AddProductToCartDTO, Cart } from 'src/domain/entities/cart.entity';
+import { AddComplexWholesaleProductToCartDTO, AddProductToCartDTO, Cart } from 'src/domain/entities/cart.entity';
 import { User } from 'src/domain/entities/user.entity';
 import { ICartRepository } from 'src/domain/ports/cart-repository.port';
 import { ProductUseCases } from './product.use-cases';
@@ -146,59 +146,59 @@ export class CartUseCases {
   }
 
   getWholesaleVariants(product, cart, variant, predefinedQuantity, quantity) {
-    const productItems = cart.items.filter(item => item.product._id.toString() === product.id && item.is_wholesale_package);
-    if (!product.wholesaleData?.isWholesaler) {
-      throw new BadRequestException('Este producto no permite ser agregado como paquete mayorista');
-    }
+    // const productItems = cart.items.filter(item => item.product._id.toString() === product.id && item.is_wholesale_package);
+    // if (!product.wholesaleData?.isWholesaler) {
+    //   throw new BadRequestException('Este producto no permite ser agregado como paquete mayorista');
+    // }
 
-    // Si es el primer item mayorista, validar la cantidad predefinida
-    if (productItems.length === 0) {
-      if (!predefinedQuantity) {
-        throw new BadRequestException('Debe especificar la cantidad predefinida para el paquete mayorista');
-      }
-    }
-
-    // Si ya existe un paquete, validar que la suma de todas las variantes no exceda la cantidad predefinida
-    // if (productItems.length > 0) {
-    //   const wholesaleItem = productItems[0];
-    //   // Calcular la suma total de todas las variantes
-    //   const totalVariantsQuantity = wholesaleItem.wholesale_variants.reduce(
-    //     (sum, v) => sum + v.quantity,
-    //     0
-    //   );
-
-    //   // Calcular la nueva suma total incluyendo la nueva variante
-    //   const newTotalVariantsQuantity = totalVariantsQuantity + quantity;
-
-    //   if (newTotalVariantsQuantity > wholesaleItem.predefined_quantity) {
-    //     throw new BadRequestException(
-    //       `La suma total de las variantes (${newTotalVariantsQuantity}) excede la cantidad predefinida elegida de ${wholesaleItem.predefined_quantity}`
-    //     );
+    // // Si es el primer item mayorista, validar la cantidad predefinida
+    // if (productItems.length === 0) {
+    //   if (!predefinedQuantity) {
+    //     throw new BadRequestException('Debe especificar la cantidad predefinida para el paquete mayorista');
     //   }
     // }
 
-    // Si ya existe un item mayorista, actualizar sus variantes
-    if (productItems.length > 0) {
-      const wholesaleItem = productItems[0];
-      // Agregar o actualizar la variante en wholesale_variants
-      const existingVariant = wholesaleItem.wholesale_variants.find(
-        v => v.variant._id.toString() === variant.id
-      );
-      if (existingVariant) {
-        existingVariant.quantity = quantity;
-      } else {
-        wholesaleItem.wholesale_variants.push({
-          variant: { ...variant, _id: variant.id },
-          quantity: quantity
-        });
-      }
-      return wholesaleItem.wholesale_variants;
-    } else {
-      return [{
-        variant: { ...variant, _id: variant.id },
-        quantity: quantity
-      }];
-    }
+    // // Si ya existe un paquete, validar que la suma de todas las variantes no exceda la cantidad predefinida
+    // // if (productItems.length > 0) {
+    // //   const wholesaleItem = productItems[0];
+    // //   // Calcular la suma total de todas las variantes
+    // //   const totalVariantsQuantity = wholesaleItem.wholesale_variants.reduce(
+    // //     (sum, v) => sum + v.quantity,
+    // //     0
+    // //   );
+
+    // //   // Calcular la nueva suma total incluyendo la nueva variante
+    // //   const newTotalVariantsQuantity = totalVariantsQuantity + quantity;
+
+    // //   if (newTotalVariantsQuantity > wholesaleItem.predefined_quantity) {
+    // //     throw new BadRequestException(
+    // //       `La suma total de las variantes (${newTotalVariantsQuantity}) excede la cantidad predefinida elegida de ${wholesaleItem.predefined_quantity}`
+    // //     );
+    // //   }
+    // // }
+
+    // // Si ya existe un item mayorista, actualizar sus variantes
+    // if (productItems.length > 0) {
+    //   const wholesaleItem = productItems[0];
+    //   // Agregar o actualizar la variante en wholesale_variants
+    //   const existingVariant = wholesaleItem.wholesale_variants.find(
+    //     v => v.variant._id.toString() === variant.id
+    //   );
+    //   if (existingVariant) {
+    //     existingVariant.quantity = quantity;
+    //   } else {
+    //     wholesaleItem.wholesale_variants.push({
+    //       variant: { ...variant, _id: variant.id },
+    //       quantity: quantity
+    //     });
+    //   }
+    //   return wholesaleItem.wholesale_variants;
+    // } else {
+    return [{
+      variant: { ...variant, _id: variant.id },
+      quantity: quantity
+    }];
+    // }
   }
 
   async removeProductFromCart(cartId: string, variantId: string, productId: string, isWholesalePackage: boolean): Promise<Cart> {
@@ -297,5 +297,80 @@ export class CartUseCases {
 
   async updateCart(cart: any): Promise<Cart> {
     return this.cartRepository.updateCart(cart);
+  }
+
+  async addComplexWholesaleProductToCart({
+    cartId,
+    productId,
+    predefinedQuantity,
+    variants
+  }: AddComplexWholesaleProductToCartDTO): Promise<Cart> {
+    const cart = await this.cartRepository.getCartById(cartId);
+    if (!cart) {
+      throw new BadRequestException('Cart not found');
+    }
+
+    const product = await this.productUseCases.getProductById(productId);
+    if (!product) {
+      throw new BadRequestException('Product not found');
+    }
+
+    if (!product.wholesaleData.isWholesaler) {
+      throw new BadRequestException(productErrors.wholesalePackageNotAllowed);
+    }
+
+    if (product.wholesaleData.packageType !== packageTypes.complex) {
+      throw new BadRequestException('This product is not a complex wholesale package');
+    }
+
+    // Verificar que todas las variantes existan y tengan stock suficiente
+    for (const variant of variants) {
+      const variantExists = await this.variantUseCases.getVariantById(variant.variantId);
+      if (!variantExists) {
+        throw new BadRequestException(`Variant ${variant.variantId} not found`);
+      }
+
+      const quantityInStock = await this.stockUseCases.getQuantityByVariantId(productId, variant.variantId);
+      if (variant.quantity > quantityInStock) {
+        throw new BadRequestException(`Insufficient stock for variant ${variant.variantId}`);
+      }
+    }
+
+    // Verificar que la suma de todas las cantidades no exceda la cantidad predefinida
+    const totalQuantity = variants.reduce((acc, v) => acc + v.quantity, 0);
+    if (totalQuantity > predefinedQuantity) {
+      throw new BadRequestException(`Total quantity (${totalQuantity}) exceeds predefined quantity (${predefinedQuantity})`);
+    }
+
+    // Buscar el item del paquete mayorista complejo
+    const cartItem = cart.items.find((item) => 
+      item.product._id.toString() === product.id && 
+      item.is_wholesale_package && 
+      item.product.wholesale_data.package_type === packageTypes.complex
+    );
+
+    if (!cartItem) {
+      throw new BadRequestException('Complex wholesale package item not found in cart');
+    }
+
+    // Actualizar solo los wholesale_variants
+    cartItem.wholesale_variants = [];
+    for (const variant of variants) {
+      const variantData = await this.variantUseCases.getVariantById(variant.variantId);
+      cartItem.wholesale_variants.push({
+        variant: {
+          _id: variantData.id,
+          size: variantData.size,
+          color: variantData.color
+        },
+        quantity: variant.quantity
+      });
+    }
+
+    // Actualizar la cantidad total
+    cartItem.quantity = totalQuantity;
+    cartItem.predefined_quantity = predefinedQuantity;
+
+    return this.cartRepository.addProduct(cart);
   }
 }
