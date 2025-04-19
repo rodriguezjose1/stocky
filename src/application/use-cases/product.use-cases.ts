@@ -82,6 +82,20 @@ export class ProductUseCases {
       throw new BadRequestException(productErrors.productNotFound);
     }
 
+    if (product.wholesaleData.isWholesaler !== productDB.wholesaleData.isWholesaler
+    ) {
+      const calculatedPrices = await this.calculatePrices({
+        costPrice: product.prices.cost,
+        percentageReseller: product.percentages.reseller,
+        percentageRetail: product.percentages.retail,
+        percentageWholesale: product.percentages.wholesale,
+      });
+
+      product.prices.reseller = calculatedPrices.reseller;
+      product.prices.retail = calculatedPrices.retail;
+      product.prices.wholesale = calculatedPrices.wholesale;
+    }
+
     if (product.prices && product.prices.cost !== productDB.prices.cost) {
       const calculatedPrices = await this.calculatePrices({
         costPrice: product.prices.cost,
