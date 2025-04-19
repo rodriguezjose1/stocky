@@ -88,9 +88,9 @@ export class SalesUseCase {
             reseller: 0,
           };
           if (detail.predefinedQuantity === 6) {
-            prices.wholesale = product.prices.wholesale.half_dozen * detail.quantity;
+            prices.wholesale = product.prices.wholesale.half_dozen;
           } else {
-            prices.wholesale = product.prices.wholesale.dozen * detail.quantity;
+            prices.wholesale = product.prices.wholesale.dozen;
           }
 
           // wholesale variants to variantData

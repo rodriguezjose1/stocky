@@ -75,7 +75,8 @@ export class CartUseCases {
     let cartItemWholesaleComplex = cart.items.find((item) =>
       item.product._id.toString() === product.id &&
       item.product.wholesale_data.package_type === packageTypes.complex &&
-      item.is_wholesale_package
+      item.is_wholesale_package &&
+      isWholesalePackage
     );
 
     let cartItem = cartItemNormal || cartItemWholesaleSimple || cartItemWholesaleComplex;
@@ -343,17 +344,40 @@ export class CartUseCases {
     }
 
     // Buscar el item del paquete mayorista complejo
-    const cartItem = cart.items.find((item) => 
+    let cartItem = cart.items.find((item) => 
       item.product._id.toString() === product.id && 
       item.is_wholesale_package && 
       item.product.wholesale_data.package_type === packageTypes.complex
     );
 
     if (!cartItem) {
-      throw new BadRequestException('Complex wholesale package item not found in cart');
+      // Crear nuevo item si no existe
+      cartItem = {
+        product: {
+          _id: product.id,
+          name: product.name,
+          code: product.code,
+          prices: {
+            retail: product.prices.retail,
+            reseller: product.prices.reseller,
+            wholesale: product.prices.wholesale,
+          },
+          pictures: product.pictures,
+          wholesale_data: {
+            is_wholesaler: product.wholesaleData.isWholesaler,
+            package_type: product.wholesaleData.packageType,
+          },
+        },
+        variant: null,
+        quantity: totalQuantity,
+        is_wholesale_package: true,
+        predefined_quantity: predefinedQuantity,
+        wholesale_variants: []
+      };
+      cart.items.push(cartItem);
     }
 
-    // Actualizar solo los wholesale_variants
+    // Actualizar los wholesale_variants
     cartItem.wholesale_variants = [];
     for (const variant of variants) {
       const variantData = await this.variantUseCases.getVariantById(variant.variantId);
