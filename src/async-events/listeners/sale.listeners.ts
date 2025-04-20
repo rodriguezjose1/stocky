@@ -40,12 +40,14 @@ export class SaleListener {
         if (!detail.isWholesalePackage) {
           decremented = await this.stockUseCases.decrementStock(detail.productId, detail.variantId, {
             quantity: detail.quantity,
+            appliedPriceType: detail.appliedPriceType
           });
           stocksUpdated.push(...decremented);
         } else {
           for (const wholesaleVariant of detail.wholesaleVariants) {
             decremented = await this.stockUseCases.decrementStock(detail.productId, wholesaleVariant.variant.variantId, {
               quantity: wholesaleVariant.quantity,
+              appliedPriceType: detail.appliedPriceType
             });
             stocksUpdated.push(...decremented);
           }

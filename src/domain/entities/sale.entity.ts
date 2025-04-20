@@ -7,6 +7,14 @@ export enum SaleStatus {
   REJECTED = 'rejected',
 }
 
+export enum AppliedPriceTypeEnum {
+  RETAIL = 'retail',
+  WHOLESALE = 'wholesale',
+  RESELLER = 'reseller'
+}
+
+export type AppliedPriceType = AppliedPriceTypeEnum.RETAIL | AppliedPriceTypeEnum.WHOLESALE | AppliedPriceTypeEnum.RESELLER;
+
 export class GetSalesFilterDto {
   @IsInt()
   @IsOptional()
@@ -43,6 +51,7 @@ export class SaleDetail {
       variant: VariantData;
       quantity: number;
     }[],
+    public appliedPriceType?: AppliedPriceType,
   ) {}
 }
 
@@ -83,6 +92,7 @@ export class StocksUpdated {
         dozen: number;
       };
     },
+    public appliedPriceType?: AppliedPriceType,
   ) {}
 }
 

@@ -11,9 +11,9 @@ import { BasicAuthGuard } from 'src/infrastructure/auth/guards/basic-auth.guard'
 export class SaleController {
   constructor(private saleUseCases: SalesUseCase) {}
 
-  @UseGuards(BasicAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SELLER)
   @Post()
+  @Roles(Role.ADMIN, Role.SELLER, Role.CUSTOMER)
+  @UseGuards(BasicAuthGuard, RolesGuard)
   async createSale(
     @Body()
     saleData: CreateSaleDto,
@@ -26,9 +26,9 @@ export class SaleController {
     };
   }
 
-  @UseGuards(BasicAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SELLER)
   @Get()
+  @UseGuards(BasicAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SELLER, Role.CUSTOMER)
   async getAllSales(@Query() query: GetSalesFilterDto, @Req() req) {
     query.user = req.user;
     const { sales, total } = await this.saleUseCases.findAll(query);

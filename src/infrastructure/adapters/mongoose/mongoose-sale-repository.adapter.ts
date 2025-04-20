@@ -165,6 +165,10 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
                 keyLabel: attribute.key_label,
               })),
             },
+            detail.is_wholesale_package,
+            detail.predefined_quantity,
+            [],
+            detail.applied_price_type
           );
         } else {
           return new SaleDetail(  
@@ -195,6 +199,7 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
               },
               quantity: v.quantity,
             })),
+            detail.applied_price_type
           );
         }
       }),
@@ -222,7 +227,7 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
             label: attribute.label,
               keyLabel: attribute.key_label,
             })),
-          });
+          }, detail.is_wholesale_package, detail.predefined_quantity, [], detail.applied_price_type);
         } else {
           return new SaleDetail(detail.product.toString(), null, detail.quantity, detail.prices, null, true, detail.predefined_quantity, detail.wholesale_variants.map((v) => ({
             variant: {
@@ -239,59 +244,67 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
               }),
             },
             quantity: v.quantity,
-          })));
+          })), detail.applied_price_type);
         }
       }
     );
   }
 
   private mapToModel(sale: Partial<Sale>): Partial<SaleModel> {
-    return {
-      date: sale.date || undefined,
-      status: sale.status || undefined,
-      details:
-        sale.details?.map((detail) => ({
-          product: new Types.ObjectId(detail.productId),
-          variant: detail.variantId ? new Types.ObjectId(detail.variantId) : null,
-          variant_data: detail.variantData?.productCode ? {
-            product_name: detail.variantData.productName,
-            product_code: detail.variantData.productCode,
-            variant_id: new Types.ObjectId(detail.variantId),
-            variant_attributes: detail.variantData.variantAttributes.map((attribute) => ({
+    const mappedSale: Partial<SaleModel> = {};
+
+    if (sale.date) mappedSale.date = sale.date;
+    if (sale.status) mappedSale.status = sale.status;
+    if (sale.weekCode) mappedSale.weekCode = sale.weekCode;
+    if (sale.cartId) mappedSale.cart = new Types.ObjectId(sale.cartId);
+    if (sale.user) mappedSale.user = sale.user;
+
+    if (sale.details?.length) {
+      mappedSale.details = sale.details.map((detail) => ({
+        product: new Types.ObjectId(detail.productId),
+        variant: detail.variantId ? new Types.ObjectId(detail.variantId) : null,
+        variant_data: detail.variantData?.productCode ? {
+          product_name: detail.variantData.productName,
+          product_code: detail.variantData.productCode,
+          variant_id: new Types.ObjectId(detail.variantId),
+          variant_attributes: detail.variantData.variantAttributes.map((attribute) => ({
+            name: attribute.name,
+            value: attribute.value,
+            label: attribute.label,
+            key_label: attribute.keyLabel,
+          })),
+        } : null,
+        quantity: detail.quantity,
+        prices: detail.prices,
+        is_wholesale_package: detail.isWholesalePackage || false,
+        predefined_quantity: detail.predefinedQuantity || 0,
+        applied_price_type: detail.appliedPriceType,
+        wholesale_variants: detail.wholesaleVariants?.length ? detail.wholesaleVariants.map((variant) => ({
+          variant: {
+            product_name: variant.variant.productName,
+            product_code: variant.variant.productCode,
+            variant_id: new Types.ObjectId(variant.variant.variantId),
+            variant_attributes: variant.variant.variantAttributes.map((attribute) => ({
               name: attribute.name,
               value: attribute.value,
               label: attribute.label,
               key_label: attribute.keyLabel,
             })),
-          } : null,
-          quantity: detail.quantity,
-          prices: detail.prices,
-          is_wholesale_package: detail.isWholesalePackage || false,
-          predefined_quantity: detail.predefinedQuantity || 0,
-          wholesale_variants: detail.wholesaleVariants?.length ? detail.wholesaleVariants.map((variant) => ({
-            variant: {
-              product_name: variant.variant.productName,
-              product_code: variant.variant.productCode,
-              variant_id: new Types.ObjectId(variant.variant.variantId),
-              variant_attributes: variant.variant.variantAttributes.map((attribute) => ({
-                name: attribute.name,
-                value: attribute.value,
-                label: attribute.label,
-                key_label: attribute.keyLabel,
-              })),
-            },
-            quantity: variant.quantity,
-          })) : [],
-        })) || undefined,
-      stocks_updated:
-        sale.stocksUpdated?.map((stockUpdated) => ({
-          stock: new Types.ObjectId(stockUpdated.stock),
-          quantity: stockUpdated.quantity,
-          prices: stockUpdated.prices,
-        })) || undefined,
-      cart: sale.cartId ? new Types.ObjectId(sale.cartId) : undefined,
-      user: sale.user || undefined,
-      weekCode: sale.weekCode || undefined,
-    };
+          },
+          quantity: variant.quantity,
+        })) : [],
+      }));
+    }
+
+    if (sale.stocksUpdated?.length) {
+      mappedSale.stocks_updated = sale.stocksUpdated.map((stockUpdated) => ({
+        stock: new Types.ObjectId(stockUpdated.stock),
+        quantity: stockUpdated.quantity,
+        prices: stockUpdated.prices,
+        applied_price_type: stockUpdated.appliedPriceType,
+      }));
+    }
+
+    return mappedSale;
   }
 }

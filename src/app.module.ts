@@ -22,7 +22,7 @@ import { UserModule } from './modules/user.module';
 import { VariantModule } from './modules/variant.module';
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, envFilePath: process.env.NODE_ENV === 'test' ? `.env_${process.env.NODE_ENV}` : undefined }),
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: process.env.NODE_ENV === 'dev' ? `.env_${process.env.NODE_ENV}` : undefined }),
     DatabaseModule.forRootAsync(),
     EventEmitterModule.forRoot(),
     ...(process.env.NODE_ENV === 'production' ? [SentryModule.forRoot()] : []),

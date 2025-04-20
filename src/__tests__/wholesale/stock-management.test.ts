@@ -155,12 +155,15 @@ describe('Wholesale Stock Management', () => {
 
     const decrementAmount = 20;
     const decrementedStocks = await context.stockUseCases.decrementStock(
-      productId, 
-      createdStock[0].variant, 
-      { quantity: decrementAmount }
+      productId,
+      createdStock[0].variant,
+      {
+        quantity: decrementAmount,
+        appliedPriceType: "wholesale" as const
+      }
     );
     const quantity = await context.stockUseCases.getQuantityByVariantId(productId, createdStock[0].variant);
-    
+
     expect(decrementedStocks).toBeDefined();
     expect(decrementedStocks[0].quantity).toBe(decrementAmount);
     expect(quantity).toBe(TEST_DATA.stock.quantity - decrementAmount);
@@ -210,7 +213,7 @@ describe('Wholesale Stock Management', () => {
 
     const decrementAmount = TEST_DATA.stock.quantity + 1;
     await expect(
-      context.stockUseCases.decrementStock(productId, stockId, { quantity: decrementAmount })
+      context.stockUseCases.decrementStock(productId, stockId, { quantity: decrementAmount, appliedPriceType: "wholesale" as const })
     ).rejects.toThrow();
   });
 }); 

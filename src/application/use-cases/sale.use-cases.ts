@@ -43,12 +43,12 @@ export class SalesUseCase {
         saleData.details = cart.items.map((item) => {
           if (item.variant) {
             if (item.is_wholesale_package) {
-              return new SaleDetail(item.product._id, item.variant._id, item.quantity, null, null, true);
+              return new SaleDetail(item.product._id, item.variant._id, item.quantity, null, null, true, null, [], item.applied_price_type);
             } else {
-              return new SaleDetail(item.product._id, item.variant._id, item.quantity);
+              return new SaleDetail(item.product._id, item.variant._id, item.quantity, null, null, false, null, [], item.applied_price_type);
             }
           } else {
-            return new SaleDetail(item.product._id, null, item.quantity, null, null, true, item.predefined_quantity, item.wholesale_variants);
+            return new SaleDetail(item.product._id, null, item.quantity, null, null, true, item.predefined_quantity, item.wholesale_variants, item.applied_price_type);
           }
         });
       }
@@ -93,7 +93,7 @@ export class SalesUseCase {
               },
             ],
           };
-          details[i] = new SaleDetail(detail.productId, detail.variantId, detail.quantity, prices, variantData, detail.isWholesalePackage);
+          details[i] = new SaleDetail(detail.productId, detail.variantId, detail.quantity, prices, variantData, detail.isWholesalePackage, detail.predefinedQuantity, detail.wholesaleVariants, detail.appliedPriceType);
         } else {
           prices = {
             retail: 0,
@@ -131,7 +131,7 @@ export class SalesUseCase {
             };
           });
 
-          details[i] = new SaleDetail(detail.productId, null, detail.quantity, prices, null, true, detail.predefinedQuantity, wholesaleVariantsData);
+          details[i] = new SaleDetail(detail.productId, null, detail.quantity, prices, null, true, detail.predefinedQuantity, wholesaleVariantsData, detail.appliedPriceType);
         }
       });
       await Promise.all(calls);

@@ -27,7 +27,8 @@ export class AddProductToCartDTO {
     public variantId: string,
     public quantity: number,
     public isWholesalePackage?: boolean,
-    public predefinedQuantity?: number  // Cantidad predefinida que el usuario eligió al inicio
+    public predefinedQuantity?: number,  // Cantidad predefinida que el usuario eligió al inicio
+    public userRole?: string
   ) {}
 }
 
@@ -39,7 +40,8 @@ export class AddComplexWholesaleProductToCartDTO {
     public variants: {
       variantId: string;
       quantity: number;
-    }[]
+    }[],
+    public userRole?: string
   ) {}
 }
 

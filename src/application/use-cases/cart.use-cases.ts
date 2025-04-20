@@ -7,6 +7,8 @@ import { StockUseCases } from './stock.use-cases';
 import { VariantUseCases } from './variant.use-cases';
 import { productErrors } from '../error.constants';
 import { packageTypes } from '../constants.use-cases';
+import { AppliedPriceTypeEnum } from 'src/domain/entities/sale.entity';
+import { Role } from 'src/domain/enums/role.enum';
 
 @Injectable()
 export class CartUseCases {
@@ -31,7 +33,8 @@ export class CartUseCases {
     variantId,
     quantity,
     isWholesalePackage,
-    predefinedQuantity
+    predefinedQuantity,
+    userRole
   }: AddProductToCartDTO): Promise<Cart> {
     const cart = await this.cartRepository.getCartById(cartId);
     if (!cart) {
@@ -42,7 +45,6 @@ export class CartUseCases {
     if (!product) {
       throw new BadRequestException('Product not found');
     }
-
 
     if (isWholesalePackage && !product.wholesaleData.isWholesaler) {
       throw new BadRequestException(productErrors.wholesalePackageNotAllowed);
@@ -126,7 +128,8 @@ export class CartUseCases {
           color: variant.color,
         },
         quantity,
-        is_wholesale_package: isWholesalePackage || false
+        is_wholesale_package: isWholesalePackage || false,
+        applied_price_type: isWholesalePackage ? AppliedPriceTypeEnum.WHOLESALE : userRole === Role.ADMIN || userRole === Role.SELLER ? AppliedPriceTypeEnum.RESELLER : AppliedPriceTypeEnum.RETAIL
       };
 
       if (isWholesalePackage) {
@@ -304,7 +307,7 @@ export class CartUseCases {
     cartId,
     productId,
     predefinedQuantity,
-    variants
+    variants,
   }: AddComplexWholesaleProductToCartDTO): Promise<Cart> {
     const cart = await this.cartRepository.getCartById(cartId);
     if (!cart) {
@@ -372,7 +375,8 @@ export class CartUseCases {
         quantity: totalQuantity,
         is_wholesale_package: true,
         predefined_quantity: predefinedQuantity,
-        wholesale_variants: []
+        wholesale_variants: [],
+        applied_price_type: AppliedPriceTypeEnum.WHOLESALE
       };
       cart.items.push(cartItem);
     }

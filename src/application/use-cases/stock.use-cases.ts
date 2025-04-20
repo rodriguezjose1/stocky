@@ -21,7 +21,7 @@ export class StockUseCases {
     private productUseCases: ProductUseCases,
     private eventEmitter: EventEmitter2,
     @InjectConnection() private readonly connection: mongoose.Connection,
-  ) {}
+  ) { }
 
   async getStockByProductId(productId: string): Promise<Stock[] | null> {
     return this.stockRepository.getByProductId(productId);
@@ -178,7 +178,7 @@ export class StockUseCases {
     return stock;
   }
 
-  async decrementStock(productId, variantId, { quantity: decrementAmount }): Promise<StocksUpdated[]> {
+  async decrementStock(productId, variantId, { quantity: decrementAmount, appliedPriceType }): Promise<StocksUpdated[]> {
     const decremented: StocksUpdated[] = [];
     const stocks = await this.stockRepository.getStockByVariantIdAndProductId(variantId, productId);
     const product = await this.productUseCases.getProductById(stocks[0].product);
@@ -210,6 +210,7 @@ export class StockUseCases {
           reseller: product.prices.reseller,
           wholesale: product.prices.wholesale,
         },
+        appliedPriceType,
       });
 
       // Guardamos los cambios en la base de datos
@@ -222,19 +223,33 @@ export class StockUseCases {
   }
 
   public async checkStock(details: SaleDetail[]): Promise<void> {
+    // Agrupar detalles por productId y variantId usando un objeto para simplificar
+    const stockMap = new Map<string, number>();
+
+    // Agrupar todas las cantidades por producto y variante
     for (const detail of details) {
       if (detail.variantId !== null) {
-        const quantity = await this.stockRepository.getQuantityByVariantId(detail.productId, detail.variantId);
-        if (quantity < detail.quantity) {
-          throw new InsufficientStockException(detail.productId, detail.quantity, quantity);
-        }
-      } else {
+        // Producto con variante específica
+        const key = `${detail.productId}-${detail.variantId}`;
+        stockMap.set(key, (stockMap.get(key) || 0) + detail.quantity);
+      } else if (detail.wholesaleVariants?.length > 0) {
+        // Producto complejo con variantes mayoristas
         for (const variant of detail.wholesaleVariants) {
-          const quantity = await this.stockRepository.getQuantityByVariantId(detail.productId, variant.variant._id);
-          if (quantity < variant.quantity) {
-            throw new InsufficientStockException(detail.productId, variant.quantity, quantity);
-          }
+          const key = `${detail.productId}-${variant.variant._id}`;
+          stockMap.set(key, (stockMap.get(key) || 0) + variant.quantity);
         }
+      }
+    }
+
+    // Verificar el stock para cada grupo
+    for (const [key, totalQuantity] of stockMap.entries()) {
+      const [productId, variantId] = key.split('-');
+      const availableStock = await this.stockRepository.getQuantityByVariantId(productId, variantId);
+      const stockValue = Number(availableStock);
+      const requestedValue = Number(totalQuantity);
+      
+      if (!isNaN(stockValue) && !isNaN(requestedValue) && stockValue < requestedValue) {
+        throw new InsufficientStockException(productId, requestedValue, stockValue);
       }
     }
   }

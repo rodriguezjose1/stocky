@@ -1,7 +1,7 @@
 // infrastructure/models/sale.model.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, SchemaTypes, Types } from 'mongoose';
-import { SaleStatus } from 'src/domain/entities/sale.entity';
+import { SaleStatus, AppliedPriceType, AppliedPriceTypeEnum } from 'src/domain/entities/sale.entity';
 
 @Schema({ _id: false })
 export class UserDataSchema {
@@ -71,6 +71,9 @@ class StocksUpdated {
       dozen: number;
     };
   };
+
+  @Prop({ required: true, enum: AppliedPriceTypeEnum })
+  applied_price_type: AppliedPriceType;
 }
 
 interface IStocksUpated {
@@ -85,6 +88,7 @@ interface IStocksUpated {
       dozen: number;
     };
   };
+  applied_price_type: AppliedPriceType;
 }
 
 const StocksUpdatedSchema = SchemaFactory.createForClass(StocksUpdated);
@@ -167,6 +171,9 @@ export class SaleDetailSchema {
 
   @Prop({ type: Number, default: 0 })
   predefined_quantity: number;
+
+  @Prop({ type: String, enum: ['retail', 'wholesale', 'reseller'], default: 'retail' })
+  applied_price_type: AppliedPriceType;
 
   @Prop({
     type: [WholesaleVariantSchema], default: []
