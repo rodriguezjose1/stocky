@@ -1,7 +1,7 @@
 // infrastructure/models/sale.model.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, SchemaTypes, Types } from 'mongoose';
-import { SaleStatus, AppliedPriceType, AppliedPriceTypeEnum } from 'src/domain/entities/sale.entity';
+import { SaleStatus, AppliedPriceType, AppliedPriceTypeEnum } from '../../domain/entities/sale.entity';
 
 @Schema({ _id: false })
 export class UserDataSchema {
@@ -42,56 +42,6 @@ export class PricesSchema {
   @Prop({})
   wholesale?: number;
 }
-
-@Schema()
-class StocksUpdated {
-  @Prop({ type: SchemaTypes.ObjectId, required: true })
-  stock: Types.ObjectId;
-
-  @Prop({ required: true })
-  quantity: number;
-
-  @Prop({
-    type: {
-      cost: Number,
-      retail: Number,
-      reseller: Number,
-      wholesale: {
-        half_dozen: Number,
-        dozen: Number,
-      }
-    }
-  })
-  prices: {
-    cost?: number;
-    retail?: number;
-    reseller?: number;
-    wholesale?: {
-      half_dozen: number;
-      dozen: number;
-    };
-  };
-
-  @Prop({ required: true, enum: AppliedPriceTypeEnum })
-  applied_price_type: AppliedPriceType;
-}
-
-interface IStocksUpated {
-  stock: Types.ObjectId;
-  quantity: number;
-  prices: {
-    cost?: number;
-    retail?: number;
-    reseller?: number;
-    wholesale?: number | {
-      half_dozen: number;
-      dozen: number;
-    };
-  };
-  applied_price_type: AppliedPriceType;
-}
-
-const StocksUpdatedSchema = SchemaFactory.createForClass(StocksUpdated);
 
 @Schema({ _id: false })
 export class VariantAttributeSchema {
@@ -136,6 +86,7 @@ interface VariantData {
   variant_id: Types.ObjectId;
   variant_attributes: VariantAttribute[];
 }
+
 @Schema({ _id: false })
 export class WholesaleVariantSchema {
   @Prop({ type: VariantDataSchema })
@@ -149,6 +100,7 @@ interface WholesaleVariant {
   variant: VariantData;
   quantity: number;
 }
+
 @Schema({ _id: false })
 export class SaleDetailSchema {
   @Prop({ type: SchemaTypes.ObjectId, required: true })
@@ -182,6 +134,60 @@ export class SaleDetailSchema {
 }
 
 const SaleDetailSchemaFactory = SchemaFactory.createForClass(SaleDetailSchema);
+
+@Schema({ _id: false })
+class StocksUpdated {
+  @Prop({ type: SchemaTypes.ObjectId, required: true })
+  stock: Types.ObjectId;
+
+  @Prop({ type: VariantDataSchema, required: true })
+  variant_data: VariantData;
+
+  @Prop({ required: true })
+  quantity: number;
+
+  @Prop({
+    type: {
+      cost: Number,
+      retail: Number,
+      reseller: Number,
+      wholesale: {
+        half_dozen: Number,
+        dozen: Number,
+      }
+    }
+  })
+  prices: {
+    cost?: number;
+    retail?: number;
+    reseller?: number;
+    wholesale?: {
+      half_dozen: number;
+      dozen: number;
+    };
+  };
+
+  @Prop({ required: true, enum: AppliedPriceTypeEnum })
+  applied_price_type: AppliedPriceType;
+}
+
+interface IStocksUpated {
+  stock: Types.ObjectId;
+  variant_data: VariantData;
+  quantity: number;
+  prices: {
+    cost?: number;
+    retail?: number;
+    reseller?: number;
+    wholesale?: number | {
+      half_dozen: number;
+      dozen: number;
+    };
+  };
+  applied_price_type: AppliedPriceType;
+}
+
+const StocksUpdatedSchema = SchemaFactory.createForClass(StocksUpdated);
 
 @Schema({ collection: 'sales', timestamps: true })
 export class SaleModel extends Document {

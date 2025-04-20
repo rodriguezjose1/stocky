@@ -11,6 +11,7 @@ import { ProductUseCases } from './product.use-cases';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { StockCreatedEvent, StockDecrementedEvent, StockIncrementedEvent } from 'src/async-events/events/stock.events';
 import { DEFAULT_ERROR, QUANTITY_LESS_THAN_CURRENT_TOTAL } from '../error.constants';
+import { ProductAttributeUseCases } from './product-attribute.use-cases';
 
 @Injectable()
 export class StockUseCases {
@@ -19,6 +20,7 @@ export class StockUseCases {
     private stockRepository: StockRepositoryPort,
     private variantUseCases: VariantUseCases,
     private productUseCases: ProductUseCases,
+    private productAttributeUseCases: ProductAttributeUseCases,
     private eventEmitter: EventEmitter2,
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) { }
@@ -182,7 +184,9 @@ export class StockUseCases {
     const decremented: StocksUpdated[] = [];
     const stocks = await this.stockRepository.getStockByVariantIdAndProductId(variantId, productId);
     const product = await this.productUseCases.getProductById(stocks[0].product);
-
+    const variant = await this.variantUseCases.getVariantById(variantId);
+    const colorAttribute = await this.productAttributeUseCases.getProductAttributeByValue(variant.color);
+    const sizeAttribute = await this.productAttributeUseCases.getProductAttributeByValue(variant.size);
     let remaining = decrementAmount; // Cuánto stock queda por decrementar
 
     let quantitySaved = 0;
@@ -203,6 +207,25 @@ export class StockUseCases {
 
       decremented.push({
         stock: stock.id,
+        variantData: {
+          productName: product.name,
+          productCode: product.code,
+          variantId: variant.id,
+          variantAttributes: [
+            {
+              name: 'color',
+              keyLabel: 'Color',
+              value: variant.color,
+              label: colorAttribute ? colorAttribute.label : variant.color,
+            },
+            {
+              name: 'size',
+              keyLabel: 'Talle',
+              value: variant.size,
+              label: sizeAttribute ? sizeAttribute.label : variant.size,
+            },
+          ],
+        },
         quantity: quantitySaved,
         prices: {
           cost: stock.costPrice,

@@ -7,6 +7,7 @@ import { AuthModule } from './infrastructure/auth/auth.module';
 import { DatabaseModule } from './infrastructure/database/database.module';
 import { LoggerMiddleware } from './infrastructure/logging/logger.middleware';
 import { LoggerModule } from './infrastructure/logging/logger.module';
+import { ScriptsModule } from './infrastructure/scripts/scripts.module';
 import { CartModule } from './modules/cart.module';
 import { CategoryModule } from './modules/category.module';
 import { LoginModule } from './modules/login.module';
@@ -42,6 +43,7 @@ import { VariantModule } from './modules/variant.module';
     UploadImageModule,
     CartModule,
     NotificationModule,
+    ScriptsModule,
   ],
 })
 export class AppModule implements NestModule {

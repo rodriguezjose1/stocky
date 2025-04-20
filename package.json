@@ -17,7 +17,8 @@
     "test:watch": "jest --watch --detectOpenHandles",
     "test:cov": "jest --coverage --detectOpenHandles",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand --detectOpenHandles",
-    "test:e2e": "jest --config ./test/jest-e2e.json --detectOpenHandles"
+    "test:e2e": "jest --config ./test/jest-e2e.json --detectOpenHandles",
+    "migrate": "NODE_ENV=dev ts-node src/infrastructure/scripts/migrate.ts"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.0.2",
@@ -39,6 +40,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "cloudinary": "^1.41.3",
+    "exceljs": "^4.4.0",
     "handlebars": "^4.7.8",
     "mongoose": "^8.5.0",
     "multer-storage-cloudinary": "^4.0.0",

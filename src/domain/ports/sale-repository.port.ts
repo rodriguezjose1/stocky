@@ -10,4 +10,14 @@ export interface SaleRepositoryPort {
   findSellersWithSalesInCurrentWeek(): Promise<Sale[]>;
   findProductsBySellerId(sellerId: string): Promise<any>;
   findGroupedProductsInCurrentWeek(): Promise<any>;
+  findMonthlySalesStats(month?: number, year?: number): Promise<{
+    totalSales: number;
+    totalTransactions: number;
+    totalCosts: number;
+    totalProfit: number;
+    totalProductsSold: number;
+    averageSaleAmount: number;
+    averageProfitPerTransaction: number;
+  }>;
+  findMonthlySalesDetail(month?: number, year?: number): Promise<any[]>;
 }

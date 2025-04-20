@@ -82,6 +82,7 @@ interface VariantData {
 export class StocksUpdated {
   constructor(
     public stock: string,
+    public variantData: VariantData,
     public quantity: number,
     public prices?: {
       cost?: number;

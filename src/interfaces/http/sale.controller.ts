@@ -1,11 +1,13 @@
 // interfaces/http/sale.controller.ts
-import { Controller, Post, Body, Get, Put, Param, Query, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Body, Get, Put, Param, Query, UseGuards, Req, Res } from '@nestjs/common';
 import { SalesUseCase } from '../../application/use-cases/sale.use-cases';
 import { CreateSaleDto, GetSalesFilterDto, Sale } from 'src/domain/entities/sale.entity';
 import { Roles } from 'src/infrastructure/auth/decorators/roles.decorator';
 import { Role } from 'src/domain/enums/role.enum';
 import { RolesGuard } from 'src/infrastructure/auth/guards/roles.guard';
 import { BasicAuthGuard } from 'src/infrastructure/auth/guards/basic-auth.guard';
+import * as ExcelJS from 'exceljs';
+import { Response } from 'express';
 
 @Controller('sales')
 export class SaleController {
@@ -36,15 +38,6 @@ export class SaleController {
     return {
       sales,
       total,
-    };
-  }
-
-  @Get(':id')
-  async getSaleById(id: string) {
-    const sale = await this.saleUseCases.findById(id);
-
-    return {
-      sale,
     };
   }
 
@@ -87,5 +80,52 @@ export class SaleController {
   @Post('/async-events/:saleId')
   async processAsyncEvents(@Param('saleId') saleId: string) {
     return this.saleUseCases.processAsyncEvents(saleId);
+  }
+
+  @Get('grouped-products-current-week')
+  @Roles(Role.ADMIN, Role.SELLER)
+  async getGroupedProductsInCurrentWeek() {
+    return this.saleUseCases.findGroupedProductsInCurrentWeek();
+  }
+
+  @Get('monthly-stats')
+  @Roles(Role.ADMIN, Role.SELLER)
+  async getMonthlySalesStats(
+    @Query('month') month?: number,
+    @Query('year') year?: number,
+  ) {
+    return this.saleUseCases.getMonthlySalesStats(month, year);
+  }
+
+  @Get('monthly-detail')
+  @Roles(Role.ADMIN, Role.SELLER)
+  async getMonthlySalesDetail(
+    @Res() res: Response,
+    @Query('month') month?: number,
+    @Query('year') year?: number
+  ) {
+    const excelBuffer = await this.saleUseCases.generateMonthlySalesExcel(month, year);
+    
+    // Configurar la respuesta HTTP
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=ventas-detalle-${month || new Date().getMonth() + 1}-${year || new Date().getFullYear()}.xlsx`
+    );
+    
+    // Enviar el archivo
+    res.send(excelBuffer);
+  }
+
+  @Get(':id')
+  async getSaleById(id: string) {
+    const sale = await this.saleUseCases.findById(id);
+
+    return {
+      sale,
+    };
   }
 }
