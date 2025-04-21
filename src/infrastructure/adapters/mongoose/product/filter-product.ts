@@ -164,6 +164,9 @@ export class FilterProduct {
         costPrice: { $first: '$prices.cost' },
         resellerPrice: { $first: '$prices.reseller' },
         retailPrice: { $first: '$prices.retail' },
+        retailPercentage: { $first: '$percentages.retail' },
+        resellerPercentage: { $first: '$percentages.reseller' },
+        wholesalePercentage: { $first: '$percentages.wholesale' },
         pictures: { $first: '$pictures' },
         has_stock: { $first: '$has_stock' },
         sizes: { $first: '$sizes' },
@@ -185,6 +188,11 @@ export class FilterProduct {
           brand: '$brand',
         },
         quantity: '$quantity',
+        percentages: {
+          retail: '$retailPercentage',
+          reseller: '$resellerPercentage',
+          wholesale: '$wholesalePercentage',
+        },
         prices: {
           cost: '$costPrice',
           reseller: '$resellerPrice',

@@ -342,8 +342,8 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
         $addFields: {
           profitMargin: {
             $cond: [
-              { $gt: ['$totalSale', 0] },
-              { $multiply: [{ $divide: ['$profit', '$totalSale'] }, 100] },
+              { $gt: ['$totalCost', 0] },
+              { $multiply: [{ $divide: ['$profit', '$totalCost'] }, 100] },
               0
             ]
           }

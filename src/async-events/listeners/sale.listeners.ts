@@ -37,7 +37,7 @@ export class SaleListener {
 
       for (const detail of sale.details) {
         let decremented;
-        if (!detail.isWholesalePackage) {
+        if (!detail.isWholesalePackage || (detail.isWholesalePackage && !detail.wholesaleVariants.length)) {
           decremented = await this.stockUseCases.decrementStock(detail.productId, detail.variantId, {
             quantity: detail.quantity,
             appliedPriceType: detail.appliedPriceType

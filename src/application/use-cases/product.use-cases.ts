@@ -82,17 +82,16 @@ export class ProductUseCases {
       throw new BadRequestException(productErrors.productNotFound);
     }
 
-    if (product.wholesaleData.isWholesaler !== productDB.wholesaleData.isWholesaler) {
-      const calculatedPrices = await this.calculatePrices({
-        costPrice: product.prices.cost,
-        percentageReseller: product.percentages.reseller,
-        percentageRetail: product.percentages.retail,
-        percentageWholesale: product.percentages.wholesale,
-      });
+    // if percentages was changed, update prices
+    if (product.percentages.reseller !== productDB.percentages.reseller ||
+      product.percentages.retail !== productDB.percentages.retail ||
+      product.percentages.wholesale !== productDB.percentages.wholesale) {
+      await this.updatePrices(product);
+    }
 
-      product.prices.reseller = calculatedPrices.reseller;
-      product.prices.retail = calculatedPrices.retail;
-      product.prices.wholesale = calculatedPrices.wholesale;
+    if (product.wholesaleData.isWholesaler !== productDB.wholesaleData.isWholesaler) {
+      await this.updatePrices(product);
+
       if (!product.wholesaleData.isWholesaler) {
         product.percentages.wholesale.half_dozen = 0;
         product.percentages.wholesale.dozen = 0;
@@ -100,16 +99,7 @@ export class ProductUseCases {
     }
 
     if (product.prices && product.prices.cost !== productDB.prices.cost) {
-      const calculatedPrices = await this.calculatePrices({
-        costPrice: product.prices.cost,
-        percentageReseller: productDB.percentages.reseller,
-        percentageRetail: productDB.percentages.retail,
-        percentageWholesale: productDB.percentages.wholesale,
-      });
-
-      product.prices.reseller = calculatedPrices.reseller;
-      product.prices.retail = calculatedPrices.retail;
-      product.prices.wholesale = calculatedPrices.wholesale;
+      await this.updatePrices(product);
 
       this.productRepository.savePriceHistory({
         productId: productDB.id,
@@ -155,6 +145,19 @@ export class ProductUseCases {
     }
 
     return this.productRepository.update(id, product);
+  }
+
+  private async updatePrices(product: Partial<Product>) {
+    const calculatedPrices = await this.calculatePrices({
+      costPrice: product.prices.cost,
+      percentageReseller: product.percentages.reseller,
+      percentageRetail: product.percentages.retail,
+      percentageWholesale: product.percentages.wholesale,
+    });
+
+    product.prices.reseller = calculatedPrices.reseller;
+    product.prices.retail = calculatedPrices.retail;
+    product.prices.wholesale = calculatedPrices.wholesale;
   }
 
   async updatePartialProduct(id: string, product: Partial<Product>): Promise<Product | null> {

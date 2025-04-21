@@ -58,14 +58,15 @@ export class SalesUseCase {
 
       let prices: Prices;
       const details: SaleDetail[] = [];
-      const calls = saleData.details.map(async (detail, i) => {
+      
+      for (let i = 0; i < saleData.details.length; i++) {
+        const detail = saleData.details[i];
         const product: Product = await this.productUseCases.getProductById(detail.productId);
-        const variant: Variant = await this.variantUseCases.getVariantById(detail.variantId);
-        const productAttributeColor = await this.productAttributeUseCases.getProductAttributeByValue(variant.color);
-        const productAttributeSize = await this.productAttributeUseCases.getProductAttributeByValue(variant.size);
         
-
-        if (!detail.isWholesalePackage || (detail.isWholesalePackage && !detail.wholesaleVariants)) {
+        if (!detail.isWholesalePackage || (detail.isWholesalePackage && !detail.wholesaleVariants.length)) {
+          const variant: Variant = await this.variantUseCases.getVariantById(detail.variantId);
+          const productAttributeColor = await this.productAttributeUseCases.getProductAttributeByValue(variant.color.toLowerCase());
+          const productAttributeSize = await this.productAttributeUseCases.getProductAttributeByValue(variant.size.toLowerCase());
           if (detail.isWholesalePackage) {
             prices = {
               retail: 0,
@@ -110,7 +111,11 @@ export class SalesUseCase {
           }
 
           // wholesale variants to variantData
-          const wholesaleVariantsData = detail.wholesaleVariants.map((v) => {
+          const wholesaleVariantsData = await Promise.all(detail.wholesaleVariants.map(async (v) => {
+            const variant: Variant = await this.variantUseCases.getVariantById(v.variant._id);
+            const productAttributeColor = await this.productAttributeUseCases.getProductAttributeByValue(variant.color.toLowerCase());
+            const productAttributeSize = await this.productAttributeUseCases.getProductAttributeByValue(variant.size.toLowerCase());
+            
             return {
               variant: {
                 productName: product.name,
@@ -133,12 +138,11 @@ export class SalesUseCase {
               },
               quantity: v.quantity,
             };
-          });
+          }));
 
           details[i] = new SaleDetail(detail.productId, null, detail.quantity, prices, null, true, detail.predefinedQuantity, wholesaleVariantsData, detail.appliedPriceType);
         }
-      });
-      await Promise.all(calls);
+      }
 
       if (!saleData.user) {
         saleData.user = userReq.id;
@@ -333,7 +337,7 @@ export class SalesUseCase {
         totalSale: saleGroup.reduce((sum, sale) => sum + sale.totalSale, 0).toFixed(2),
         profit: saleGroup.reduce((sum, sale) => sum + sale.profit, 0).toFixed(2),
         profitMargin: ((saleGroup.reduce((sum, sale) => sum + sale.profit, 0) / 
-                       saleGroup.reduce((sum, sale) => sum + sale.totalSale, 0)) * 100).toFixed(2) + '%'
+                       saleGroup.reduce((sum, sale) => sum + sale.totalCost, 0)) * 100).toFixed(2) + '%'
       });
       
       // Dar formato a la fila de subtotal
@@ -381,7 +385,7 @@ export class SalesUseCase {
       totalSale: sales.reduce((sum, sale) => sum + sale.totalSale, 0).toFixed(2),
       profit: sales.reduce((sum, sale) => sum + sale.profit, 0).toFixed(2),
       profitMargin: (sales.reduce((sum, sale) => sum + sale.profit, 0) / 
-                    sales.reduce((sum, sale) => sum + sale.totalSale, 0) * 100).toFixed(2) + '%'
+                    sales.reduce((sum, sale) => sum + sale.totalCost, 0) * 100).toFixed(2) + '%'
     });
     
     // Dar formato a la fila de totales
