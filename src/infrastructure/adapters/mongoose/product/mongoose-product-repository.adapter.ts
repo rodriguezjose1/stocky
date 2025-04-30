@@ -204,13 +204,23 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
   }
 
   private mapToModel(product: Partial<Product>): Partial<ProductModel> {
-    return {
-      ...product,
-      size_type: new Types.ObjectId(product.sizeType),
-      categories_filter: (product.categoriesFilter as any) || undefined,
-      categories: (product.categories as any) || undefined,
-      has_stock: product.hasStock,
-    };
+    const model: Partial<ProductModel> = {};
+    
+    if (product.name !== undefined) model.name = product.name;
+    if (product.description !== undefined) model.description = product.description;
+    if (product.code !== undefined) model.code = product.code;
+    if (product.categories !== undefined) model.categories = product.categories as any;
+    if (product.attributes !== undefined) model.attributes = product.attributes;
+    if (product.pictures !== undefined) model.pictures = product.pictures;
+    if (product.prices !== undefined) model.prices = product.prices;
+    if (product.percentages !== undefined) model.percentages = product.percentages;
+    if (product.hasStock !== undefined) model.has_stock = product.hasStock;
+    if (product.sizeType !== undefined) model.size_type = new Types.ObjectId(product.sizeType);
+    if (product.sizes !== undefined) model.sizes = product.sizes;
+    if (product.colors !== undefined) model.colors = product.colors;
+    if (product.categoriesFilter !== undefined) model.categories_filter = product.categoriesFilter as any;
+    
+    return model;
   }
 
   private mapToEntity(productModel: ProductModel, withPopulate = false): Product {
