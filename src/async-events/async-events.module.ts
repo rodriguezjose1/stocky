@@ -13,6 +13,7 @@ import { NotificationListener } from './listeners/notification.listeners';
 import { MailModule } from 'src/infrastructure/adapters/email-service/mail.module';
 import { ErrorNotificationService } from 'src/infrastructure/adapters/email-service/error-notification.service';
 import { ConfigModule } from '@nestjs/config';
+import { StockMovementModule } from 'src/modules/stock-movement.module';
 
 @Module({
   imports: [
@@ -21,9 +22,10 @@ import { ConfigModule } from '@nestjs/config';
     ProductModule, 
     SaleModule, 
     CartModule, 
-    NotificationModule, 
+    NotificationModule,
     MailModule,
-    ConfigModule
+    ConfigModule,
+    StockMovementModule
   ],
   providers: [
     PurchaseListener, 

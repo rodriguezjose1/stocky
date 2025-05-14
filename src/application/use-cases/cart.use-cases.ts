@@ -55,8 +55,37 @@ export class CartUseCases {
       throw new BadRequestException('Variant not found');
     }
 
+    let totalQuantityInWholesaleSimple = 0;
+    if (isWholesalePackage) {
+      if (product.wholesaleData.packageType === packageTypes.simple) {
+        // Calculate total quantity for specific variant in wholesale packages
+        totalQuantityInWholesaleSimple = cart.items.reduce((acc, item) => {
+          if (item.product._id.toString() === productId && item.is_wholesale_package && item.product.wholesale_data.package_type === packageTypes.simple) {
+            return acc + item.quantity;
+          }
+          return acc;
+        }, 0);
+      }
+    }
+
+    const totalQuantityInWholesaleComplex = cart.items.reduce((acc, item) => {
+      if (item.product._id.toString() === productId && item.is_wholesale_package && item.product.wholesale_data.package_type === packageTypes.complex) {
+        const variant = item.wholesale_variants.find(v => v.variant._id.toString() === variantId);
+        return acc + (variant?.quantity || 0);
+      }
+      return acc;
+    }, 0);
+
+    // check sum quantities of same product into wholesale variants and normal product
+    const totalQuantityInSimpleProduct = cart.items.reduce((acc, item) => {
+      if (item.product._id.toString() === productId && item.variant?._id.toString() === variantId && !item.is_wholesale_package) {
+        return acc + item.quantity;
+      }
+      return acc;
+    }, 0);
+
     const quantityInStock = await this.stockUseCases.getQuantityByVariantId(productId, variantId);
-    if (quantity > quantityInStock) {
+    if (quantity + totalQuantityInWholesaleSimple + totalQuantityInSimpleProduct + totalQuantityInWholesaleComplex > quantityInStock) {
       throw new BadRequestException('Insufficient stock');
     }
     // checkear si el producto normal existe
@@ -126,6 +155,8 @@ export class CartUseCases {
           _id: variant.id,
           size: variant.size,
           color: variant.color,
+          color_label: variant.colorLabel,
+          size_label: variant.sizeLabel,
         },
         quantity,
         is_wholesale_package: isWholesalePackage || false,
@@ -199,7 +230,7 @@ export class CartUseCases {
     //   return wholesaleItem.wholesale_variants;
     // } else {
     return [{
-      variant: { ...variant, _id: variant.id },
+      variant: { ...variant, color_label: variant.colorLabel, size_label: variant.sizeLabel, _id: variant.id },
       quantity: quantity
     }];
     // }
@@ -217,11 +248,15 @@ export class CartUseCases {
         cartItem.wholesale_variants = cartItem.wholesale_variants.filter((v) => v.variant._id.toString() !== variantId);
         cartItem.quantity = cartItem.wholesale_variants.reduce((acc, v) => acc + v.quantity, 0);
       } else {
-        cart.items = cart.items.filter((item) => item.product._id.toString() !== productId);
+        cart.items = cart.items.filter((item) => !(item.product._id.toString() === productId && item.variant === null));
       }
     } else {
       // delete from normal product
-      cart.items = cart.items.filter((item) => item.product._id.toString() !== productId && item.variant?._id.toString() !== variantId);
+      const getVariantValue = (item) => item.variant ? item.variant._id.toString() : null;
+      const isVariantIdEqual = (item) => getVariantValue(item) === variantId;
+      const newItems = [];
+
+      cart.items = cart.items.filter((item) => !(item.product._id.toString() === productId && isVariantIdEqual(item)));
     }
     return this.cartRepository.removeProduct(cart);
   }
@@ -389,7 +424,9 @@ export class CartUseCases {
         variant: {
           _id: variantData.id,
           size: variantData.size,
-          color: variantData.color
+          color: variantData.color,
+          color_label: variantData.colorLabel,
+          size_label: variantData.sizeLabel,
         },
         quantity: variant.quantity
       });

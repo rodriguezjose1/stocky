@@ -386,7 +386,7 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
               in: {
                 $cond: [
                   { $gt: [{ $size: '$$sizeAttr' }, 0] },
-                  { $arrayElemAt: ['$$sizeAttr.value', 0] },
+                  { $ifNull: [{ $arrayElemAt: ['$$sizeAttr.label', 0] }, { $arrayElemAt: ['$$sizeAttr.value', 0] }] },
                   ''
                 ]
               }

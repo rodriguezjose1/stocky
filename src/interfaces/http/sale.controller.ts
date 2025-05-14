@@ -1,13 +1,12 @@
 // interfaces/http/sale.controller.ts
-import { Controller, Post, Body, Get, Put, Param, Query, UseGuards, Req, Res } from '@nestjs/common';
-import { SalesUseCase } from '../../application/use-cases/sale.use-cases';
-import { CreateSaleDto, GetSalesFilterDto, Sale } from 'src/domain/entities/sale.entity';
-import { Roles } from 'src/infrastructure/auth/decorators/roles.decorator';
-import { Role } from 'src/domain/enums/role.enum';
-import { RolesGuard } from 'src/infrastructure/auth/guards/roles.guard';
-import { BasicAuthGuard } from 'src/infrastructure/auth/guards/basic-auth.guard';
-import * as ExcelJS from 'exceljs';
+import { Body, Controller, Get, Param, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
+import { CreateSaleDto, GetSalesFilterDto, Sale } from 'src/domain/entities/sale.entity';
+import { Role } from 'src/domain/enums/role.enum';
+import { Roles } from 'src/infrastructure/auth/decorators/roles.decorator';
+import { BasicAuthGuard } from 'src/infrastructure/auth/guards/basic-auth.guard';
+import { RolesGuard } from 'src/infrastructure/auth/guards/roles.guard';
+import { SalesUseCase } from '../../application/use-cases/sale.use-cases';
 
 @Controller('sales')
 export class SaleController {

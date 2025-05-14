@@ -65,8 +65,6 @@ export class SalesUseCase {
         
         if (!detail.isWholesalePackage || (detail.isWholesalePackage && !detail.wholesaleVariants.length)) {
           const variant: Variant = await this.variantUseCases.getVariantById(detail.variantId);
-          const productAttributeColor = await this.productAttributeUseCases.getProductAttributeByValue(variant.color.toLowerCase());
-          const productAttributeSize = await this.productAttributeUseCases.getProductAttributeByValue(variant.size.toLowerCase());
           if (detail.isWholesalePackage) {
             prices = {
               retail: 0,
@@ -88,13 +86,13 @@ export class SalesUseCase {
                 name: 'color',
                 keyLabel: 'Color',
                 value: variant.color,
-                label: productAttributeColor.label,
+                label: variant.colorLabel,
               },
               {
                 name: 'size',
                 keyLabel: 'Talle',
                 value: variant.size,
-                label: productAttributeSize.label,
+                label: variant.sizeLabel,
               },
             ],
           };

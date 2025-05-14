@@ -6,13 +6,15 @@ import { StockUseCases } from 'src/application/use-cases/stock.use-cases';
 import { SaleStatus } from 'src/domain/entities/sale.entity';
 import { SaleCreatedEvent, SaleUpdatedEvent } from '../events/sale.events';
 import { ErrorNotificationService } from 'src/infrastructure/adapters/email-service/error-notification.service';
-
+import { MovementSource, StockMovementStatus, StockMovementType } from 'src/infrastructure/models/stock-movement.model';
+import { StockMovementUseCases } from 'src/application/use-cases/stock-movement.use-cases';
 @Injectable()
 export class SaleListener {
   constructor(
     private stockUseCases: StockUseCases,
     private saleUseCases: SalesUseCase,
     private cartUseCases: CartUseCases,
+    private stockMovementUseCases: StockMovementUseCases,
     private readonly errorNotificationService: ErrorNotificationService,
   ) { }
 
@@ -41,14 +43,14 @@ export class SaleListener {
           decremented = await this.stockUseCases.decrementStock(detail.productId, detail.variantId, {
             quantity: detail.quantity,
             appliedPriceType: detail.appliedPriceType
-          });
+          }, sale.id, sale.user.id);
           stocksUpdated.push(...decremented);
         } else {
           for (const wholesaleVariant of detail.wholesaleVariants) {
             decremented = await this.stockUseCases.decrementStock(detail.productId, wholesaleVariant.variant.variantId, {
               quantity: wholesaleVariant.quantity,
               appliedPriceType: detail.appliedPriceType
-            });
+            }, sale.id, sale.user.id);
             stocksUpdated.push(...decremented);
           }
         }
@@ -111,8 +113,11 @@ export class SaleListener {
         for (const stockUpdated of sale.stocksUpdated) {
           await this.stockUseCases.incrementStock(stockUpdated.stock, {
             quantity: stockUpdated.quantity,
-          });
+          }, null, StockMovementType.IN, MovementSource.SALE, StockMovementStatus.REJECTED);
         }
+      } else if (sale.status === SaleStatus.APPROVED) {
+        // change status movement to approved
+        await this.stockMovementUseCases.udpateStockMovementStatusBySaleId(sale.id, StockMovementStatus.CONFIRMED);
       }
     } catch (error) {
       console.error('Error in SaleListener.handleSaleUpdatedStatus:', error);

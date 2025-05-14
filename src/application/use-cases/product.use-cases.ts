@@ -98,10 +98,15 @@ export class ProductUseCases {
       }
     }
 
-    if (product.prices && product.prices.cost !== productDB.prices.cost) {
+    if (product.prices && product.prices.cost !== productDB.prices.cost ||
+      (product.percentages.reseller !== productDB.percentages.reseller ||
+        product.percentages.retail !== productDB.percentages.retail ||
+        product.percentages.wholesale.half_dozen  !== productDB.percentages.wholesale.half_dozen ||
+        product.percentages.wholesale.dozen !== productDB.percentages.wholesale.dozen)
+    ) {
       await this.updatePrices(product);
 
-      this.productRepository.savePriceHistory({
+      await this.productRepository.savePriceHistory({
         productId: productDB.id,
         previousPrice: productDB.prices,
         newPrice: product.prices,
@@ -226,11 +231,7 @@ export class ProductUseCases {
   }
 
   private getUniqueColors(colors: string[], newColors: string[]): string[] {
-    const uniqueColors = new Set(colors);
-
-    newColors.forEach((color) => uniqueColors.add(color));
-
-    return Array.from(uniqueColors);
+    return Array.from(new Set(newColors));
   }
 
   private async getSizeType(product, categories) {

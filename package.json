@@ -18,7 +18,7 @@
     "test:cov": "jest --coverage --detectOpenHandles",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand --detectOpenHandles",
     "test:e2e": "jest --config ./test/jest-e2e.json --detectOpenHandles",
-    "migrate": "NODE_ENV=dev ts-node src/infrastructure/scripts/migrate.ts"
+    "migrate": "NODE_ENV=dev ts-node -P tsconfig.scripts.json src/infrastructure/scripts/migrate.ts"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.0.2",
@@ -36,6 +36,7 @@
     "@types/bcrypt": "^5.0.2",
     "@types/express": "^4.17.17",
     "@types/multer": "^1.4.12",
+    "axios": "^1.9.0",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",

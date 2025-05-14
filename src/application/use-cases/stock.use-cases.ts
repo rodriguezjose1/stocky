@@ -12,6 +12,9 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { StockCreatedEvent, StockDecrementedEvent, StockIncrementedEvent } from 'src/async-events/events/stock.events';
 import { DEFAULT_ERROR, QUANTITY_LESS_THAN_CURRENT_TOTAL } from '../error.constants';
 import { ProductAttributeUseCases } from './product-attribute.use-cases';
+import { StockMovementUseCases } from './stock-movement.use-cases';
+import { StockMovementType, MovementSource, StockMovementStatus } from '../../infrastructure/models/stock-movement.model';
+import { AppliedPriceTypeEnum } from '../../domain/entities/sale.entity';
 
 @Injectable()
 export class StockUseCases {
@@ -21,6 +24,7 @@ export class StockUseCases {
     private variantUseCases: VariantUseCases,
     private productUseCases: ProductUseCases,
     private productAttributeUseCases: ProductAttributeUseCases,
+    private stockMovementUseCases: StockMovementUseCases,
     private eventEmitter: EventEmitter2,
     @InjectConnection() private readonly connection: mongoose.Connection,
   ) { }
@@ -87,16 +91,14 @@ export class StockUseCases {
   }
 
   async createStock(stockDto: UpdateStockDto, session?): Promise<{ stock: Stock; isCreated: boolean }> {
-    // const session = await this.connection.startSession();
     let isCreated = false;
     try {
-      // session.startTransaction();
-
       if (!stockDto.date) {
         stockDto.date = new Date();
       }
 
       const variant = await this.variantUseCases.getOneBy(stockDto.variant as any);
+      const product = await this.productUseCases.getProductById(stockDto.product);
 
       let variantId = variant ? variant.id : null;
       let stock = null;
@@ -105,10 +107,12 @@ export class StockUseCases {
         if (stockDto.quantity <= 0) {
           throw new BadRequestException(QUANTITY_LESS_THAN_CURRENT_TOTAL);
         }
-        // save variant
+        
+        // todo: this is bad, products contians only a array with the size value and not an object with both value and label
+        const sizeAttribute = await this.productAttributeUseCases.getProductAttributeByLabel(stockDto.variant.size);
         const variantToSave: Variant = {
           id: undefined,
-          size: stockDto.variant.size,
+          size: sizeAttribute?.value || stockDto.variant.size,
           color: stockDto.variant.color,
         };
         const savedVariant = await this.variantUseCases.createVariant(variantToSave, session);
@@ -125,8 +129,20 @@ export class StockUseCases {
         };
 
         stock = await this.stockRepository.create(stockToSave, session);
-        // this.eventEmitter.emit('stock.created', new StockCreatedEvent(stock.id));
         isCreated = true;
+
+        // Create stock movement for new stock
+        await this.stockMovementUseCases.createMovement({
+          productId: stock.product,
+          variantId: stock.variant,
+          stock: stock.id,
+          type: StockMovementType.IN,
+          quantity: stock.quantity,
+          stockBefore: 0,
+          stockAfter: stock.quantity,
+          source: MovementSource.MANUAL,
+          prices: product.prices,
+        });
       } else {
         // update existing stock
         const stockDB = await this.stockRepository.getByVariantAndProductAndCostPriceWithQuantity(stockDto.product, variantId, stockDto.costPrice);
@@ -145,22 +161,31 @@ export class StockUseCases {
           };
 
           stock = await this.stockRepository.create(stockToSave, session);
-          // this.eventEmitter.emit('stock.created', new StockCreatedEvent(stock.id));
           isCreated = true;
+
+          // Create stock movement for new stock with different cost price
+          await this.stockMovementUseCases.createMovement({
+            productId: stock.product,
+            variantId: stock.variant,
+            stock: stock.id,
+            type: StockMovementType.IN,
+            quantity: stock.quantity,
+            stockBefore: 0,
+            stockAfter: stock.quantity,
+            source: MovementSource.MANUAL,
+            prices: product.prices,
+          });
         } else {
           const diff = stockDB.quantity + stockDto.quantity;
           if (diff < 0) {
             throw new BadRequestException(QUANTITY_LESS_THAN_CURRENT_TOTAL);
           }
-          stock = await this.incrementStock(stockDB.id, { quantity: stockDto.quantity }, session);
+          stock = await this.incrementStock(stockDB.id, { quantity: stockDto.quantity }, session, StockMovementType.IN, MovementSource.MANUAL);
         }
       }
 
-      // await session.commitTransaction();
-
       return { stock, isCreated };
     } catch (error) {
-      // await session.abortTransaction();
       console.log('create-stock-error', error);
       throw error;
     }
@@ -174,36 +199,68 @@ export class StockUseCases {
     return this.stockRepository.delete(id);
   }
 
-  async incrementStock(stockId, { quantity }, session?): Promise<Stock | null> {
+  async incrementStock(stockId, { quantity }, session?, type: StockMovementType = null, source: MovementSource = null, status: StockMovementStatus = null): Promise<Stock | null> {
     const stock = await this.stockRepository.incrementStock(stockId, quantity, session);
+    const product = await this.productUseCases.getProductById(stock.product);
+
+    // Create stock movement for increment
+    await this.stockMovementUseCases.createMovement({
+      productId: stock.product,
+      variantId: stock.variant,
+      stock: stock.id,
+      quantity: quantity,
+      stockBefore: stock.quantity - quantity,
+      stockAfter: stock.quantity,
+      type,
+      source,
+      status,
+      prices: product.prices,
+    });
+
     this.eventEmitter.emit('stock.incremented', new StockIncrementedEvent(stockId, stock.product, quantity));
     return stock;
   }
 
-  async decrementStock(productId, variantId, { quantity: decrementAmount, appliedPriceType }): Promise<StocksUpdated[]> {
+  async decrementStock(productId, variantId, { quantity: decrementAmount, appliedPriceType }, saleId: string = null, clientId: string = null): Promise<StocksUpdated[]> {
     const decremented: StocksUpdated[] = [];
     const stocks = await this.stockRepository.getStockByVariantIdAndProductId(variantId, productId);
     const product = await this.productUseCases.getProductById(stocks[0].product);
     const variant = await this.variantUseCases.getVariantById(variantId);
     const colorAttribute = await this.productAttributeUseCases.getProductAttributeByValue(variant.color);
     const sizeAttribute = await this.productAttributeUseCases.getProductAttributeByValue(variant.size);
-    let remaining = decrementAmount; // Cuánto stock queda por decrementar
+    let remaining = decrementAmount;
 
     let quantitySaved = 0;
     for (const stock of stocks) {
-      if (remaining <= 0) break; // Si ya hemos decrementado suficiente, salimos
+      if (remaining <= 0) break;
 
+      const stockBefore = stock.quantity;
       if (stock.quantity >= remaining) {
-        // Si este registro tiene suficiente stock para cubrir lo que queda
         stock.quantity -= remaining;
         quantitySaved = remaining;
-        remaining = 0; // Ya no necesitamos restar más
+        remaining = 0;
       } else {
-        // Si no tiene suficiente stock, restamos todo el stock disponible y seguimos
         remaining -= stock.quantity;
         quantitySaved = stock.quantity;
         stock.quantity = 0;
       }
+
+      // Create stock movement for decrement
+      await this.stockMovementUseCases.createMovement({
+        productId: stock.product,
+        variantId: stock.variant,
+        stock: stock.id,
+        type: StockMovementType.OUT,
+        quantity: quantitySaved,
+        stockBefore: stockBefore,
+        stockAfter: stock.quantity,
+        source: MovementSource.SALE,
+        status: StockMovementStatus.PENDING,
+        prices: product.prices,
+        appliedPriceType: appliedPriceType,
+        saleId: saleId,
+        clientId: clientId,
+      });
 
       decremented.push({
         stock: stock.id,
@@ -235,12 +292,7 @@ export class StockUseCases {
         },
         appliedPriceType,
       });
-
-      // Guardamos los cambios en la base de datos
-      await this.stockRepository.update(stock.id, { quantity: stock.quantity });
     }
-
-    this.eventEmitter.emit('stock.decremented', new StockDecrementedEvent(product.id, decrementAmount));
 
     return decremented;
   }

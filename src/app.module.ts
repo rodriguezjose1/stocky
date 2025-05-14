@@ -17,6 +17,7 @@ import { ProductModule } from './modules/product.module';
 import { PurchaseModule } from './modules/purchase.module';
 import { RoleModule } from './modules/role.module';
 import { SaleModule } from './modules/sale.module';
+import { StockMovementModule } from './modules/stock-movement.module';
 import { StockModule } from './modules/stock.module';
 import { UploadImageModule } from './modules/upload-image.module';
 import { UserModule } from './modules/user.module';
@@ -33,6 +34,7 @@ import { VariantModule } from './modules/variant.module';
     ProductModule,
     PurchaseModule,
     StockModule,
+    StockMovementModule,
     SaleModule,
     UserModule,
     LoginModule,

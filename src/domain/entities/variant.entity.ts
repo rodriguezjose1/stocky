@@ -4,5 +4,7 @@ export class Variant {
     // TODO: FIX THIS
     public size: any,
     public color: any,
+    public sizeLabel?: string,
+    public colorLabel?: string,
   ) {}
 }

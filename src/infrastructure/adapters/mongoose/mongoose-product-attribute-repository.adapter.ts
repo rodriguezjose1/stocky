@@ -38,6 +38,11 @@ export class MongooseProductAttributeRepositoryAdapter implements ProductAttribu
     return productAttribute ? this.mapToEntity(productAttribute) : null;
   }
 
+  async getByLabel(label: string): Promise<ProductAttribute> {
+    const productAttribute = await this.productAttributeModel.findOne({ label }).exec();
+    return productAttribute ? this.mapToEntity(productAttribute) : null;
+  }
+
   async create(productAttribute: PostProductAttributeDto): Promise<ProductAttribute> {
     const productAttributeModel = await this.productAttributeModel.create(productAttribute);
     return this.mapToEntity(productAttributeModel);

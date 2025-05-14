@@ -4,7 +4,6 @@ import { Connection, Model } from 'mongoose';
 import { Variant } from 'src/domain/entities/variant.entity';
 import { VariantRepositoryPort } from '../../../domain/ports/variant-repository.port';
 import { VariantModel, VariantSchema } from '../../models/variant.model';
-import * as mongoose from 'mongoose';
 
 export interface Filter {
   size: string;
@@ -50,13 +49,15 @@ export class MongooseVariantRepositoryAdapter implements VariantRepositoryPort {
   }
 
   private mapToEntity(variantModel: VariantModel): Variant {
-    return new Variant(variantModel._id.toString(), variantModel.size, variantModel.color);
+    return new Variant(variantModel._id.toString(), variantModel.size, variantModel.color, variantModel.size_label, variantModel.color_label);
   }
 
   private mapToModel(variant: Partial<Variant>): Partial<VariantModel> {
     return {
       size: variant.size,
       color: variant.color,
+      size_label: variant.sizeLabel,
+      color_label: variant.colorLabel,
     };
   }
 }

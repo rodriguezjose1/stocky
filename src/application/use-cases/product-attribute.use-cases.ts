@@ -21,6 +21,11 @@ export class ProductAttributeUseCases {
     return this.productAttributeRepository.getByValue(value);
   }
 
+  // todo: this is bad, it needs to be refactored
+  async getProductAttributeByLabel(label: string): Promise<ProductAttribute> {
+    return this.productAttributeRepository.getByLabel(label);
+  }
+
   async createProductAttribute(productAttribute: PostProductAttributeDto): Promise<ProductAttribute> {
     productAttribute.value = this.getValue(productAttribute.label);
     return this.productAttributeRepository.create(productAttribute);

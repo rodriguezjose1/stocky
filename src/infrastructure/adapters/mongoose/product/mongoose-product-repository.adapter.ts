@@ -305,6 +305,8 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
             id: stock.variant._id.toString(),
             color: stock.variant.color,
             size: stock.variant.size,
+            colorLabel: stock.variant.color_label,
+            sizeLabel: stock.variant.size_label,
           },
           costPrice: stock.cost_price,
           date: stock.date,
