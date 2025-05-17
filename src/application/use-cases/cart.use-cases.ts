@@ -244,11 +244,16 @@ export class CartUseCases {
         throw new BadRequestException('El producto no es un paquete mayorista');
       }
 
+      // remove specific variant from complex package
       if (cartItem.product.wholesale_data.package_type === packageTypes.complex && variantId !== 'null') {
         cartItem.wholesale_variants = cartItem.wholesale_variants.filter((v) => v.variant._id.toString() !== variantId);
         cartItem.quantity = cartItem.wholesale_variants.reduce((acc, v) => acc + v.quantity, 0);
-      } else {
+      } else if (cartItem.product.wholesale_data.package_type === packageTypes.complex && variantId === 'null') {
+        // remove full complex package
         cart.items = cart.items.filter((item) => !(item.product._id.toString() === productId && item.variant === null));
+      } else {
+        // remove simple package
+        cart.items = cart.items.filter((item) => !(item.product._id.toString() === productId && item.variant._id.toString() === variantId));
       }
     } else {
       // delete from normal product
