@@ -78,11 +78,6 @@ export class StockMovementUseCases {
         throw new BadRequestException('El ID de cliente es requerido para movimientos de tipo venta');
       }
     }
-
-    // Validar que el tipo de movimiento sea consistente con la fuente
-    if (data.source === MovementSource.SALE && data.type !== StockMovementType.OUT) {
-      throw new BadRequestException('Los movimientos de venta deben ser de tipo OUT');
-    }
   }
 
   private async validateStockMovement(data: CreateStockMovementDto & { prices: Prices }): Promise<void> {

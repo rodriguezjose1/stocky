@@ -180,7 +180,11 @@ export class StockUseCases {
           if (diff < 0) {
             throw new BadRequestException(QUANTITY_LESS_THAN_CURRENT_TOTAL);
           }
-          stock = await this.incrementStock(stockDB.id, { quantity: stockDto.quantity }, session, StockMovementType.IN, MovementSource.MANUAL);
+          stock = await this.incrementStock(
+            stockDB.id, { quantity: stockDto.quantity },
+            { type: StockMovementType.IN, source: MovementSource.MANUAL, status: StockMovementStatus.PENDING, saleId: null, clientId: null, appliedPriceType: null },
+            session
+          );
         }
       }
 
@@ -199,7 +203,11 @@ export class StockUseCases {
     return this.stockRepository.delete(id);
   }
 
-  async incrementStock(stockId, { quantity }, session?, type: StockMovementType = null, source: MovementSource = null, status: StockMovementStatus = null): Promise<Stock | null> {
+  async incrementStock(
+    stockId, { quantity },
+    { type, source, status, saleId, clientId, appliedPriceType }: { type: StockMovementType, source: MovementSource, status: StockMovementStatus, saleId: string, clientId: string, appliedPriceType: AppliedPriceTypeEnum },
+    session?
+  ): Promise<Stock | null> {
     const stock = await this.stockRepository.incrementStock(stockId, quantity, session);
     const product = await this.productUseCases.getProductById(stock.product);
 
@@ -215,6 +223,9 @@ export class StockUseCases {
       source,
       status,
       prices: product.prices,
+      saleId,
+      clientId,
+      appliedPriceType,
     });
 
     this.eventEmitter.emit('stock.incremented', new StockIncrementedEvent(stockId, stock.product, quantity));
@@ -226,8 +237,6 @@ export class StockUseCases {
     const stocks = await this.stockRepository.getStockByVariantIdAndProductId(variantId, productId);
     const product = await this.productUseCases.getProductById(stocks[0].product);
     const variant = await this.variantUseCases.getVariantById(variantId);
-    const colorAttribute = await this.productAttributeUseCases.getProductAttributeByValue(variant.color);
-    const sizeAttribute = await this.productAttributeUseCases.getProductAttributeByValue(variant.size);
     let remaining = decrementAmount;
 
     let quantitySaved = 0;
@@ -273,13 +282,13 @@ export class StockUseCases {
               name: 'color',
               keyLabel: 'Color',
               value: variant.color,
-              label: colorAttribute ? colorAttribute.label : variant.color,
+              label: variant.colorLabel,
             },
             {
               name: 'size',
               keyLabel: 'Talle',
               value: variant.size,
-              label: sizeAttribute ? sizeAttribute.label : variant.size,
+              label: variant.sizeLabel,
             },
           ],
         },

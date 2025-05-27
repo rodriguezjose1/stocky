@@ -10,10 +10,13 @@ export enum SaleStatus {
 export enum AppliedPriceTypeEnum {
   RETAIL = 'retail',
   WHOLESALE = 'wholesale',
-  RESELLER = 'reseller'
+  RESELLER = 'reseller',
+  WHOLESALE_HALF_DOZEN = 'wholesale_half_dozen',
+  WHOLESALE_DOZEN = 'wholesale_dozen',
 }
 
-export type AppliedPriceType = AppliedPriceTypeEnum.RETAIL | AppliedPriceTypeEnum.WHOLESALE | AppliedPriceTypeEnum.RESELLER;
+export type AppliedPriceType = AppliedPriceTypeEnum.RETAIL | AppliedPriceTypeEnum.WHOLESALE | AppliedPriceTypeEnum.RESELLER |
+  AppliedPriceTypeEnum.WHOLESALE_HALF_DOZEN | AppliedPriceTypeEnum.WHOLESALE_DOZEN | null | undefined;
 
 export class GetSalesFilterDto {
   @IsInt()
@@ -77,6 +80,8 @@ interface VariantData {
   _id?: string;
   color?: string;
   size?: string;
+  color_label?: string;
+  size_label?: string;
 }
 
 export class StocksUpdated {

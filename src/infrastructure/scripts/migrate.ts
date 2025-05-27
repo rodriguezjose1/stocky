@@ -3,9 +3,11 @@ import { UpdateSalesVariantDataScript } from './update-sales-variant-data';
 import { MigrationModule } from './migration.module';
 import { ConfigService } from '@nestjs/config';
 import { UpdateCartVariantsScript } from './update-cart-variants';
+import { UpdateVariantLabelsMigration } from './update-variant-labels';
 const AVAILABLE_MIGRATIONS = {
   'update-sales-variant-data': UpdateSalesVariantDataScript,
   'update-cart-variants': UpdateCartVariantsScript,
+  'update-variant-labels': UpdateVariantLabelsMigration,
   // Aquí puedes agregar más migraciones según sea necesario
 };
 

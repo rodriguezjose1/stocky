@@ -14,7 +14,7 @@ import { UpdateCartVariantsScript } from './update-cart-variants';
   imports: [
     ConfigModule.forRoot({ 
       isGlobal: true, 
-      envFilePath: process.env.NODE_ENV === 'dev' ? `.env_${process.env.NODE_ENV}` : undefined 
+      envFilePath: process.env.NODE_ENV === 'sandbox' ? `.env_${process.env.NODE_ENV}` : undefined 
     }),
     DatabaseModule.forRootAsync(),
     MongooseModule.forFeature([

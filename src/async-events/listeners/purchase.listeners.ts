@@ -4,7 +4,9 @@ import { PurchaseCreatedEvent } from '../events/purchase.events';
 import { PurchasesUseCase } from 'src/application/use-cases/purchase.use-cases';
 import { Injectable } from '@nestjs/common';
 import { ErrorNotificationService } from 'src/infrastructure/adapters/email-service/error-notification.service';
-
+import { StockMovementStatus } from 'src/infrastructure/models/stock-movement.model';
+import { MovementSource } from 'src/infrastructure/models/stock-movement.model';
+import { StockMovementType } from 'src/infrastructure/models/stock-movement.model';
 @Injectable()
 export class PurchaseListener {
   constructor(
@@ -34,7 +36,7 @@ export class PurchaseListener {
       for (const detail of purchase.details) {
         await this.stockUseCases.incrementStock(detail.product_id, {
           quantity: detail.quantity,
-        });
+        }, { type: StockMovementType.IN, source: MovementSource.MANUAL, status: StockMovementStatus.PENDING, saleId: null, clientId: null, appliedPriceType: null });
       }
     } catch (error) {
       console.error('Error in PurchaseListener.handlePurchaseCreated:', error);

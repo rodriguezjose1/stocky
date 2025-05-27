@@ -124,7 +124,7 @@ export class SaleDetailSchema {
   @Prop({ type: Number, default: 0 })
   predefined_quantity: number;
 
-  @Prop({ type: String, enum: ['retail', 'wholesale', 'reseller'], default: 'retail' })
+  @Prop({ type: String, enum: AppliedPriceTypeEnum, default: AppliedPriceTypeEnum.RETAIL })
   applied_price_type: AppliedPriceType;
 
   @Prop({

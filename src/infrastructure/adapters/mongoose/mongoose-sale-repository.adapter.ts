@@ -2,7 +2,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection, Model, Types } from 'mongoose';
-import { Sale, SaleDetail, SaleStatus, StocksUpdated } from '../../../domain/entities/sale.entity';
+import { AppliedPriceTypeEnum, Sale, SaleDetail, SaleStatus, StocksUpdated } from '../../../domain/entities/sale.entity';
 import { SaleRepositoryPort } from '../../../domain/ports/sale-repository.port';
 import { SaleDetailSchema, SaleModel, SaleSchema } from '../../models/sale.model';
 import { getWeekCode } from 'src/common/utils/date.utils';
@@ -185,26 +185,20 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
                   $switch: {
                     branches: [
                       {
-                        case: { $eq: ['$stocks_updated.applied_price_type', 'retail'] },
+                        case: { $eq: ['$stocks_updated.applied_price_type', AppliedPriceTypeEnum.RETAIL] },
                         then: { $ifNull: ['$stocks_updated.prices.retail', 0] }
                       },
                       {
-                        case: { $eq: ['$stocks_updated.applied_price_type', 'reseller'] },
+                        case: { $eq: ['$stocks_updated.applied_price_type', AppliedPriceTypeEnum.RESELLER] },
                         then: { $ifNull: ['$stocks_updated.prices.reseller', 0] }
                       },
                       {
-                        case: { $eq: ['$stocks_updated.applied_price_type', 'wholesale'] },
+                        case: { $eq: [{ $type: '$stocks_updated.prices.wholesale' }, 'object'] },
                         then: {
                           $cond: {
-                            if: { $eq: [{ $type: '$stocks_updated.prices.wholesale' }, 'object'] },
-                            then: {
-                              $cond: {
-                                if: { $eq: ['$stocks_updated.quantity', 6] },
-                                then: { $ifNull: ['$stocks_updated.prices.wholesale.half_dozen', 0] },
-                                else: { $ifNull: ['$stocks_updated.prices.wholesale.dozen', 0] }
-                              }
-                            },
-                            else: { $ifNull: ['$stocks_updated.prices.wholesale', 0] }
+                            if: { $eq: ['$stocks_updated.applied_price_type', AppliedPriceTypeEnum.WHOLESALE_HALF_DOZEN] },
+                            then: { $ifNull: ['$stocks_updated.prices.wholesale.half_dozen', 0] },
+                            else: { $ifNull: ['$stocks_updated.prices.wholesale.dozen', 0] }
                           }
                         }
                       },
@@ -308,23 +302,13 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
       },
       {
         $addFields: {
-          wholesalePrice: {
-            $cond: [
-              { $eq: ['$quantity', 6] },
-              '$wholesaleHalfDozen',
-              '$wholesaleDozen'
-            ]
-          }
-        }
-      },
-      {
-        $addFields: {
           unitPrice: {
             $switch: {
               branches: [
-                { case: { $eq: ['$appliedPriceType', 'retail'] }, then: '$retailPrice' },
-                { case: { $eq: ['$appliedPriceType', 'reseller'] }, then: '$resellerPrice' },
-                { case: { $eq: ['$appliedPriceType', 'wholesale'] }, then: '$wholesalePrice' }
+                { case: { $eq: ['$appliedPriceType', AppliedPriceTypeEnum.RETAIL] }, then: '$retailPrice' },
+                { case: { $eq: ['$appliedPriceType', AppliedPriceTypeEnum.RESELLER] }, then: '$resellerPrice' },
+                { case: { $eq: ['$appliedPriceType', AppliedPriceTypeEnum.WHOLESALE_HALF_DOZEN] }, then: '$wholesaleHalfDozen' },
+                { case: { $eq: ['$appliedPriceType', AppliedPriceTypeEnum.WHOLESALE_DOZEN] }, then: '$wholesaleDozen' }
               ],
               default: '$resellerPrice'
             }

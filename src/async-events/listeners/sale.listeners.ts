@@ -113,7 +113,7 @@ export class SaleListener {
         for (const stockUpdated of sale.stocksUpdated) {
           await this.stockUseCases.incrementStock(stockUpdated.stock, {
             quantity: stockUpdated.quantity,
-          }, null, StockMovementType.IN, MovementSource.SALE, StockMovementStatus.REJECTED);
+          }, { type: StockMovementType.IN, source: MovementSource.SALE, status: StockMovementStatus.REJECTED, saleId: sale.id, clientId: sale.user.id, appliedPriceType: stockUpdated.appliedPriceType });
         }
       } else if (sale.status === SaleStatus.APPROVED) {
         // change status movement to approved

@@ -9,7 +9,7 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
-    "start:dev": "NODE_ENV=dev nest start --watch --no-test",
+    "start:dev": "NODE_ENV=sandbox nest start --watch --no-test",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
@@ -18,7 +18,7 @@
     "test:cov": "jest --coverage --detectOpenHandles",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand --detectOpenHandles",
     "test:e2e": "jest --config ./test/jest-e2e.json --detectOpenHandles",
-    "migrate": "NODE_ENV=dev ts-node -P tsconfig.scripts.json src/infrastructure/scripts/migrate.ts"
+    "migrate": "NODE_ENV=sandbox ts-node src/infrastructure/scripts/migrate.ts"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.0.2",

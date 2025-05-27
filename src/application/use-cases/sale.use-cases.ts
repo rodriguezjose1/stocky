@@ -29,8 +29,6 @@ export class SalesUseCase {
     private stockUseCases: StockUseCases,
     private cartUseCases: CartUseCases,
     private userUseCases: UserUseCases,
-    private productAttributeUseCases: ProductAttributeUseCases,
-    private porductAttributeSubtypeUseCases: ProductAttributeSubtypeUseCases,
     @Inject(ERROR_HANDLER_PORT) private errorHandler: ErrorHandlerPort,
   ) { }
 
@@ -110,9 +108,6 @@ export class SalesUseCase {
 
           // wholesale variants to variantData
           const wholesaleVariantsData = await Promise.all(detail.wholesaleVariants.map(async (v) => {
-            const variant: Variant = await this.variantUseCases.getVariantById(v.variant._id);
-            const productAttributeColor = await this.productAttributeUseCases.getProductAttributeByValue(variant.color.toLowerCase());
-            const productAttributeSize = await this.productAttributeUseCases.getProductAttributeByValue(variant.size.toLowerCase());
             
             return {
               variant: {
@@ -124,13 +119,13 @@ export class SalesUseCase {
                     name: 'color',
                     keyLabel: 'Color',
                     value: v.variant.color,
-                    label: productAttributeColor.label,
+                    label: v.variant.color_label,
                   },
                   {
                     name: 'size',
                     keyLabel: 'Talle',
                     value: v.variant.size,
-                    label: productAttributeSize.label,
+                    label: v.variant.size_label,
                   },
                 ],
               },

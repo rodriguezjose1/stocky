@@ -160,7 +160,7 @@ export class CartUseCases {
         },
         quantity,
         is_wholesale_package: isWholesalePackage || false,
-        applied_price_type: isWholesalePackage ? AppliedPriceTypeEnum.WHOLESALE : userRole === Role.ADMIN || userRole === Role.SELLER ? AppliedPriceTypeEnum.RESELLER : AppliedPriceTypeEnum.RETAIL
+        applied_price_type: isWholesalePackage ? (predefinedQuantity === 12) ? AppliedPriceTypeEnum.WHOLESALE_DOZEN : AppliedPriceTypeEnum.WHOLESALE_HALF_DOZEN : userRole === Role.ADMIN || userRole === Role.SELLER ? AppliedPriceTypeEnum.RESELLER : AppliedPriceTypeEnum.RETAIL
       };
 
       if (isWholesalePackage) {
@@ -416,7 +416,7 @@ export class CartUseCases {
         is_wholesale_package: true,
         predefined_quantity: predefinedQuantity,
         wholesale_variants: [],
-        applied_price_type: AppliedPriceTypeEnum.WHOLESALE
+        applied_price_type: (predefinedQuantity === 12) ? AppliedPriceTypeEnum.WHOLESALE_DOZEN : AppliedPriceTypeEnum.WHOLESALE_HALF_DOZEN
       };
       cart.items.push(cartItem);
     }
