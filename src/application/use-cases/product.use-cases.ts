@@ -128,6 +128,16 @@ export class ProductUseCases {
     return this.productRepository.update(id, product);
   }
 
+  async updateProductSimple(id: string, product: Partial<Product>): Promise<Product | null> {
+    // Verificar si el producto existe
+    const existingProduct = await this.productRepository.findById(id);
+    if (!existingProduct) {
+      throw new BadRequestException(productErrors.productNotFound);
+    }
+
+    return this.productRepository.update(id, product);
+  }
+
   async deleteProduct(id: string): Promise<boolean> {
     return this.productRepository.delete(id);
   }

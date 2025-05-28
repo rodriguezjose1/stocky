@@ -28,12 +28,11 @@ export class StockListener {
 
     if (stock.quantity > 0) {
       console.log('Setting hasStock to true for product:', stock.product);
-      await this.productUseCases.updateProduct(
+      await this.productUseCases.updateProductSimple(
         stock.product,
         {
           hasStock: true,
         },
-        null,
       );
     }
     console.log('=== END STOCK CREATED ===\n');
@@ -65,23 +64,21 @@ export class StockListener {
         console.log('Total stock for product:', totalStock);
         if (totalStock <= 0) {
           console.log('Setting hasStock to false for product:', event.productId);
-          await this.productUseCases.updateProduct(
+          await this.productUseCases.updateProductSimple(
             event.productId,
             {
               hasStock: false,
-            },
-            null,
+            }
           );
         }
       }
     } else if (stock.quantity > 0) {
       console.log('Setting hasStock to true for product:', event.productId);
-      await this.productUseCases.updateProduct(
+      await this.productUseCases.updateProductSimple(
         event.productId,
         {
           hasStock: true,
         },
-        null,
       );
     }
     console.log('=== END STOCK INCREMENTED ===\n');
@@ -115,7 +112,7 @@ export class StockListener {
 
     if (total === 0) {
       console.log('Setting hasStock to false for product:', event.productId);
-      await this.productUseCases.updateProduct(
+      await this.productUseCases.updateProductSimple(
         event.productId,
         {
           hasStock: false,
