@@ -117,7 +117,6 @@ export class StockListener {
         {
           hasStock: false,
         },
-        null,
       );
     }
     console.log('=== END STOCK DECREMENTED ===\n');
