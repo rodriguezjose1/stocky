@@ -5,9 +5,11 @@ import { MongooseStockRepositoryAdapter } from '../infrastructure/adapters/mongo
 import { StockController } from '../interfaces/http/stock.controller';
 import { ProductModule } from './product.module';
 import { VariantModule } from './variant.module';
+import { ProductAttributeModule } from './product-attribute.module';
+import { StockMovementModule } from './stock-movement.module';
 
 @Module({
-  imports: [VariantModule, ProductModule],
+  imports: [VariantModule, ProductModule, ProductAttributeModule, StockMovementModule],
   providers: [
     StockUseCases,
     {

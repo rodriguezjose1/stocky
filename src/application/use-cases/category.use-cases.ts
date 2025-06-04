@@ -49,4 +49,12 @@ export class CategoryUseCases {
 
     return categoryTree;
   }
+
+  async getById(id: string): Promise<Category> {
+    return this.categoryRepository.getById(id);
+  }
+
+  async createCategory(data: { name: string; code: string; active: boolean; sizeTypes?: string[] }): Promise<Category> {
+    return this.categoryRepository.create(data);
+  }
 }

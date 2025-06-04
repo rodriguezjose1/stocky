@@ -49,13 +49,15 @@ export class MongooseVariantRepositoryAdapter implements VariantRepositoryPort {
   }
 
   private mapToEntity(variantModel: VariantModel): Variant {
-    return new Variant(variantModel._id.toString(), variantModel.size, variantModel.color);
+    return new Variant(variantModel._id.toString(), variantModel.size, variantModel.color, variantModel.size_label, variantModel.color_label);
   }
 
   private mapToModel(variant: Partial<Variant>): Partial<VariantModel> {
     return {
       size: variant.size,
       color: variant.color,
+      size_label: variant.sizeLabel,
+      color_label: variant.colorLabel,
     };
   }
 }

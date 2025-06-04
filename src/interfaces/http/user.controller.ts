@@ -47,9 +47,20 @@ export class UserController {
     };
   }
 
+  @UseGuards(BasicAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @Post()
   async createUser(@Body() user: User) {
     const newUser = await this.userUseCases.createUser(user);
+
+    return {
+      user: newUser,
+    };
+  }
+
+  @Post('customers')
+  async createCustomer(@Body() user: User) {
+    const newUser = await this.userUseCases.createUser(user, 'customer');
 
     return {
       user: newUser,

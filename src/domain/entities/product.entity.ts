@@ -20,28 +20,121 @@ export interface Prices {
   cost?: number;
   retail: number;
   reseller: number;
+  wholesale?: WholesalePercentage;
 }
 
 export interface Percentages {
   reseller: number;
   retail: number;
+  wholesale?: WholesalePercentage;
+}
+
+export interface WholesaleData {
+  isWholesaler: boolean;
+  packageType: 'simple' | 'complex';
+}
+
+export interface WholesalePercentage {
+  half_dozen: number;
+  dozen: number;
+}
+
+export class WholesaleDataDTO {
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value === 'true';
+    }
+    return value;
+  })
+  isWholesaler: boolean = false;
+
+  @IsOptional()
+  @IsEnum(['simple', 'complex', null])
+  @Transform(({ value }) => {
+    if (value === 'null' || value === null) return null;
+    return value;
+  })
+  packageType: 'simple' | 'complex' | null = null;
 }
 
 export class CreateProductDto {
-  constructor(
-    public id: string,
-    public name: string,
-    public description: string,
-    public code: string,
-    public categories: string[],
-    public attributes: Attributes,
-    public pictures: Image[],
-    public prices: Prices,
-    public percentages: Percentages,
-    public sizeType: string,
-    public sizes: string[],
-    public colors: string[],
-  ) {}
+  id: string;
+
+  @IsString()
+  name: string;
+
+  @IsString()
+  description: string;
+
+  @IsString()
+  code: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  categories: string[];
+
+  @IsObject()
+  attributes: Attributes;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  pictures: Image[];
+
+  prices: Prices;
+
+  @ValidateNested()
+  @Type(() => PercentagesDTO)
+  @IsObject()
+  percentages: Percentages;
+
+  @IsString()
+  sizeType: string;
+
+  sizes: string[];
+
+  @IsArray()
+  @IsString({ each: true })
+  colors: string[];
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => WholesaleDataDTO)
+  wholesaleData?: WholesaleData;
+}
+
+export class ImageDTO {
+  @IsString()
+  url: string;
+
+  @IsString()
+  alt_text: string;
+}
+
+export class WholesalePercentageDTO {
+  @IsNumber()
+  @Min(0)
+  half_dozen: number;
+
+  @IsNumber()
+  @Min(0)
+  dozen: number;
+}
+
+export class PercentagesDTO {
+  @IsNumber()
+  @Min(0)
+  reseller: number;
+
+  @IsNumber()
+  @Min(0)
+  retail: number;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => WholesalePercentageDTO)
+  wholesale?: WholesalePercentage;
 }
 
 export class PricesDTO {
@@ -59,6 +152,12 @@ export class PricesDTO {
   @Min(0)
   @Type(() => Number)
   reseller: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => WholesalePercentageDTO)
+  wholesale: WholesalePercentage;
 }
 
 export class UpdateProductDto {
@@ -102,6 +201,11 @@ export class UpdateProductDto {
   @IsOptional()
   @IsArray()
   colors: string[];
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => WholesaleDataDTO)
+  wholesaleData?: WholesaleDataDTO;
 }
 
 export class Product {
@@ -123,6 +227,7 @@ export class Product {
     public sizes?: string[],
     public colors?: string[],
     public createdAt?: Date,
+    public wholesaleData?: WholesaleData,
   ) {}
 }
 
@@ -246,6 +351,19 @@ export class FilterProductsDto {
   @Type(() => Number)
   @Min(1)
   limit?: number = 20;
+
+  @IsBoolean()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value === 'true';
+    }
+    return value;
+  })
+  isWholesaler: boolean = false;
+
+  @IsOptional()
+  @IsEnum(['simple', 'complex'])
+  wholesalePackageType?: 'simple' | 'complex';
 }
 
 export class GetProductByIdQueryDto extends FilterProductsDto {
@@ -287,6 +405,11 @@ export class CalculatePricesDto {
   @Type(() => Number)
   @Min(0)
   percentageRetail: number;
+
+  @IsNumber()
+  @Type(() => Number)
+  @Min(0)
+  percentageWholesale: number;
 }
 
 export class IncreasePrices {

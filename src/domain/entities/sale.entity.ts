@@ -7,6 +7,17 @@ export enum SaleStatus {
   REJECTED = 'rejected',
 }
 
+export enum AppliedPriceTypeEnum {
+  RETAIL = 'retail',
+  WHOLESALE = 'wholesale',
+  RESELLER = 'reseller',
+  WHOLESALE_HALF_DOZEN = 'wholesale_half_dozen',
+  WHOLESALE_DOZEN = 'wholesale_dozen',
+}
+
+export type AppliedPriceType = AppliedPriceTypeEnum.RETAIL | AppliedPriceTypeEnum.WHOLESALE | AppliedPriceTypeEnum.RESELLER |
+  AppliedPriceTypeEnum.WHOLESALE_HALF_DOZEN | AppliedPriceTypeEnum.WHOLESALE_DOZEN | null | undefined;
+
 export class GetSalesFilterDto {
   @IsInt()
   @IsOptional()
@@ -26,6 +37,7 @@ export class Prices {
     public cost?: number,
     public retail?: number,
     public reseller?: number,
+    public wholesale?: number,
   ) {}
 }
 
@@ -36,6 +48,13 @@ export class SaleDetail {
     public quantity: number,
     public prices?: Prices,
     public variantData?: VariantData,
+    public isWholesalePackage?: boolean,
+    public predefinedQuantity?: number,
+    public wholesaleVariants?: {
+      variant: VariantData;
+      quantity: number;
+    }[],
+    public appliedPriceType?: AppliedPriceType,
   ) {}
 }
 
@@ -53,16 +72,33 @@ interface VariantAttribute {
 }
 
 interface VariantData {
-  productName: string;
-  productCode: string;
-  variantAttributes: VariantAttribute[];
+  productName?: string;
+  productCode?: string;
+  variantId?: string;
+  variantAttributes?: VariantAttribute[];
+  // fix this
+  _id?: string;
+  color?: string;
+  size?: string;
+  color_label?: string;
+  size_label?: string;
 }
 
 export class StocksUpdated {
   constructor(
     public stock: string,
+    public variantData: VariantData,
     public quantity: number,
-    public prices?: Prices,
+    public prices?: {
+      cost?: number;
+      retail?: number;
+      reseller?: number;
+      wholesale?: number | {
+        half_dozen: number;
+        dozen: number;
+      };
+    },
+    public appliedPriceType?: AppliedPriceType,
   ) {}
 }
 

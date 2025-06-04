@@ -7,6 +7,7 @@ import { AuthModule } from './infrastructure/auth/auth.module';
 import { DatabaseModule } from './infrastructure/database/database.module';
 import { LoggerMiddleware } from './infrastructure/logging/logger.middleware';
 import { LoggerModule } from './infrastructure/logging/logger.module';
+import { ScriptsModule } from './infrastructure/scripts/scripts.module';
 import { CartModule } from './modules/cart.module';
 import { CategoryModule } from './modules/category.module';
 import { LoginModule } from './modules/login.module';
@@ -16,22 +17,24 @@ import { ProductModule } from './modules/product.module';
 import { PurchaseModule } from './modules/purchase.module';
 import { RoleModule } from './modules/role.module';
 import { SaleModule } from './modules/sale.module';
+import { StockMovementModule } from './modules/stock-movement.module';
 import { StockModule } from './modules/stock.module';
 import { UploadImageModule } from './modules/upload-image.module';
 import { UserModule } from './modules/user.module';
 import { VariantModule } from './modules/variant.module';
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, envFilePath: process.env.NODE_ENV === 'test' ? `.env_${process.env.NODE_ENV}` : undefined }),
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: process.env.NODE_ENV === 'sandbox' ? `.env_${process.env.NODE_ENV}` : undefined }),
     DatabaseModule.forRootAsync(),
     EventEmitterModule.forRoot(),
-    ...(process.env.NODE_ENV !== 'test' ? [SentryModule.forRoot()] : []),
+    ...(process.env.NODE_ENV === 'production' ? [SentryModule.forRoot()] : []),
     AuthModule,
     LoggerModule,
     AsyncEventsModule,
     ProductModule,
     PurchaseModule,
     StockModule,
+    StockMovementModule,
     SaleModule,
     UserModule,
     LoginModule,
@@ -42,6 +45,7 @@ import { VariantModule } from './modules/variant.module';
     UploadImageModule,
     CartModule,
     NotificationModule,
+    ScriptsModule,
   ],
 })
 export class AppModule implements NestModule {

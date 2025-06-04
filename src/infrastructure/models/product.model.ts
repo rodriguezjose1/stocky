@@ -12,7 +12,7 @@ class AttributeSchema {
   brand: string;
 }
 
-interface Image {
+export interface Image {
   url: string;
   alt_text: string;
 }
@@ -26,15 +26,30 @@ export class ImageSchema {
   alt_text: string;
 }
 
+interface WholesalePercentage {
+  half_dozen: number;
+  dozen: number;
+}
+
+@Schema({ _id: false })
+class WholesalePercentageSchema {
+  @Prop({ required: true, default: 0 })
+  half_dozen: number;
+
+  @Prop({ required: true, default: 0 })
+  dozen: number;
+}
+
 export interface Prices {
   cost?: number;
   retail: number;
   reseller: number;
+  wholesale?: WholesalePercentage;
 }
 
 @Schema({ _id: false })
 export class PricesSchema {
-  @Prop({ required: false })
+  @Prop({ required: true })
   cost?: number;
 
   @Prop({ required: true })
@@ -42,11 +57,15 @@ export class PricesSchema {
 
   @Prop({ required: true })
   reseller: number;
+
+  @Prop({ required: false, type: WholesalePercentageSchema })
+  wholesale?: WholesalePercentage;
 }
 
 interface Percentages {
   reseller: number;
   retail: number;
+  wholesale?: WholesalePercentage;
 }
 
 @Schema({ _id: false })
@@ -56,6 +75,23 @@ class PercentagesSchema {
 
   @Prop({ required: true })
   reseller: number;
+
+  @Prop({ required: false, type: WholesalePercentageSchema })
+  wholesale?: WholesalePercentage;
+}
+
+@Schema({ _id: false })
+export class WholesaleDataSchema {
+  @Prop({ type: Boolean, default: false })
+  is_wholesaler: boolean;
+
+  @Prop({ type: String, enum: ['simple', 'complex', null], default: null })
+  package_type: string;
+}
+
+export interface WholesaleData {
+  is_wholesaler: boolean;
+  package_type: string;
 }
 
 @Schema({ timestamps: true, collection: 'products' })
@@ -90,7 +126,7 @@ export class ProductModel extends Document {
   @Prop({ type: Boolean, required: true, default: false })
   has_stock: boolean;
 
-  @Prop({ type: SchemaTypes.ObjectId, required: true, default: false })
+  @Prop({ type: SchemaTypes.ObjectId, required: true })
   size_type: Types.ObjectId;
 
   // TODO: move sizes and colors to other table to avoid add specifc fields
@@ -99,6 +135,9 @@ export class ProductModel extends Document {
 
   @Prop({ type: [String], default: [] })
   colors: string[];
+
+  @Prop({ type: WholesaleDataSchema, required: true, default: { is_wholesaler: false, package_type: null } })
+  wholesale_data: WholesaleData;
 
   stocks: any;
   quantity: any;

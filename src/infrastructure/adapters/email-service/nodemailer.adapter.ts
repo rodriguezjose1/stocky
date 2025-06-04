@@ -17,6 +17,11 @@ export class NodemailerService implements IEmailService {
         pass: process.env.EMAIL_PASSWORD,
       },
     });
+
+    // Registrar el helper json para formatear objetos en el template
+    Handlebars.registerHelper('json', function(context) {
+      return JSON.stringify(context, null, 2);
+    });
   }
 
   // Función para cargar y compilar templates

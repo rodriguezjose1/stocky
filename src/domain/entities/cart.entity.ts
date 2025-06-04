@@ -15,6 +15,7 @@ export class Cart {
     public items: any[],
     public totalReseller: number,
     public totalRetail: number,
+    public totalWholesale: number,
     public active: boolean,
   ) {}
 }
@@ -25,6 +26,22 @@ export class AddProductToCartDTO {
     public productId: string,
     public variantId: string,
     public quantity: number,
+    public isWholesalePackage?: boolean,
+    public predefinedQuantity?: number,  // Cantidad predefinida que el usuario eligió al inicio
+    public userRole?: string
+  ) {}
+}
+
+export class AddComplexWholesaleProductToCartDTO {
+  constructor(
+    public cartId: string,
+    public productId: string,
+    public predefinedQuantity: number,
+    public variants: {
+      variantId: string;
+      quantity: number;
+    }[],
+    public userRole?: string
   ) {}
 }
 

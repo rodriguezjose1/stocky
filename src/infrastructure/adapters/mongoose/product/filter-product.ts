@@ -16,6 +16,9 @@ export class FilterProduct {
       maxRetailPrice,
       brand,
       hasStock,
+      page = 1,
+      limit = 20,
+      isWholesaler,
     } = filterDto;
 
     const match: any = {};
@@ -166,12 +169,16 @@ export class FilterProduct {
         costPrice: { $first: '$prices.cost' },
         resellerPrice: { $first: '$prices.reseller' },
         retailPrice: { $first: '$prices.retail' },
+        retailPercentage: { $first: '$percentages.retail' },
+        resellerPercentage: { $first: '$percentages.reseller' },
+        wholesalePercentage: { $first: '$percentages.wholesale' },
         pictures: { $first: '$pictures' },
         has_stock: { $first: '$has_stock' },
         sizes: { $first: '$sizes' },
         colors: { $first: '$colors' },
         sizeType: { $first: '$size_type' },
         createdAt: { $first: '$createdAt' },
+        wholesale_data: { $first: '$wholesale_data' },
       },
     });
 
@@ -186,6 +193,11 @@ export class FilterProduct {
           brand: '$brand',
         },
         quantity: '$quantity',
+        percentages: {
+          retail: '$retailPercentage',
+          reseller: '$resellerPercentage',
+          wholesale: '$wholesalePercentage',
+        },
         prices: {
           cost: '$costPrice',
           reseller: '$resellerPrice',
@@ -197,6 +209,7 @@ export class FilterProduct {
         colors: { $ifNull: ['$colors', []] },
         size_type: '$sizeType',
         createdAt: '$createdAt',
+        wholesale_data: '$wholesale_data',
       },
     });
 

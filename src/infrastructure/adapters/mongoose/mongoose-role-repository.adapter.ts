@@ -39,6 +39,11 @@ export class MongooseRoleRepositoryAdapter implements RoleRepositoryPort {
     return result.deletedCount === 1;
   }
 
+  async findByName(name: string): Promise<Role> {
+    const role = await this.roleModel.findOne({ name }).exec();
+    return this.mapToEntity(role);
+  }
+
   private mapToEntity(roleModel: RoleModel): Role {
     return new Role(roleModel._id.toString(), roleModel.name, roleModel.description, roleModel.permissions);
   }

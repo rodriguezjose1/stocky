@@ -1,10 +1,11 @@
 // application/use-cases/user-use-cases.ts
 import { BadRequestException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { EncrypterPort } from 'src/domain/ports/encrypter.port';
 import { User } from '../../domain/entities/user.entity';
 import { UserRepositoryPort } from '../../domain/ports/user-repository.port';
-import { ConfigService } from '@nestjs/config';
 import { userErrors } from '../error.constants';
+import { RoleUseCases } from './role.use-cases';
 
 @Injectable()
 export class UserUseCases {
@@ -13,6 +14,7 @@ export class UserUseCases {
     private userRepository: UserRepositoryPort,
     @Inject('EncrypterPort')
     private encrypter: EncrypterPort,
+    private roleUseCases: RoleUseCases,
     private configService: ConfigService,
   ) {}
 
@@ -55,7 +57,7 @@ export class UserUseCases {
     return this.userRepository.findByIdAuth(id);
   }
 
-  async createUser(user: User): Promise<User> {
+  async createUser(user: User, caller: string = 'admin'): Promise<User> {
     const userInDB = await this.userRepository.findByEmail(user.email);
     if (userInDB) {
       throw new BadRequestException(userErrors.userAlreadyExists);
@@ -63,6 +65,10 @@ export class UserUseCases {
 
     if (!user.password) {
       user.password = this.configService.get('DEFAULT_PASSWORD');
+    }
+    if (caller === 'customer') {
+      const customerRole = await this.roleUseCases.getRoleByName('customer');
+      user.roles = [customerRole.id];
     }
     const hashedPassword = await this.encrypter.hash(user.password);
     user.password = hashedPassword;

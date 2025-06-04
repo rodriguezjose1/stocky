@@ -12,4 +12,8 @@ export class RoleUseCases {
   async getRoles(): Promise<Role[]> {
     return this.RoleRepository.findAll();
   }
+
+  async getRoleByName(name: string): Promise<Role> {
+    return this.RoleRepository.findByName(name);
+  }
 }

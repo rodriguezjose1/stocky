@@ -16,6 +16,9 @@ export class CartModel extends Document {
   @Prop()
   total_retail: number;
 
+  @Prop()
+  total_wholesale: number;
+
   @Prop({ type: Boolean, default: true })
   active: boolean;
 }

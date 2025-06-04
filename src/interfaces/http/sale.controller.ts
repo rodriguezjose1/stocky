@@ -1,19 +1,20 @@
 // interfaces/http/sale.controller.ts
-import { Controller, Post, Body, Get, Put, Param, Query, UseGuards, Req } from '@nestjs/common';
-import { SalesUseCase } from '../../application/use-cases/sale.use-cases';
+import { Body, Controller, Get, Param, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Response } from 'express';
 import { CreateSaleDto, GetSalesFilterDto, Sale } from 'src/domain/entities/sale.entity';
-import { Roles } from 'src/infrastructure/auth/decorators/roles.decorator';
 import { Role } from 'src/domain/enums/role.enum';
-import { RolesGuard } from 'src/infrastructure/auth/guards/roles.guard';
+import { Roles } from 'src/infrastructure/auth/decorators/roles.decorator';
 import { BasicAuthGuard } from 'src/infrastructure/auth/guards/basic-auth.guard';
+import { RolesGuard } from 'src/infrastructure/auth/guards/roles.guard';
+import { SalesUseCase } from '../../application/use-cases/sale.use-cases';
 
 @Controller('sales')
 export class SaleController {
   constructor(private saleUseCases: SalesUseCase) {}
 
-  @UseGuards(BasicAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SELLER)
   @Post()
+  @Roles(Role.ADMIN, Role.SELLER, Role.CUSTOMER)
+  @UseGuards(BasicAuthGuard, RolesGuard)
   async createSale(
     @Body()
     saleData: CreateSaleDto,
@@ -26,9 +27,9 @@ export class SaleController {
     };
   }
 
-  @UseGuards(BasicAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SELLER)
   @Get()
+  @UseGuards(BasicAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SELLER, Role.CUSTOMER)
   async getAllSales(@Query() query: GetSalesFilterDto, @Req() req) {
     query.user = req.user;
     const { sales, total } = await this.saleUseCases.findAll(query);
@@ -36,15 +37,6 @@ export class SaleController {
     return {
       sales,
       total,
-    };
-  }
-
-  @Get(':id')
-  async getSaleById(id: string) {
-    const sale = await this.saleUseCases.findById(id);
-
-    return {
-      sale,
     };
   }
 
@@ -87,5 +79,52 @@ export class SaleController {
   @Post('/async-events/:saleId')
   async processAsyncEvents(@Param('saleId') saleId: string) {
     return this.saleUseCases.processAsyncEvents(saleId);
+  }
+
+  @Get('grouped-products-current-week')
+  @Roles(Role.ADMIN, Role.SELLER)
+  async getGroupedProductsInCurrentWeek() {
+    return this.saleUseCases.findGroupedProductsInCurrentWeek();
+  }
+
+  @Get('monthly-stats')
+  @Roles(Role.ADMIN, Role.SELLER)
+  async getMonthlySalesStats(
+    @Query('month') month?: number,
+    @Query('year') year?: number,
+  ) {
+    return this.saleUseCases.getMonthlySalesStats(month, year);
+  }
+
+  @Get('monthly-detail')
+  @Roles(Role.ADMIN, Role.SELLER)
+  async getMonthlySalesDetail(
+    @Res() res: Response,
+    @Query('month') month?: number,
+    @Query('year') year?: number
+  ) {
+    const excelBuffer = await this.saleUseCases.generateMonthlySalesExcel(month, year);
+    
+    // Configurar la respuesta HTTP
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=ventas-detalle-${month || new Date().getMonth() + 1}-${year || new Date().getFullYear()}.xlsx`
+    );
+    
+    // Enviar el archivo
+    res.send(excelBuffer);
+  }
+
+  @Get(':id')
+  async getSaleById(id: string) {
+    const sale = await this.saleUseCases.findById(id);
+
+    return {
+      sale,
+    };
   }
 }

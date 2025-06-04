@@ -17,7 +17,7 @@ export class ProductUseCases {
     private productAttributesUseCases: ProductAttributeUseCases,
     private productAttributesSubtypeUseCases: ProductAttributeSubtypeUseCases,
     private categoryUseCases: CategoryUseCases,
-  ) {}
+  ) { }
 
   async getProductsByCategory(categoryId: string): Promise<Product[]> {
     const products = await this.productRepository.getByCategory(categoryId);
@@ -37,6 +37,12 @@ export class ProductUseCases {
   }
 
   async createProduct(product: CreateProductDto): Promise<Product> {
+    // Check if a product with the same code already exists
+    const existingProduct = await this.productRepository.findByCode(product.code);
+    if (existingProduct) {
+      throw new BadRequestException(productErrors.duplicateProductCode);
+    }
+
     const categoryIds = product.categories; // IDs de las categorías seleccionadas
 
     // Obtener las categorías y sus ancestros
@@ -52,14 +58,18 @@ export class ProductUseCases {
     // Construir el categoryPaths
     const categoryPaths = this.buildCategoryPaths(categories);
 
+    this.validateWholesaleData(product);
+
     const calculatePrices = await this.calculatePrices({
       costPrice: product.prices.cost,
       percentageReseller: product.percentages.reseller,
       percentageRetail: product.percentages.retail,
+      percentageWholesale: product.percentages.wholesale,
     });
 
     product.prices.reseller = calculatePrices.reseller;
     product.prices.retail = calculatePrices.retail;
+    product.prices.wholesale = calculatePrices.wholesale;
 
     const createdProduct = await this.productRepository.create({ ...product, categories: categoryIds, categoriesFilter: categoryPaths });
 
@@ -72,17 +82,31 @@ export class ProductUseCases {
       throw new BadRequestException(productErrors.productNotFound);
     }
 
-    if (product.prices && product.prices.cost !== productDB.prices.cost) {
-      const calculatedPrices = await this.calculatePrices({
-        costPrice: product.prices.cost,
-        percentageReseller: productDB.percentages.reseller,
-        percentageRetail: productDB.percentages.retail,
-      });
+    // if percentages was changed, update prices
+    if (product.percentages.reseller !== productDB.percentages.reseller ||
+      product.percentages.retail !== productDB.percentages.retail ||
+      product.percentages.wholesale !== productDB.percentages.wholesale) {
+      await this.updatePrices(product);
+    }
 
-      product.prices.reseller = calculatedPrices.reseller;
-      product.prices.retail = calculatedPrices.retail;
+    if (product.wholesaleData.isWholesaler !== productDB.wholesaleData.isWholesaler) {
+      await this.updatePrices(product);
 
-      this.productRepository.savePriceHistory({
+      if (!product.wholesaleData.isWholesaler) {
+        product.percentages.wholesale.half_dozen = 0;
+        product.percentages.wholesale.dozen = 0;
+      }
+    }
+
+    if (product.prices && product.prices.cost !== productDB.prices.cost ||
+      (product.percentages.reseller !== productDB.percentages.reseller ||
+        product.percentages.retail !== productDB.percentages.retail ||
+        product.percentages.wholesale.half_dozen  !== productDB.percentages.wholesale.half_dozen ||
+        product.percentages.wholesale.dozen !== productDB.percentages.wholesale.dozen)
+    ) {
+      await this.updatePrices(product);
+
+      await this.productRepository.savePriceHistory({
         productId: productDB.id,
         previousPrice: productDB.prices,
         newPrice: product.prices,
@@ -128,14 +152,36 @@ export class ProductUseCases {
     return this.productRepository.update(id, product);
   }
 
-  async updateProductSimple(id: string, product: Partial<Product>): Promise<Product | null> {
+  private async updatePrices(product: Partial<Product>) {
+    const calculatedPrices = await this.calculatePrices({
+      costPrice: product.prices.cost,
+      percentageReseller: product.percentages.reseller,
+      percentageRetail: product.percentages.retail,
+      percentageWholesale: product.percentages.wholesale,
+    });
+
+    product.prices.reseller = calculatedPrices.reseller;
+    product.prices.retail = calculatedPrices.retail;
+    product.prices.wholesale = calculatedPrices.wholesale;
+  }
+
+  async updatePartialProduct(id: string, product: Partial<Product>): Promise<Product | null> {
     // Verificar si el producto existe
     const existingProduct = await this.productRepository.findById(id);
     if (!existingProduct) {
       throw new BadRequestException(productErrors.productNotFound);
     }
 
-    return this.productRepository.update(id, product);
+    // Si se está actualizando el código, verificar que no exista otro producto con el mismo código
+    if (product.code && product.code !== existingProduct.code) {
+      const productWithSameCode = await this.productRepository.findByCode(product.code);
+      if (productWithSameCode) {
+        throw new BadRequestException(productErrors.duplicateProductCode);
+      }
+    }
+
+    // Utilizar el método updatePartial del repositorio que ahora maneja el mapeo correctamente
+    return this.productRepository.updatePartial(id, product);
   }
 
   async deleteProduct(id: string): Promise<boolean> {
@@ -150,8 +196,8 @@ export class ProductUseCases {
     return this.productRepository.findByCodeOrName(filter);
   }
 
-  async calculatePrices({ costPrice, percentageReseller, percentageRetail }) {
-    return this.productRepository.calculatePrices(costPrice, percentageReseller, percentageRetail);
+  async calculatePrices({ costPrice, percentageReseller, percentageRetail, percentageWholesale }) {
+    return this.productRepository.calculatePrices(costPrice, percentageReseller, percentageRetail, percentageWholesale);
   }
 
   async increasePrices(data: IncreasePrices) {
@@ -185,11 +231,7 @@ export class ProductUseCases {
   }
 
   private getUniqueColors(colors: string[], newColors: string[]): string[] {
-    const uniqueColors = new Set(colors);
-
-    newColors.forEach((color) => uniqueColors.add(color));
-
-    return Array.from(uniqueColors);
+    return Array.from(new Set(newColors));
   }
 
   private async getSizeType(product, categories) {
@@ -217,4 +259,29 @@ export class ProductUseCases {
     const percentage = (increase / initialAmount) * 100;
     return percentage;
   }
+
+  private validateWholesaleData(product) {
+    if (product.wholesaleData && product.wholesaleData.isWholesaler) {
+      if (!product.wholesaleData.packageType) {
+        throw new BadRequestException(productErrors.wholesalePackageTypeRequired);
+      }
+      if (product.percentages.wholesale.dozen === 0 && product.percentages.wholesale.half_dozen === 0) {
+        throw new BadRequestException(productErrors.wholesalePercentagesRequired);
+      }
+    }
+
+    if (product.wholesaleData && !product.wholesaleData.isWholesaler) {
+      product.percentages.wholesale.half_dozen = 0;
+      product.percentages.wholesale.dozen = 0;
+      product.wholesaleData.packageType = null;
+    }
+
+    if (!product.wholesaleData) {
+      product.percentages.wholesale = {
+        half_dozen: 0,
+        dozen: 0,
+      };
+    }
+  }
+
 }

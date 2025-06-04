@@ -60,6 +60,11 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
     };
   }
 
+  async findByCode(code: string): Promise<Product | null> {
+    const product = await this.productModel.findOne({ code }).exec();
+    return product ? this.mapToEntity(product) : null;
+  }
+
   async findById(id: string): Promise<Product | null> {
     const product = await this.productModel.findById(id).exec();
     return product ? this.mapToEntity(product) : null;
@@ -91,19 +96,19 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
           ...(size ? { 'variant.size': size } : {}),
           ...(minCostPrice || maxCostPrice
             ? {
-                cost_price: {
-                  ...(minCostPrice ? { $gte: minCostPrice } : {}),
-                  ...(maxCostPrice ? { $lte: maxCostPrice } : {}),
-                },
-              }
+              cost_price: {
+                ...(minCostPrice ? { $gte: minCostPrice } : {}),
+                ...(maxCostPrice ? { $lte: maxCostPrice } : {}),
+              },
+            }
             : {}),
           ...(minQuantity || maxQuantity
             ? {
-                quantity: {
-                  ...(minQuantity ? { $gte: minQuantity } : {}),
-                  ...(maxQuantity ? { $lte: maxQuantity } : {}),
-                },
-              }
+              quantity: {
+                ...(minQuantity ? { $gte: minQuantity } : {}),
+                ...(maxQuantity ? { $lte: maxQuantity } : {}),
+              },
+            }
             : {}),
         },
       },
@@ -151,6 +156,12 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
     return updatedProduct ? this.mapToEntity(updatedProduct) : null;
   }
 
+  async updatePartial(id: string, product: Partial<Product>): Promise<Product | null> {
+    const mappedProduct = this.mapToModel(product);
+    const updatedProduct = await this.productModel.findByIdAndUpdate(id, mappedProduct, { new: true }).exec();
+    return updatedProduct ? this.mapToEntity(updatedProduct) : null;
+  }
+
   async delete(id: string): Promise<boolean> {
     const result = await this.productModel.deleteOne({ _id: id }).exec();
     return result.deletedCount === 1;
@@ -161,11 +172,16 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
     return products.map((product) => this.mapToEntity(product));
   }
 
-  async calculatePrices(costPrice, percentageReseller, percentageRetail) {
+  async calculatePrices(costPrice, percentageReseller, percentageRetail, percentageWholesale) {
     const resellerWithoutRound = costPrice + costPrice * (percentageReseller / 100);
     const reseller = roundUpTo100(resellerWithoutRound);
     const retail = roundUpTo100(resellerWithoutRound + resellerWithoutRound * (percentageRetail / 100));
-    return { reseller, retail, costPrice };
+    console.log(percentageWholesale.half_dozen > 0 ? costPrice + costPrice * (percentageWholesale.half_dozen / 100) : 0);
+    const wholesale = {
+      half_dozen: roundUpTo100(percentageWholesale.half_dozen > 0 ? costPrice + costPrice * (percentageWholesale.half_dozen / 100) : 0),
+      dozen: roundUpTo100(percentageWholesale.dozen > 0 ? costPrice + costPrice * (percentageWholesale.dozen / 100) : 0),
+    }
+    return { reseller, retail, wholesale, costPrice };
   }
 
   async increasePrices({ productsIds, percentageIncrease, user }): Promise<Product[]> {
@@ -178,12 +194,16 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
   async increasePrice(product: ProductModel, percentageIncrease, user): Promise<Product> {
     const reseller = roundUpTo100(product.prices.reseller + (product.prices.reseller * percentageIncrease) / 100);
     const retail = roundUpTo100(product.prices.retail + (product.prices.retail * percentageIncrease) / 100);
+    const wholesale = {
+      half_dozen: roundUpTo100(product.prices.wholesale.half_dozen + (product.prices.wholesale.half_dozen * percentageIncrease) / 100),
+      dozen: roundUpTo100(product.prices.wholesale.dozen + (product.prices.wholesale.dozen * percentageIncrease) / 100),
+    };
 
-    if (reseller < 0 || retail < 0) {
+    if (reseller < 0 || retail < 0 || wholesale.half_dozen < 0 || wholesale.dozen < 0) {
       throw new Error('El precio no puede ser negativo');
     }
 
-    const updatedProduct = { ...product, prices: { ...product.prices, reseller, retail } };
+    const updatedProduct = { ...product, prices: { ...product.prices, reseller, retail, wholesale } };
     const updated = await this.productModel.findOneAndUpdate({ _id: product._id }, { $set: { prices: updatedProduct.prices } }, { new: true }).exec();
     await this.priceHistoryModel.create({
       productId: product._id,
@@ -202,23 +222,49 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
   }
 
   private mapToModel(product: Partial<Product>): Partial<ProductModel> {
-    const model: Partial<ProductModel> = {};
-    
-    if (product.name !== undefined) model.name = product.name;
-    if (product.description !== undefined) model.description = product.description;
-    if (product.code !== undefined) model.code = product.code;
-    if (product.categories !== undefined) model.categories = product.categories as any;
-    if (product.attributes !== undefined) model.attributes = product.attributes;
-    if (product.pictures !== undefined) model.pictures = product.pictures;
-    if (product.prices !== undefined) model.prices = product.prices;
-    if (product.percentages !== undefined) model.percentages = product.percentages;
-    if (product.hasStock !== undefined) model.has_stock = product.hasStock;
-    if (product.sizeType !== undefined) model.size_type = new Types.ObjectId(product.sizeType);
-    if (product.sizes !== undefined) model.sizes = product.sizes;
-    if (product.colors !== undefined) model.colors = product.colors;
-    if (product.categoriesFilter !== undefined) model.categories_filter = product.categoriesFilter as any;
-    
-    return model;
+    // Crear un objeto base sin las propiedades que necesitan transformación
+    const { sizeType, categoriesFilter, categories, hasStock, prices, wholesaleData, ...rest } = product;
+    const mappedProduct: Partial<ProductModel> = { ...rest };
+
+    // Mapear campos específicos solo si existen
+    if (sizeType !== undefined) {
+      mappedProduct.size_type = new Types.ObjectId(sizeType);
+    }
+
+    if (categoriesFilter !== undefined) {
+      mappedProduct.categories_filter = categoriesFilter as any;
+    }
+
+    if (categories !== undefined) {
+      mappedProduct.categories = categories as any;
+    }
+
+    if (hasStock !== undefined) {
+      mappedProduct.has_stock = hasStock;
+    }
+
+    // Mapear precios solo si existen
+    if (prices) {
+      mappedProduct.prices = {
+        cost: prices.cost !== undefined ? prices.cost : undefined,
+        retail: prices.retail !== undefined ? prices.retail : undefined,
+        reseller: prices.reseller !== undefined ? prices.reseller : undefined,
+        wholesale: prices.wholesale ? {
+          half_dozen: prices.wholesale.half_dozen !== undefined ? prices.wholesale.half_dozen : 0,
+          dozen: prices.wholesale.dozen !== undefined ? prices.wholesale.dozen : 0
+        } : undefined
+      };
+    }
+
+    // Mapear wholesale_data solo si existe
+    if (wholesaleData) {
+      mappedProduct.wholesale_data = {
+        is_wholesaler: wholesaleData.isWholesaler !== undefined ? wholesaleData.isWholesaler : undefined,
+        package_type: wholesaleData.packageType !== undefined ? wholesaleData.packageType : undefined
+      };
+    }
+
+    return mappedProduct;
   }
 
   private mapToEntity(productModel: ProductModel, withPopulate = false): Product {
@@ -228,11 +274,15 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
         id: category._id.toString(),
         name: category.name,
         slug: category.slug,
-        // parent: category.parent?.toString(),
       }));
     } else {
       categories = productModel.categories?.map((category) => category.toString());
     }
+
+    const categoriesFilter = productModel.categories_filter?.map(row =>
+      row.map(id => id.toString())
+    );
+
     return new Product(
       productModel._id.toString(),
       productModel.name,
@@ -244,25 +294,31 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
       productModel.prices,
       productModel.percentages,
       productModel.has_stock,
-      undefined,
+      categoriesFilter,
       productModel.stocks
         ? productModel.stocks.map((stock) => ({
-            id: stock._id.toString(),
-            quantity: stock.quantity,
-            variant: {
-              id: stock.variant._id.toString(),
-              color: stock.variant.color,
-              size: stock.variant.size,
-            },
-            costPrice: stock.cost_price,
-            date: stock.date,
-          }))
+          id: stock._id.toString(),
+          quantity: stock.quantity,
+          variant: {
+            id: stock.variant._id.toString(),
+            color: stock.variant.color,
+            size: stock.variant.size,
+            colorLabel: stock.variant.color_label,
+            sizeLabel: stock.variant.size_label,
+          },
+          costPrice: stock.cost_price,
+          date: stock.date,
+        }))
         : undefined,
       productModel.quantity,
       productModel.size_type?.toString() || undefined,
       productModel.sizes,
       productModel.colors,
       productModel.createdAt,
+      productModel.wholesale_data ? {
+        isWholesaler: productModel.wholesale_data.is_wholesaler,
+        packageType: productModel.wholesale_data.package_type as 'simple' | 'complex'
+      } : undefined
     );
   }
 }

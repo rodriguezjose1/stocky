@@ -30,6 +30,11 @@ export class MongooseProductAttributeSubtypeRepositoryAdapter implements Product
     return this.mapToEntity(productAttributeSubtype);
   }
 
+  async create(data: { type: string; label_type: string; value: string }): Promise<ProductAttributeSubtype> {
+    const productAttributeSubtype = await this.productAttributeModel.create(data);
+    return this.mapToEntity(productAttributeSubtype);
+  }
+
   mapToEntity(productAttributeModel: ProductAttributeSubtypeModel): ProductAttributeSubtype {
     return {
       id: productAttributeModel._id.toString(),
