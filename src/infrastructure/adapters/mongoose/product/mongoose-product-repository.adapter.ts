@@ -26,16 +26,14 @@ export class MongooseProductRepositoryAdapter implements ProductRepositoryPort {
   }
 
   async filterProducts(filterDto: FilterProductsDto): Promise<ResGetProductsDto> {
-    const aggregatePipeline = this.filterProduct.filterProducts(filterDto);
-
-    const result = await this.productModel.aggregate(aggregatePipeline).exec();
-
-    const total = result[0]?.total?.total || 0;
-    const products = result[0]?.products || [];
+    const dataPipeline = this.filterProduct.filterProducts(filterDto);
+    const resultData = await this.productModel.aggregate(dataPipeline).exec();
+    const countPipeline = this.filterProduct.countProducts(filterDto);
+    const resultCount = await this.productModel.aggregate(countPipeline).exec();
 
     return {
-      products: products.map((product) => this.mapToEntity(product, true)),
-      total,
+      products: resultData.map((product) => this.mapToEntity(product, true)),
+      total: resultCount[0]?.total || 0,
     };
   }
 

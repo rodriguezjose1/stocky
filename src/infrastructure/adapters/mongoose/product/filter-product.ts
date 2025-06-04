@@ -6,7 +6,7 @@ import { FilterProductsDto } from 'src/domain/entities/product.entity';
 export class FilterProduct {
   constructor() {}
 
-  filterProducts(filterDto: FilterProductsDto) {
+  private buildBaseMatch(filterDto: FilterProductsDto) {
     const {
       q,
       code,
@@ -14,14 +14,7 @@ export class FilterProduct {
       description,
       minRetailPrice,
       maxRetailPrice,
-      categories,
       brand,
-      color,
-      size,
-      minCostPrice,
-      maxCostPrice,
-      minQuantity,
-      maxQuantity,
       hasStock,
       page = 1,
       limit = 20,
@@ -68,11 +61,15 @@ export class FilterProduct {
       match['attributes.brand'] = { $in: brand.split(',').map((b) => b.toLowerCase()) };
     }
 
-    if (isWholesaler) {
-      match['wholesale_data.is_wholesaler'] = isWholesaler;
-    }
+    return match;
+  }
 
+  private buildBasePipeline(filterDto: FilterProductsDto) {
+    const { categories, color, size, minCostPrice, maxCostPrice, minQuantity, maxQuantity } = filterDto;
+
+    const match = this.buildBaseMatch(filterDto);
     const aggregatePipeline: any[] = [{ $match: match }];
+
     // Filtro por categorías
     if (categories && categories.length) {
       let customFilterCategories = null;
@@ -152,6 +149,14 @@ export class FilterProduct {
       },
     });
 
+    return aggregatePipeline;
+  }
+
+  filterProducts(filterDto: FilterProductsDto) {
+    const { page = 1, limit = 20 } = filterDto;
+
+    const aggregatePipeline = this.buildBasePipeline(filterDto);
+
     aggregatePipeline.push({
       $group: {
         _id: '$_id',
@@ -211,18 +216,24 @@ export class FilterProduct {
     // add sort by last created
     aggregatePipeline.push({ $sort: { createdAt: -1 } });
 
-    // Añadir los campos de total y paginación
-    aggregatePipeline.push(
-      // Fase de conteo total de productos
-      {
-        $facet: {
-          total: [{ $count: 'total' }],
-          products: [{ $skip: (page - 1) * limit }, { $limit: limit }],
-        },
+    // Añadir paginación
+    aggregatePipeline.push({ $skip: (page - 1) * limit }, { $limit: limit });
+
+    return aggregatePipeline;
+  }
+
+  countProducts(filterDto: FilterProductsDto) {
+    const aggregatePipeline = this.buildBasePipeline(filterDto);
+
+    aggregatePipeline.push({
+      $group: {
+        _id: '$_id',
       },
-      // Desestructurar los resultados
-      { $unwind: '$total' },
-    );
+    });
+
+    aggregatePipeline.push({
+      $count: 'total',
+    });
 
     return aggregatePipeline;
   }
