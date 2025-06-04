@@ -97,6 +97,8 @@ export class StockUseCases {
         stockDto.date = new Date();
       }
 
+      const sizeAttribute = await this.productAttributeUseCases.getProductAttributeByLabel(stockDto.variant.size);
+      stockDto.variant.size = sizeAttribute?.value || stockDto.variant.size;
       const variant = await this.variantUseCases.getOneBy(stockDto.variant as any);
       const product = await this.productUseCases.getProductById(stockDto.product);
 
@@ -109,7 +111,6 @@ export class StockUseCases {
         }
         
         // todo: this is bad, products contians only a array with the size value and not an object with both value and label
-        const sizeAttribute = await this.productAttributeUseCases.getProductAttributeByLabel(stockDto.variant.size);
         const variantToSave: Variant = {
           id: undefined,
           size: sizeAttribute?.value || stockDto.variant.size,
