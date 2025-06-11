@@ -2,7 +2,7 @@ import { MongoClient, ObjectId } from 'mongodb';
 
 async function findProductsWithOrphanedCategories() {
   // Define MongoDB connection URL directly
-  const uri = 'mongodb+srv://admin:admin@cluster0.pcumk.mongodb.net/stocky?retryWrites=true&w=majority';
+  const uri = '';
   const client = new MongoClient(uri);
 
   try {
