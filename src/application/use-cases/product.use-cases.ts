@@ -82,6 +82,8 @@ export class ProductUseCases {
       throw new BadRequestException(productErrors.productNotFound);
     }
 
+    this.validateWholesaleData(product);
+
     // if percentages was changed, update prices
     if (product.percentages.reseller !== productDB.percentages.reseller ||
       product.percentages.retail !== productDB.percentages.retail ||
@@ -101,8 +103,8 @@ export class ProductUseCases {
     if (product.prices && product.prices.cost !== productDB.prices.cost ||
       (product.percentages.reseller !== productDB.percentages.reseller ||
         product.percentages.retail !== productDB.percentages.retail ||
-        product.percentages.wholesale.half_dozen  !== productDB.percentages.wholesale.half_dozen ||
-        product.percentages.wholesale.dozen !== productDB.percentages.wholesale.dozen)
+        product.percentages.wholesale?.half_dozen  !== productDB.percentages.wholesale?.half_dozen ||
+        product.percentages.wholesale?.dozen !== productDB.percentages.wholesale?.dozen)
     ) {
       await this.updatePrices(product);
 
