@@ -14,11 +14,12 @@ export class FilterProduct {
       description,
       minRetailPrice,
       maxRetailPrice,
+      minResellerPrice,
+      maxResellerPrice,
       brand,
       hasStock,
-      page = 1,
-      limit = 20,
       isWholesaler,
+      wholesalePackageType,
     } = filterDto;
 
     const match: any = {};
@@ -45,20 +46,41 @@ export class FilterProduct {
       match.$or = [{ name: { $regex: q, $options: 'i' } }, { code: { $regex: q, $options: 'i' } }, { description: { $regex: q, $options: 'i' } }];
     }
 
-    // Filtro por precios de revendedor
+    // Filtro por precios retail
     if (minRetailPrice || maxRetailPrice) {
-      match['prices.reseller'] = {};
+      match['prices.retail'] = {};
       if (minRetailPrice) {
-        match['prices.reseller'].$gte = minRetailPrice;
+        match['prices.retail'].$gte = minRetailPrice;
       }
       if (maxRetailPrice) {
-        match['prices.reseller'].$lte = maxRetailPrice;
+        match['prices.retail'].$lte = maxRetailPrice;
+      }
+    }
+
+    // Filtro por precios de revendedor
+    if (minResellerPrice || maxResellerPrice) {
+      match['prices.reseller'] = {};
+      if (minResellerPrice) {
+        match['prices.reseller'].$gte = minResellerPrice;
+      }
+      if (maxResellerPrice) {
+        match['prices.reseller'].$lte = maxResellerPrice;
       }
     }
 
     // Filtro por marca
     if (brand) {
       match['attributes.brand'] = { $in: brand.split(',').map((b) => b.toLowerCase()) };
+    }
+
+    // Filtro por productos mayoristas
+    if (isWholesaler !== undefined) {
+      match['wholesale_data.is_wholesaler'] = isWholesaler;
+    }
+
+    // Filtro por tipo de paquete mayorista
+    if (wholesalePackageType) {
+      match['wholesale_data.package_type'] = wholesalePackageType;
     }
 
     return match;
