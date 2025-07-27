@@ -48,3 +48,9 @@ export class AddComplexWholesaleProductToCartDTO {
 export class CreateCartDTO {
   constructor(public userId: string) {}
 }
+
+export class CreateGuestCartDTO {
+  constructor(
+    public sessionId: string
+  ) {}
+}

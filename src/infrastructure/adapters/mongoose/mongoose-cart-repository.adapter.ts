@@ -179,4 +179,49 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
     }
     return cart;
   }
+
+  // Nuevos métodos para guest carts
+  async createSessionCart(sessionId: string): Promise<Cart> {
+    const newCart = new this.cartModel({
+      sessionId,
+      items: [],
+      total_reseller: 0,
+      total_retail: 0,
+      total_wholesale: 0,
+      active: true,
+    });
+    return newCart.save();
+  }
+
+  async getCartBySessionId(sessionId: string): Promise<Cart> {
+    const cart: Cart = await this.cartModel.findOne({ sessionId, active: true }).lean();
+
+    if (cart && cart.items.length > 0) {
+      const calls = cart.items.map(async (item, i) => {
+        if (item.is_wholesale_package && item.product.wholesale_data.package_type === packageTypes.complex) {
+          const calls = item.wholesale_variants.map(async (wv, j) => {
+            const stock = await this.stockModel.find({ product: item.product._id, variant: wv.variant._id }).exec();
+            item.wholesale_variants[j].stock = stock[0];
+            if (stock.length > 1) {
+              item.wholesale_variants[j].stock.quantity = stock.reduce((acc, curr) => {
+                return acc + curr.quantity;
+              }, 0);
+            }
+          });
+          await Promise.all(calls);
+        } else {
+          const stock = await this.stockModel.find({ product: item.product._id, variant: item.variant._id }).exec();
+          item.stock = stock[0];
+          if (stock.length > 1) {
+            item.stock.quantity = stock.reduce((acc, curr) => {
+              return acc + curr.quantity;
+            }, 0);
+          }
+        }
+      });
+      await Promise.all(calls);
+    }
+
+    return cart;
+  }
 }

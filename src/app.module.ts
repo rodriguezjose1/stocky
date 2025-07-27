@@ -9,6 +9,7 @@ import { LoggerMiddleware } from './infrastructure/logging/logger.middleware';
 import { LoggerModule } from './infrastructure/logging/logger.module';
 import { ScriptsModule } from './infrastructure/scripts/scripts.module';
 import { CartModule } from './modules/cart.module';
+import { GuestCartModule } from './modules/guest-cart.module';
 import { CategoryModule } from './modules/category.module';
 import { LoginModule } from './modules/login.module';
 import { NotificationModule } from './modules/notification.module';
@@ -44,6 +45,7 @@ import { VariantModule } from './modules/variant.module';
     ProductAttributeModule,
     UploadImageModule,
     CartModule,
+    GuestCartModule,
     NotificationModule,
     ScriptsModule,
   ],
