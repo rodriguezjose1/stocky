@@ -111,22 +111,22 @@ export class MongooseCartRepositoryAdapter implements ICartRepository {
       cart.totalWholesale = 0;
       return;
     }
-    cart.totalReseller = cart.items.reduce((total, item) => {
-        return total + productsMap[item.product._id.toString()].prices.reseller * item.quantity;
-    }, 0);
     cart.totalRetail = cart.items.reduce((total, item) => {
       return total + productsMap[item.product._id.toString()].prices.retail * item.quantity;
     }, 0);
-    cart.totalWholesale = cart.items.reduce((total, item) => {
-      if (item.is_wholesale_package) {
-        if (item.predefined_quantity === 6) {
-          return total + (productsMap[item.product._id.toString()].prices.wholesale.half_dozen || 0) * item.quantity;
-        } else {
-          return total + (productsMap[item.product._id.toString()].prices.wholesale.dozen || 0) * item.quantity;
-        }
-      }
-      return total;
-    }, 0);
+    // cart.totalReseller = cart.items.reduce((total, item) => {
+    //     return total + productsMap[item.product._id.toString()].prices.reseller * item.quantity;
+    // }, 0);
+    // cart.totalWholesale = cart.items.reduce((total, item) => {
+    //   if (item.is_wholesale_package) {
+    //     if (item.predefined_quantity === 6) {
+    //       return total + (productsMap[item.product._id.toString()].prices.wholesale.half_dozen || 0) * item.quantity;
+    //     } else {
+    //       return total + (productsMap[item.product._id.toString()].prices.wholesale.dozen || 0) * item.quantity;
+    //     }
+    //   }
+    //   return total;
+    // }, 0);
   }
 
   async updateCart(cart: any): Promise<Cart> {
