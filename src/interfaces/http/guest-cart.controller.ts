@@ -1,12 +1,29 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, BadRequestException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { GuestCartUseCases } from 'src/application/use-cases/guest-cart.use-cases';
 import { AddProductToCartDTO, CreateGuestCartDTO } from 'src/domain/entities/cart.entity';
 
+@ApiTags('guest-carts')
 @Controller('guest-carts')
 export class GuestCartController {
   constructor(private guestCartUseCases: GuestCartUseCases) {}
 
   @Post('')
+  @ApiOperation({ summary: 'Crear carrito de sesión para usuario no autenticado' })
+  @ApiBody({
+    type: CreateGuestCartDTO,
+    description: 'Datos para crear un carrito de sesión',
+    examples: {
+      example1: {
+        summary: 'Crear carrito con sessionId',
+        value: {
+          sessionId: '550e8400-e29b-41d4-a716-446655440000'
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 201, description: 'Carrito creado exitosamente' })
+  @ApiResponse({ status: 400, description: 'sessionId es requerido' })
   async createGuestCart(@Body() body: CreateGuestCartDTO) {
     if (!body.sessionId || body.sessionId.trim() === '') {
       throw new BadRequestException('sessionId is required');
@@ -16,6 +33,35 @@ export class GuestCartController {
   }
 
   @Post('add-product')
+  @ApiOperation({ summary: 'Agregar producto al carrito' })
+  @ApiBody({
+    type: AddProductToCartDTO,
+    description: 'Datos para agregar un producto al carrito',
+    examples: {
+      example1: {
+        summary: 'Agregar producto normal',
+        value: {
+          cartId: '550e8400-e29b-41d4-a716-446655440000',
+          productId: '507f1f77bcf86cd799439011',
+          variantId: '507f1f77bcf86cd799439012',
+          quantity: 2
+        }
+      },
+      example2: {
+        summary: 'Agregar paquete mayorista',
+        value: {
+          cartId: '550e8400-e29b-41d4-a716-446655440000',
+          productId: '507f1f77bcf86cd799439011',
+          variantId: '507f1f77bcf86cd799439012',
+          quantity: 1,
+          isWholesalePackage: true,
+          predefinedQuantity: 6
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 201, description: 'Producto agregado exitosamente' })
+  @ApiResponse({ status: 400, description: 'Datos inválidos' })
   async addProductToGuestCart(@Body() body: AddProductToCartDTO) {
     if (!body.cartId || body.cartId.trim() === '') {
       throw new BadRequestException('cartId (sessionId) is required');
@@ -24,26 +70,55 @@ export class GuestCartController {
     return { cart };
   }
 
-  @Get(':sessionId')
-  async getGuestCart(@Param('sessionId') sessionId: string) {
-    if (!sessionId || sessionId.trim() === '') {
-      throw new BadRequestException('sessionId is required');
+  @Get(':cartId')
+  @ApiOperation({ summary: 'Obtener carrito por ID' })
+  @ApiParam({ name: 'cartId', description: 'ID del carrito' })
+  @ApiResponse({ status: 200, description: 'Carrito encontrado' })
+  @ApiResponse({ status: 404, description: 'Carrito no encontrado' })
+  async getGuestCart(@Param('cartId') cartId: string) {
+    if (!cartId || cartId.trim() === '') {
+      throw new BadRequestException('cartId is required');
     }
-    const cart = await this.guestCartUseCases.getGuestCart(sessionId);
+    const cart = await this.guestCartUseCases.getGuestCart(cartId);
     return { cart };
   }
 
-  @Delete(':sessionId/remove-product')
+  @Delete(':cartId/products/:productId')
+  @ApiOperation({ summary: 'Eliminar producto del carrito' })
+  @ApiParam({ name: 'cartId', description: 'ID del carrito' })
+  @ApiParam({ name: 'productId', description: 'ID del producto' })
+  @ApiBody({
+    description: 'Datos para eliminar un producto del carrito',
+    examples: {
+      example1: {
+        summary: 'Eliminar producto normal',
+        value: {
+          variantId: '507f1f77bcf86cd799439012',
+          isWholesalePackage: false
+        }
+      },
+      example2: {
+        summary: 'Eliminar paquete mayorista',
+        value: {
+          variantId: '507f1f77bcf86cd799439012',
+          isWholesalePackage: true
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 200, description: 'Producto eliminado exitosamente' })
+  @ApiResponse({ status: 404, description: 'Carrito o producto no encontrado' })
   async removeProductFromGuestCart(
-    @Param('sessionId') sessionId: string,
-    @Body() body: { productId: string; variantId: string; isWholesalePackage: boolean }
+    @Param('cartId') cartId: string,
+    @Param('productId') productId: string,
+    @Body() body: { variantId: string; isWholesalePackage: boolean }
   ) {
-    if (!sessionId || sessionId.trim() === '') {
-      throw new BadRequestException('sessionId is required');
+    if (!cartId || cartId.trim() === '') {
+      throw new BadRequestException('cartId is required');
     }
     const cart = await this.guestCartUseCases.removeProductFromGuestCart(
-      sessionId, 
-      body.productId, 
+      cartId, 
+      productId, 
       body.variantId, 
       body.isWholesalePackage
     );
@@ -51,6 +126,33 @@ export class GuestCartController {
   }
 
   @Put(':cartId/products/:productId/quantity')
+  @ApiOperation({ summary: 'Actualizar cantidad de producto en el carrito' })
+  @ApiParam({ name: 'cartId', description: 'ID del carrito' })
+  @ApiParam({ name: 'productId', description: 'ID del producto' })
+  @ApiBody({
+    description: 'Datos para actualizar la cantidad de un producto',
+    examples: {
+      example1: {
+        summary: 'Actualizar producto normal',
+        value: {
+          variantId: '507f1f77bcf86cd799439012',
+          quantity: 3,
+          isWholesalePackage: false
+        }
+      },
+      example2: {
+        summary: 'Actualizar paquete mayorista',
+        value: {
+          variantId: '507f1f77bcf86cd799439012',
+          quantity: 1,
+          isWholesalePackage: true,
+          predefinedQuantity: 12
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 200, description: 'Cantidad actualizada exitosamente' })
+  @ApiResponse({ status: 404, description: 'Carrito o producto no encontrado' })
   async updateGuestCartQuantity(
     @Param('cartId') cartId: string,
     @Param('productId') productId: string,
