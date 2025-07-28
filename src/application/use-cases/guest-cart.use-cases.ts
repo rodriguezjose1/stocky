@@ -137,8 +137,8 @@ export class GuestCartUseCases {
     return this.cartRepository.getCartBySessionId(sessionId);
   }
 
-  async removeProductFromGuestCart(sessionId: string, productId: string, variantId: string, isWholesalePackage: boolean): Promise<Cart> {
-    const cart = await this.cartRepository.getCartBySessionId(sessionId);
+  async removeProductFromGuestCart(cartId: string, productId: string, variantId: string, isWholesalePackage: boolean): Promise<Cart> {
+    const cart = await this.cartRepository.getCartById(cartId);
     if (!cart) {
       throw new BadRequestException('Cart not found');
     }

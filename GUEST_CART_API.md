@@ -6,7 +6,7 @@ Todos los endpoints están disponibles en `/api/guest-carts/` y **NO requieren a
 
 ### 1. Crear carrito de sesión
 
-**POST** `/api/guest-carts/create`
+**POST** `/api/guest-carts`
 
 **Body:**
 ```json
@@ -82,7 +82,7 @@ Todos los endpoints están disponibles en `/api/guest-carts/` y **NO requieren a
 
 ### 3. Obtener carrito
 
-**GET** `/api/guest-carts/:sessionId`
+**GET** `/api/guest-carts/:cartId`
 
 **Response:**
 ```json
@@ -100,18 +100,17 @@ Todos los endpoints están disponibles en `/api/guest-carts/` y **NO requieren a
 
 ### 4. Remover producto del carrito
 
-**DELETE** `/api/guest-carts/:sessionId/remove-product`
+**DELETE** `/api/guest-carts/:cartId/products/:productId`
 
 **Body:**
 ```json
 {
-  "productId": "product-id",
   "variantId": "variant-id",
   "isWholesalePackage": false
 }
 ```
 
-### 5. Actualizar cantidad (RESTful)
+### 5. Actualizar cantidad
 
 **PUT** `/api/guest-carts/:cartId/products/:productId/quantity`
 
@@ -132,7 +131,7 @@ Todos los endpoints están disponibles en `/api/guest-carts/` y **NO requieren a
 const sessionId = crypto.randomUUID();
 
 // 2. Crear carrito
-const createResponse = await fetch('/api/guest-carts/create', {
+const createResponse = await fetch('/api/guest-carts', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ sessionId })
@@ -153,7 +152,11 @@ const addProductResponse = await fetch('/api/guest-carts/add-product', {
   })
 });
 
-// 5. Actualizar cantidad (RESTful)
+// 5. Obtener carrito
+const cartResponse = await fetch(`/api/guest-carts/${sessionId}`);
+const cart = await cartResponse.json();
+
+// 6. Actualizar cantidad
 const updateQuantityResponse = await fetch(`/api/guest-carts/${sessionId}/products/product-id/quantity`, {
   method: 'PUT',
   headers: { 'Content-Type': 'application/json' },
@@ -163,37 +166,34 @@ const updateQuantityResponse = await fetch(`/api/guest-carts/${sessionId}/produc
   })
 });
 
-// 6. Remover producto
-const removeProductResponse = await fetch(`/api/guest-carts/${sessionId}/remove-product`, {
+// 7. Remover producto
+const removeProductResponse = await fetch(`/api/guest-carts/${sessionId}/products/product-id`, {
   method: 'DELETE',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-    productId: 'product-id',
     variantId: 'variant-id',
     isWholesalePackage: false
   })
 });
-
-// 7. Obtener carrito
-const cartResponse = await fetch(`/api/guest-carts/${sessionId}`);
-const cart = await cartResponse.json();
 ```
 
 ## Características importantes
 
 - **sessionId obligatorio**: Debe ser proporcionado al crear el carrito
+- **cartId en URL**: Los endpoints que operan sobre carritos específicos usan cartId como parámetro
 - **Precios RETAIL**: Los usuarios no autenticados siempre ven precios minoristas
 - **Sin autenticación**: No requiere login ni tokens
 - **Persistencia**: Los carritos se mantienen hasta que se limpien automáticamente
 - **Validaciones**: Stock disponible, productos existentes, etc.
-- **RESTful en PUT**: El endpoint de actualizar cantidad sigue las mejores prácticas REST
+- **RESTful**: Los endpoints siguen las mejores prácticas REST
 
-## Ventajas del endpoint PUT RESTful
+## Ventajas de la implementación RESTful
 
-1. **Semánticamente correcto**: El carrito y producto están en la URL
-2. **Cacheable**: El endpoint puede ser cacheados
-3. **Consistente**: Sigue patrones REST estándar para actualizaciones
-4. **Debuggeable**: URL más descriptiva y fácil de entender
+1. **Semánticamente correcto**: Los recursos (carrito y producto) están en la URL
+2. **Consistente**: Todos los endpoints que operan sobre carritos usan cartId
+3. **Cacheable**: Los endpoints GET pueden ser cacheados
+4. **Debuggeable**: URLs más descriptivas y fáciles de entender
+5. **Escalable**: Fácil de extender con nuevos endpoints
 
 ## Migración a usuario autenticado
 
