@@ -50,17 +50,18 @@ export class GuestCartController {
     return { cart };
   }
 
-  @Put(':sessionId/update-quantity')
+  @Put(':cartId/products/:productId/quantity')
   async updateGuestCartQuantity(
-    @Param('sessionId') sessionId: string,
-    @Body() body: { productId: string; variantId: string; quantity: number; isWholesalePackage: boolean; predefinedQuantity?: number }
+    @Param('cartId') cartId: string,
+    @Param('productId') productId: string,
+    @Body() body: { variantId: string; quantity: number; isWholesalePackage: boolean; predefinedQuantity?: number }
   ) {
-    if (!sessionId || sessionId.trim() === '') {
-      throw new BadRequestException('sessionId is required');
+    if (!cartId || cartId.trim() === '') {
+      throw new BadRequestException('cartId is required');
     }
     const cart = await this.guestCartUseCases.updateGuestCartQuantity(
-      sessionId,
-      body.productId,
+      cartId,
+      productId,
       body.variantId,
       body.quantity,
       body.isWholesalePackage,

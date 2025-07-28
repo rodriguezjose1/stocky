@@ -33,7 +33,7 @@ export class GuestCartUseCases {
     isWholesalePackage,
     predefinedQuantity,
   }: AddProductToCartDTO): Promise<Cart> {
-    const cart = await this.cartRepository.getCartBySessionId(cartId);
+    const cart = await this.cartRepository.getCartById(cartId);
     if (!cart) {
       throw new BadRequestException('Cart not found');
     }
@@ -166,8 +166,8 @@ export class GuestCartUseCases {
     return this.cartRepository.removeProduct(cart);
   }
 
-  async updateGuestCartQuantity(sessionId: string, productId: string, variantId: string, quantity: number, isWholesalePackage: boolean, predefinedQuantity?: number): Promise<Cart> {
-    const cart = await this.cartRepository.getCartBySessionId(sessionId);
+  async updateGuestCartQuantity(cartId: string, productId: string, variantId: string, quantity: number, isWholesalePackage: boolean, predefinedQuantity?: number): Promise<Cart> {
+    const cart = await this.cartRepository.getCartById(cartId);
     if (!cart) {
       throw new BadRequestException('Cart not found');
     }

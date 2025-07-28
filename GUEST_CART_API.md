@@ -111,14 +111,13 @@ Todos los endpoints están disponibles en `/api/guest-carts/` y **NO requieren a
 }
 ```
 
-### 5. Actualizar cantidad
+### 5. Actualizar cantidad (RESTful)
 
-**PUT** `/api/guest-carts/:sessionId/update-quantity`
+**PUT** `/api/guest-carts/:cartId/products/:productId/quantity`
 
 **Body:**
 ```json
 {
-  "productId": "product-id",
   "variantId": "variant-id",
   "quantity": 3,
   "isWholesalePackage": false,
@@ -154,18 +153,47 @@ const addProductResponse = await fetch('/api/guest-carts/add-product', {
   })
 });
 
-// 5. Obtener carrito
+// 5. Actualizar cantidad (RESTful)
+const updateQuantityResponse = await fetch(`/api/guest-carts/${sessionId}/products/product-id/quantity`, {
+  method: 'PUT',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    variantId: 'variant-id',
+    quantity: 3
+  })
+});
+
+// 6. Remover producto
+const removeProductResponse = await fetch(`/api/guest-carts/${sessionId}/remove-product`, {
+  method: 'DELETE',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    productId: 'product-id',
+    variantId: 'variant-id',
+    isWholesalePackage: false
+  })
+});
+
+// 7. Obtener carrito
 const cartResponse = await fetch(`/api/guest-carts/${sessionId}`);
 const cart = await cartResponse.json();
 ```
 
 ## Características importantes
 
-- **sessionId obligatorio**: Debe ser proporcionado en todos los endpoints
+- **sessionId obligatorio**: Debe ser proporcionado al crear el carrito
 - **Precios RETAIL**: Los usuarios no autenticados siempre ven precios minoristas
 - **Sin autenticación**: No requiere login ni tokens
 - **Persistencia**: Los carritos se mantienen hasta que se limpien automáticamente
 - **Validaciones**: Stock disponible, productos existentes, etc.
+- **RESTful en PUT**: El endpoint de actualizar cantidad sigue las mejores prácticas REST
+
+## Ventajas del endpoint PUT RESTful
+
+1. **Semánticamente correcto**: El carrito y producto están en la URL
+2. **Cacheable**: El endpoint puede ser cacheados
+3. **Consistente**: Sigue patrones REST estándar para actualizaciones
+4. **Debuggeable**: URL más descriptiva y fácil de entender
 
 ## Migración a usuario autenticado
 
