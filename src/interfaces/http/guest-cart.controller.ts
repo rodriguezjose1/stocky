@@ -33,18 +33,17 @@ export class GuestCartController {
     return { cart };
   }
 
-  @Delete(':cartId/products/:productId')
+  @Delete(':sessionId/remove-product')
   async removeProductFromGuestCart(
-    @Param('cartId') cartId: string,
-    @Param('productId') productId: string,
-    @Body() body: { variantId: string; isWholesalePackage: boolean }
+    @Param('sessionId') sessionId: string,
+    @Body() body: { productId: string; variantId: string; isWholesalePackage: boolean }
   ) {
-    if (!cartId || cartId.trim() === '') {
-      throw new BadRequestException('cartId is required');
+    if (!sessionId || sessionId.trim() === '') {
+      throw new BadRequestException('sessionId is required');
     }
     const cart = await this.guestCartUseCases.removeProductFromGuestCart(
-      cartId, 
-      productId, 
+      sessionId, 
+      body.productId, 
       body.variantId, 
       body.isWholesalePackage
     );
