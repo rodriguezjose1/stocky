@@ -1,3 +1,5 @@
+import { ApiProperty } from '@nestjs/swagger';
+
 export class CartItem {
   constructor(
     public id: string,
@@ -21,28 +23,131 @@ export class Cart {
 }
 
 export class AddProductToCartDTO {
+  @ApiProperty({
+    description: 'ID del carrito (sessionId para guest carts)',
+    example: '550e8400-e29b-41d4-a716-446655440000'
+  })
+  cartId: string;
+
+  @ApiProperty({
+    description: 'ID del producto',
+    example: '507f1f77bcf86cd799439011'
+  })
+  productId: string;
+
+  @ApiProperty({
+    description: 'ID de la variante del producto',
+    example: '507f1f77bcf86cd799439012'
+  })
+  variantId: string;
+
+  @ApiProperty({
+    description: 'Cantidad a agregar',
+    example: 2,
+    minimum: 1
+  })
+  quantity: number;
+
+  @ApiProperty({
+    description: 'Si es un paquete mayorista',
+    example: false,
+    required: false
+  })
+  isWholesalePackage?: boolean;
+
+  @ApiProperty({
+    description: 'Cantidad predefinida para paquetes mayoristas',
+    example: 6,
+    required: false
+  })
+  predefinedQuantity?: number;
+
+  @ApiProperty({
+    description: 'Rol del usuario',
+    example: 'RETAIL',
+    required: false
+  })
+  userRole?: string;
+
   constructor(
-    public cartId: string,
-    public productId: string,
-    public variantId: string,
-    public quantity: number,
-    public isWholesalePackage?: boolean,
-    public predefinedQuantity?: number,  // Cantidad predefinida que el usuario eligió al inicio
-    public userRole?: string
-  ) {}
+    cartId: string,
+    productId: string,
+    variantId: string,
+    quantity: number,
+    isWholesalePackage?: boolean,
+    predefinedQuantity?: number,
+    userRole?: string
+  ) {
+    this.cartId = cartId;
+    this.productId = productId;
+    this.variantId = variantId;
+    this.quantity = quantity;
+    this.isWholesalePackage = isWholesalePackage;
+    this.predefinedQuantity = predefinedQuantity;
+    this.userRole = userRole;
+  }
 }
 
 export class AddComplexWholesaleProductToCartDTO {
+  @ApiProperty({
+    description: 'ID del carrito (sessionId para guest carts)',
+    example: '550e8400-e29b-41d4-a716-446655440000'
+  })
+  cartId: string;
+
+  @ApiProperty({
+    description: 'ID del producto',
+    example: '507f1f77bcf86cd799439011'
+  })
+  productId: string;
+
+  @ApiProperty({
+    description: 'Cantidad predefinida para paquetes mayoristas complejos',
+    example: 6
+  })
+  predefinedQuantity: number;
+
+  @ApiProperty({
+    description: 'Array de variantes con sus cantidades',
+    example: [
+      {
+        variantId: '507f1f77bcf86cd799439012',
+        quantity: 2
+      },
+      {
+        variantId: '507f1f77bcf86cd799439013',
+        quantity: 4
+      }
+    ]
+  })
+  variants: {
+    variantId: string;
+    quantity: number;
+  }[];
+
+  @ApiProperty({
+    description: 'Rol del usuario',
+    example: 'WHOLESALE',
+    required: false
+  })
+  userRole?: string;
+
   constructor(
-    public cartId: string,
-    public productId: string,
-    public predefinedQuantity: number,
-    public variants: {
+    cartId: string,
+    productId: string,
+    predefinedQuantity: number,
+    variants: {
       variantId: string;
       quantity: number;
     }[],
-    public userRole?: string
-  ) {}
+    userRole?: string
+  ) {
+    this.cartId = cartId;
+    this.productId = productId;
+    this.predefinedQuantity = predefinedQuantity;
+    this.variants = variants;
+    this.userRole = userRole;
+  }
 }
 
 export class CreateCartDTO {
@@ -50,7 +155,13 @@ export class CreateCartDTO {
 }
 
 export class CreateGuestCartDTO {
-  constructor(
-    public sessionId: string
-  ) {}
+  @ApiProperty({
+    description: 'UUID único para identificar el carrito de sesión',
+    example: '550e8400-e29b-41d4-a716-446655440000'
+  })
+  sessionId: string;
+
+  constructor(sessionId: string) {
+    this.sessionId = sessionId;
+  }
 }

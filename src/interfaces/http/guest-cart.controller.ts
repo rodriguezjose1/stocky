@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { GuestCartUseCases } from 'src/application/use-cases/guest-cart.use-cases';
-import { AddProductToCartDTO, CreateGuestCartDTO } from 'src/domain/entities/cart.entity';
+import { AddProductToCartDTO, CreateGuestCartDTO, AddComplexWholesaleProductToCartDTO } from 'src/domain/entities/cart.entity';
 
 @ApiTags('guest-carts')
 @Controller('guest-carts')
@@ -67,6 +67,43 @@ export class GuestCartController {
       throw new BadRequestException('cartId (sessionId) is required');
     }
     const cart = await this.guestCartUseCases.addProductToGuestCart(body);
+    return { cart };
+  }
+
+  @Post('add-product/complex')
+  @ApiOperation({ summary: 'Agregar producto mayorista complejo con múltiples variantes' })
+  @ApiBody({
+    type: AddComplexWholesaleProductToCartDTO,
+    description: 'Datos para agregar un producto mayorista complejo',
+    examples: {
+      example1: {
+        summary: 'Agregar producto mayorista complejo',
+        value: {
+          cartId: '550e8400-e29b-41d4-a716-446655440000',
+          productId: '507f1f77bcf86cd799439011',
+          predefinedQuantity: 6,
+          variants: [
+            {
+              variantId: '507f1f77bcf86cd799439012',
+              quantity: 2
+            },
+            {
+              variantId: '507f1f77bcf86cd799439013',
+              quantity: 4
+            }
+          ],
+          userRole: 'WHOLESALE'
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 201, description: 'Producto mayorista complejo agregado exitosamente' })
+  @ApiResponse({ status: 400, description: 'Datos inválidos' })
+  async addComplexWholesaleProductToGuestCart(@Body() body: AddComplexWholesaleProductToCartDTO) {
+    if (!body.cartId || body.cartId.trim() === '') {
+      throw new BadRequestException('cartId (sessionId) is required');
+    }
+    const cart = await this.guestCartUseCases.addComplexWholesaleProductToGuestCart(body);
     return { cart };
   }
 
