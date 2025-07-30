@@ -56,19 +56,27 @@ export class SaleListener {
         }
       }
 
-      try {
-        await this.cartUseCases.updateCart({ _id: sale.cartId, active: false });
-      } catch (error) {
-        console.error('Error updating cart:', error);
-        await this.errorNotificationService.notifyError(
-          error,
-          'SaleListener.handleSaleCreated.updateCart',
-          { saleId: event.saleId, cartId: sale.cartId }
-        );
+      // Actualizar carrito solo si existe cartId
+      if (sale.cartId) {
+        try {
+          await this.cartUseCases.updateCart({ _id: sale.cartId, active: false });
+          console.log('Cart updated successfully:', sale.cartId);
+        } catch (error) {
+          console.error('Error updating cart:', error);
+          // No es crítico si falla la actualización del carrito
+          await this.errorNotificationService.notifyError(
+            error,
+            'SaleListener.handleSaleCreated.updateCart',
+            { saleId: event.saleId, cartId: sale.cartId }
+          );
+        }
+      } else {
+        console.log('No cartId found in sale, skipping cart update');
       }
 
       try {
         await this.saleUseCases.updateSale(event.saleId, { stocksUpdated });
+        console.log('Sale updated with stocksUpdated successfully');
       } catch (error) {
         console.error('Error updating sale:', error);
         await this.errorNotificationService.notifyError(

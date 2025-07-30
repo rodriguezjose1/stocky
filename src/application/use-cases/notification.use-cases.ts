@@ -15,7 +15,17 @@ export class NotificationUseCases {
   ) {}
 
   private parseDate(date: Date) {
-    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}`;
+    // Convertir a zona horaria de Argentina (UTC-3)
+    const argentinaDate = new Date(date.toLocaleString("en-US", {timeZone: "America/Argentina/Buenos_Aires"}));
+    
+    // Formatear con ceros a la izquierda para mejor legibilidad
+    const day = argentinaDate.getDate().toString().padStart(2, '0');
+    const month = (argentinaDate.getMonth() + 1).toString().padStart(2, '0');
+    const year = argentinaDate.getFullYear();
+    const hours = argentinaDate.getHours().toString().padStart(2, '0');
+    const minutes = argentinaDate.getMinutes().toString().padStart(2, '0');
+    
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
   }
 
   async handleSaleCreated(saleId: string) {
@@ -31,14 +41,25 @@ export class NotificationUseCases {
     const dataSale = {
       ...sale,
       date: this.parseDate(new Date(sale.date)),
-      total: sale.details.reduce((acc, detail) => acc + detail.prices.reseller * detail.quantity, 0),
+      total: sale.details.reduce((acc, detail) => {
+        // Para productos normales usar retail, para mayoristas usar wholesale
+        const price = detail.variantData ? detail.prices.retail : detail.prices.wholesale;
+        return acc + (price * detail.quantity);
+      }, 0),
     };
 
-    const customer = await this.userUseCases.getUserById(sale.user.id);
+    // Siempre usar datos del sale.user (guest user)
+    const customerEmail = sale.user.email;
+    const customerName = `${sale.user.name} ${sale.user.lastname}`;
+    
+    console.log('Guest user sale:', customerName, customerEmail);
+
     const admins = await this.userUseCases.findOnlyRoleAdmins();
 
-    await this.emailService.sendEmail(customer.email, sbjCustomer, 'purchase-template', dataSale);
+    // Enviar email al cliente
+    await this.emailService.sendEmail(customerEmail, sbjCustomer, 'purchase-template', dataSale);
 
+    // Enviar email a los admins
     for (const admin of admins) {
       await this.emailService.sendEmail(admin.email, sbjAdmin, 'sale-template', dataSale);
     }

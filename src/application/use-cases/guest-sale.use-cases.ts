@@ -225,4 +225,4 @@ export class GuestSaleUseCases {
       throw this.errorHandler.handleError(error);
     }
   }
-} 
+}

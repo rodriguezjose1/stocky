@@ -79,19 +79,54 @@
               <th>Variante</th>
               <th>Cantidad</th>
               <th>Precio</th>
+              <th>Total</th>
             </tr>
           </thead>
           <tbody>
             {{#each details}}
             <tr>
+              {{#if variantData}}
+              <!-- Producto normal -->
               <td>{{variantData.productName}} ({{variantData.productCode}})</td>
+              {{else}}
+              <!-- Producto mayorista - usar nombre de la primera variante -->
+              <td>{{wholesaleVariants.0.variant.productName}} ({{wholesaleVariants.0.variant.productCode}}) - Paquete Mayorista</td>
+              {{/if}}
               <td>
+                {{#if variantData}}
+                <!-- Producto normal -->
                 {{#each variantData.variantAttributes}}
                 <span>{{keyLabel}}: {{label}}</span><br>
                 {{/each}}
+                {{else}}
+                <!-- Producto mayorista -->
+                <div style="margin-top: 10px; padding: 5px; background-color: #f5f5f5; border-radius: 3px;">
+                  <strong>Variantes incluidas:</strong><br>
+                  {{#each wholesaleVariants}}
+                  <div style="margin: 5px 0; padding: 5px; border: 1px solid #ddd; border-radius: 3px; background-color: white;">
+                    Color: {{variant.variantAttributes.0.label}}<br>
+                    Talle: {{variant.variantAttributes.1.label}}<br>
+                    Cantidad: {{quantity}}
+                  </div>
+                  {{/each}}
+                </div>
+                {{/if}}
               </td>
               <td>{{quantity}}</td>
-              <td>${{prices.reseller}}</td>
+              {{#if variantData}}
+              <!-- Producto normal -->
+              <td>${{prices.retail}}</td>
+              {{else}}
+              <!-- Producto mayorista -->
+              <td>${{prices.wholesale}}</td>
+              {{/if}}
+              {{#if variantData}}
+              <!-- Producto normal -->
+              <td>${{multiply prices.retail quantity}}</td>
+              {{else}}
+              <!-- Producto mayorista -->
+              <td>${{multiply prices.wholesale quantity}}</td>
+              {{/if}}
             </tr>
             {{/each}}
           </tbody>
@@ -100,7 +135,7 @@
       <p><strong>Total Venta:</strong> ${{total}}</p>
     </div>
     <div class="footer">
-      <p>© 2024 Stocky. Todos los derechos reservados.</p>
+      <p>© 2025 Stocky. Todos los derechos reservados.</p>
     </div>
   </div>
 </body>
