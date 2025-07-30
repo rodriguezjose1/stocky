@@ -181,7 +181,7 @@ export class GuestCartUseCases {
         );
         
         if (existingVariant) {
-          existingVariant.quantity += variantData.quantity;
+          existingVariant.quantity = variantData.quantity;
         } else {
           const variant = await this.variantUseCases.getVariantById(variantData.variantId);
           if (!variant) {
@@ -246,7 +246,7 @@ export class GuestCartUseCases {
         is_wholesale_package: true,
         predefined_quantity: predefinedQuantity,
         wholesale_variants: wholesaleVariants,
-        applied_price_type: AppliedPriceTypeEnum.RETAIL // Siempre RETAIL para guest
+        applied_price_type: (predefinedQuantity === 12) ? AppliedPriceTypeEnum.WHOLESALE_DOZEN : AppliedPriceTypeEnum.WHOLESALE_HALF_DOZEN
       };
 
       cart.items.push(newItem);
@@ -271,10 +271,10 @@ export class GuestCartUseCases {
         throw new BadRequestException('Wholesale package not found');
       }
 
-      if (cartItem.product.wholesale_data.package_type === packageTypes.complex && variantId !== 'null') {
+      if (cartItem.product.wholesale_data.package_type === packageTypes.complex && variantId !== null) {
         cartItem.wholesale_variants = cartItem.wholesale_variants.filter((v) => v.variant._id.toString() !== variantId);
         cartItem.quantity = cartItem.wholesale_variants.reduce((acc, v) => acc + v.quantity, 0);
-      } else if (cartItem.product.wholesale_data.package_type === packageTypes.complex && variantId === 'null') {
+      } else if (cartItem.product.wholesale_data.package_type === packageTypes.complex && variantId === null) {
         cart.items = cart.items.filter((item) => !(item.product._id.toString() === productId && item.variant === null));
       } else {
         cart.items = cart.items.filter((item) => !(item.product._id.toString() === productId && item.variant._id.toString() === variantId));

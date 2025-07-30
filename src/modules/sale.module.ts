@@ -12,10 +12,19 @@ import { ProductModule } from './product.module';
 import { StockModule } from './stock.module';
 import { UserModule } from './user.module';
 import { VariantModule } from './variant.module';
-
+import { GuestSaleUseCases } from 'src/application/use-cases/guest-sale.use-cases';
+import { MongooseCartRepositoryAdapter } from 'src/infrastructure/adapters/mongoose/mongoose-cart-repository.adapter';
 @Module({
   imports: [StockModule, ProductModule, CartModule, UserModule, VariantModule, ProductAttributeModule, ProductAttributeSubtypeModule],
   providers: [
+    {
+      provide: 'CartRepositoryPort',
+      useClass: MongooseCartRepositoryAdapter,
+    },
+    {
+      provide: 'ERROR_HANDLER_PORT',
+      useClass: NestErrorHandlerAdapter,
+    },
     {
       provide: 'SaleRepositoryPort',
       useClass: MongooseSaleRepositoryAdapter,
@@ -25,8 +34,9 @@ import { VariantModule } from './variant.module';
       useClass: NestErrorHandlerAdapter,
     },
     SalesUseCase,
+    GuestSaleUseCases,
   ],
   controllers: [SaleController],
-  exports: [SalesUseCase],
+  exports: [SalesUseCase, GuestSaleUseCases],
 })
 export class SaleModule {}

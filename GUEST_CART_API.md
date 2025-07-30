@@ -227,6 +227,79 @@ Todos los endpoints están disponibles en `/api/guest-carts/` y **NO requieren a
 }
 ```
 
+## Guest Sales API
+
+### 7. Crear venta para usuario invitado
+
+**POST** `/api/guest-sales/create-sale`
+
+**Body:**
+```json
+{
+  "sessionId": "550e8400-e29b-41d4-a716-446655440000",
+  "date": "2024-01-15T10:30:00.000Z",
+  "customerData": {
+    "name": "Juan",
+    "lastname": "Pérez",
+    "email": "juan.perez@email.com",
+    "phone": "+1234567890",
+    "address": "Calle Principal 123, Ciudad, País"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "sale": {
+    "id": "sale-id",
+    "date": "2024-01-15T10:30:00.000Z",
+    "status": "pending",
+    "details": [
+      {
+        "productId": "507f1f77bcf86cd799439011",
+        "variantId": "507f1f77bcf86cd799439012",
+        "quantity": 2,
+        "prices": {
+          "retail": 100,
+          "reseller": 0,
+          "wholesale": 0
+        },
+        "variantData": {
+          "productName": "Product Name",
+          "productCode": "PROD001",
+          "variantAttributes": [
+            {
+              "name": "color",
+              "keyLabel": "Color",
+              "value": "red",
+              "label": "Rojo"
+            },
+            {
+              "name": "size",
+              "keyLabel": "Talle",
+              "value": "M",
+              "label": "Mediano"
+            }
+          ]
+        },
+        "appliedPriceType": "RETAIL"
+      }
+    ],
+    "user": {
+      "id": "guest_550e8400-e29b-41d4-a716-446655440000",
+      "name": "Juan",
+      "lastname": "Pérez",
+      "email": "juan.perez@email.com",
+      "phone": "+1234567890",
+      "address": "Calle Principal 123, Ciudad, País"
+    },
+    "cartId": "cart-id",
+    "weekCode": "2024-03"
+  }
+}
+```
+
 ## Ejemplo de uso en Frontend
 
 ```javascript
@@ -299,6 +372,25 @@ const removeProductResponse = await fetch(`/api/guest-carts/${sessionId}/product
 // 8. Obtener carrito
 const cartResponse = await fetch(`/api/guest-carts/${sessionId}`);
 const cart = await cartResponse.json();
+
+// 9. Crear venta
+const createSaleResponse = await fetch('/api/guest-sales/create-sale', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    sessionId: sessionId,
+    date: new Date().toISOString(),
+    customerData: {
+      name: 'Juan',
+      lastname: 'Pérez',
+      email: 'juan.perez@email.com',
+      phone: '+1234567890',
+      address: 'Calle Principal 123, Ciudad, País'
+    }
+  })
+});
+
+const sale = await createSaleResponse.json();
 ```
 
 ## Características importantes
@@ -310,6 +402,7 @@ const cart = await cartResponse.json();
 - **Validaciones**: Stock disponible, productos existentes, etc.
 - **RESTful**: Los endpoints PUT y DELETE siguen las mejores prácticas REST
 - **Productos complejos**: Soporte para paquetes mayoristas con múltiples variantes
+- **Validación de carrito**: La venta requiere un carrito válido con items
 
 ## Swagger Documentation
 
@@ -350,4 +443,5 @@ if (sessionId) {
 | POST | `/api/guest-carts/add-complex-wholesale-product` | Agregar producto mayorista complejo |
 | GET | `/api/guest-carts/:cartId` | Obtener carrito |
 | DELETE | `/api/guest-carts/:cartId/products/:productId` | Eliminar producto |
-| PUT | `/api/guest-carts/:cartId/products/:productId/quantity` | Actualizar cantidad | 
+| PUT | `/api/guest-carts/:cartId/products/:productId/quantity` | Actualizar cantidad |
+| POST | `/api/guest-sales/create-sale` | Crear venta para usuario invitado | 

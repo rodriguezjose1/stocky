@@ -66,8 +66,8 @@ export class StockMovement extends Document {
   @Prop({ type: SchemaTypes.ObjectId, ref: 'SaleModel' })
   sale_id: Types.ObjectId;
 
-  @Prop({ type: SchemaTypes.ObjectId, required: false, default: null, ref: 'UserModel' })
-  client_id: Types.ObjectId;
+  @Prop({ type: String, required: false, default: null })
+  client_id: string;
 
   // Stock
   @Prop({ required: true, type: Number })
@@ -144,7 +144,7 @@ export class StockMovement extends Document {
     if (entity.source) model.source = entity.source;
     if (entity.status) model.status = entity.status;
     if (entity.saleId) model.sale_id = new Types.ObjectId(entity.saleId);
-    if (entity.clientId) model.client_id = new Types.ObjectId(entity.clientId);
+    if (entity.clientId) model.client_id = entity.clientId;
     if (entity.notes) model.notes = entity.notes;
     if (entity.prices) model.prices = entity.prices;
     if (entity.appliedPriceType) model.applied_price_type = entity.appliedPriceType as AppliedPriceTypeEnum;

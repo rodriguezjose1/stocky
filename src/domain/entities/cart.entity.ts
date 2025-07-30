@@ -14,6 +14,7 @@ export class Cart {
   constructor(
     public id: string,
     public userId: string,
+    public sessionId: string,
     public items: any[],
     public totalReseller: number,
     public totalRetail: number,
