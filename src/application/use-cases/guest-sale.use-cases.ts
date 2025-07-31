@@ -2,6 +2,7 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SaleCreatedEvent } from 'src/async-events/events/sale.events';
 import { getWeekCode } from 'src/common/utils/date.utils';
+import { generateSequentialSaleCode } from 'src/common/utils/sale-code.utils';
 import { Product } from 'src/domain/entities/product.entity';
 import { CreateGuestSaleDto, GuestUserData, Sale, SaleDetail, SaleStatus } from 'src/domain/entities/sale.entity';
 import { Variant } from 'src/domain/entities/variant.entity';
@@ -200,6 +201,11 @@ export class GuestSaleUseCases {
 
       // 7. Crear la venta
       const weekCode = getWeekCode(new Date(date));
+      
+      // Obtener el último código de venta para generar el secuencial
+      const lastSale = await this.saleRepository.findLastSale();
+      const saleCode = generateSequentialSaleCode(lastSale?.saleCode);
+      
       const sale = new Sale(
         null, 
         new Date(date), 
@@ -208,7 +214,8 @@ export class GuestSaleUseCases {
         [], 
         guestUser, 
         cartId, // Usar el ID del carrito como cartId
-        weekCode
+        weekCode,
+        saleCode
       );
 
       const createdSale = await this.saleRepository.create(sale);

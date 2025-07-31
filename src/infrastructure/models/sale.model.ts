@@ -206,6 +206,9 @@ export class SaleModel extends Document {
   @Prop({ required: true })
   date: Date;
 
+  @Prop({ required: true })
+  saleCode: string;
+
   @Prop({ required: true, enum: SaleStatus, default: SaleStatus.PENDING })
   status: SaleStatus;
 

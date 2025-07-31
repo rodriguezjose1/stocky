@@ -68,7 +68,22 @@
     <div class="content">
       <p>Hola,</p>
       <p>Se ha registrado una nueva venta con la siguiente información:</p>
-      <p><strong>Cliente:</strong> {{user.name}} {{user.lastname}}</p>
+      
+      <div class="customer-info">
+        <h3>Información del Cliente</h3>
+        <p><strong>Nombre:</strong> {{user.name}} {{user.lastname}}</p>
+        {{#if user.email}}
+        <p><strong>Email:</strong> {{user.email}}</p>
+        {{/if}}
+        {{#if user.phone}}
+        <p><strong>Teléfono:</strong> {{user.phone}}</p>
+        {{/if}}
+        {{#if user.address}}
+        <p><strong>Dirección:</strong> {{user.address}}</p>
+        {{/if}}
+      </div>
+      
+      <p><strong>Código de Venta:</strong> {{saleCode}}</p>
       <p><strong>Fecha:</strong> {{date}}</p>
       <div class="details">
         <h2>Detalles de la Venta:</h2>

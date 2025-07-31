@@ -63,11 +63,25 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>¡Gracias por tu compra!</h1>
+      <h1>Confirmación de Compra</h1>
     </div>
     <div class="content">
       <p>Hola <strong>{{user.name}} {{user.lastname}}</strong>,</p>
       <p>Tu compra ha sido confirmada el <strong>{{date}}</strong>.</p>
+      
+      <div class="customer-info">
+        <h3>Información de tu Compra</h3>
+        <p><strong>Código de Venta:</strong> {{saleCode}}</p>
+        {{#if user.email}}
+        <p><strong>Email:</strong> {{user.email}}</p>
+        {{/if}}
+        {{#if user.phone}}
+        <p><strong>Teléfono:</strong> {{user.phone}}</p>
+        {{/if}}
+        {{#if user.address}}
+        <p><strong>Dirección de Entrega:</strong> {{user.address}}</p>
+        {{/if}}
+      </div>
       <div class="details">
         <h2>Detalles de tu Compra:</h2>
         <table>
