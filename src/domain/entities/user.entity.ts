@@ -30,6 +30,18 @@ export class GetResellersFilterDto {
   limit?: number = 20; // Límite de semanas a devolver
 }
 
+export class GetCustomersFilterDto {
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  page?: number = 1; // Página de clientes
+
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  limit?: number = 20; // Límite de clientes a devolver
+}
+
 export class ChangePasswordDto {
   @IsString()
   currentPassword: string;

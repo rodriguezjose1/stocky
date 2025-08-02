@@ -92,6 +92,10 @@ export class UserUseCases {
     return this.userRepository.findResellers(filter);
   }
 
+  async findCustomers(filter): Promise<any> {
+    return this.userRepository.findCustomers(filter);
+  }
+
   async findOnlyRoleAdmins(): Promise<User[]> {
     return this.userRepository.findOnlyRoleAdmins();
   }
