@@ -390,53 +390,219 @@ export class NotificationController {
   }
 
   @Post('test-wholesale-structure')
-  @ApiOperation({ summary: 'Probar estructura de datos de wholesaleVariants' })
-  @ApiResponse({ status: 200, description: 'Estructura de datos mostrada' })
-  async testWholesaleStructure() {
-    try {
-      // Simular la estructura exacta que se crea en GuestSaleUseCases
-      const mockWholesaleVariants = [
-        {
-          variant: {
-            productName: 'Paquete Mayorista Camisetas',
-            productCode: 'PKG001',
-            variantId: '507f1f77bcf86cd799439014',
-            variantAttributes: [
-              { name: 'color', keyLabel: 'Color', value: 'red', label: 'Rojo' },
-              { name: 'size', keyLabel: 'Talle', value: 'S', label: 'Pequeño' }
-            ]
-          },
-          quantity: 3
-        },
-        {
-          variant: {
-            productName: 'Paquete Mayorista Camisetas',
-            productCode: 'PKG001',
-            variantId: '507f1f77bcf86cd799439015',
-            variantAttributes: [
-              { name: 'color', keyLabel: 'Color', value: 'blue', label: 'Azul' },
-              { name: 'size', keyLabel: 'Talle', value: 'M', label: 'Mediano' }
-            ]
-          },
-          quantity: 4
+  @ApiOperation({ summary: 'Inspeccionar estructura de datos de variantes mayoristas' })
+  @ApiBody({
+    description: 'Datos para inspeccionar la estructura',
+    examples: {
+      example1: {
+        summary: 'Inspeccionar estructura',
+        value: {
+          to: 'admin@example.com'
         }
-      ];
+      }
+    }
+  })
+  @ApiResponse({ status: 200, description: 'Estructura inspeccionada exitosamente' })
+  @ApiResponse({ status: 500, description: 'Error al inspeccionar estructura' })
+  async testWholesaleStructure(@Body() body: { to: string }) {
+    try {
+      const mockData = {
+        details: [
+          {
+            wholesaleVariants: [
+              {
+                variant: {
+                  productName: 'Paquete Mayorista Camisetas',
+                  productCode: 'PKG001',
+                  variantId: '507f1f77bcf86cd799439014',
+                  variantAttributes: [
+                    { name: 'color', keyLabel: 'Color', value: 'red', label: 'Rojo' },
+                    { name: 'size', keyLabel: 'Talle', value: 'S', label: 'Pequeño' }
+                  ]
+                },
+                quantity: 3
+              }
+            ]
+          }
+        ]
+      };
 
       return {
         success: true,
-        message: 'Estructura de wholesaleVariants',
-        structure: mockWholesaleVariants,
-        example: {
-          firstVariant: mockWholesaleVariants[0],
-          firstVariantColor: mockWholesaleVariants[0].variant.variantAttributes[0].label,
-          firstVariantSize: mockWholesaleVariants[0].variant.variantAttributes[1].label,
-          firstVariantQuantity: mockWholesaleVariants[0].quantity
+        message: 'Estructura de datos inspeccionada',
+        data: mockData,
+        structure: {
+          details: 'Array de detalles de venta',
+          wholesaleVariants: 'Array de variantes mayoristas',
+          variant: 'Objeto con datos de la variante',
+          variantAttributes: 'Array de atributos de la variante',
+          quantity: 'Cantidad de la variante'
         }
       };
     } catch (error) {
       return {
         success: false,
-        message: 'Error al mostrar estructura',
+        message: 'Error al inspeccionar estructura',
+        error: error.message
+      };
+    }
+  }
+
+  @Post('test-approved-email')
+  @ApiOperation({ summary: 'Probar email de venta aprobada' })
+  @ApiBody({
+    description: 'Datos para probar el email de venta aprobada',
+    examples: {
+      example1: {
+        summary: 'Email de venta aprobada',
+        value: {
+          to: 'admin@example.com'
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 200, description: 'Email de venta aprobada enviado exitosamente' })
+  @ApiResponse({ status: 500, description: 'Error al enviar email' })
+  async testApprovedEmail(@Body() body: { to: string }) {
+    try {
+      const argentinaDate = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Argentina/Buenos_Aires"}));
+      const day = argentinaDate.getDate().toString().padStart(2, '0');
+      const month = (argentinaDate.getMonth() + 1).toString().padStart(2, '0');
+      const year = argentinaDate.getFullYear();
+      const hours = argentinaDate.getHours().toString().padStart(2, '0');
+      const minutes = argentinaDate.getMinutes().toString().padStart(2, '0');
+      const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
+
+      const mockSaleData = {
+        id: 'sale-approved-123',
+        saleCode: 'V-2024-000001',
+        date: formattedDate,
+        user: {
+          id: 'guest_550e8400-e29b-41d4-a716-446655440000',
+          name: 'María',
+          lastname: 'González',
+          email: 'maria.gonzalez@example.com',
+          phone: '+1234567890',
+          address: 'Av. Libertador 456, Ciudad, País'
+        },
+        details: [
+          {
+            productId: '507f1f77bcf86cd799439013',
+            variantId: '507f1f77bcf86cd799439014',
+            quantity: 2,
+            prices: { retail: 1500, reseller: 0, wholesale: 0 },
+            variantData: {
+              productName: 'Camiseta Deportiva',
+              productCode: 'CAM001',
+              variantAttributes: [
+                { name: 'color', keyLabel: 'Color', value: 'blue', label: 'Azul' },
+                { name: 'size', keyLabel: 'Talle', value: 'M', label: 'Mediano' }
+              ]
+            }
+          }
+        ],
+        total: 3000
+      };
+
+      await this.emailService.sendEmail(
+        body.to,
+        'Tu venta ha sido aprobada',
+        'sale-approved-template',
+        mockSaleData
+      );
+
+      return {
+        success: true,
+        message: 'Email de venta aprobada enviado exitosamente',
+        to: body.to,
+        template: 'sale-approved-template',
+        userType: 'guest',
+        date: formattedDate
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Error al enviar email de venta aprobada',
+        error: error.message
+      };
+    }
+  }
+
+  @Post('test-rejected-email')
+  @ApiOperation({ summary: 'Probar email de venta rechazada' })
+  @ApiBody({
+    description: 'Datos para probar el email de venta rechazada',
+    examples: {
+      example1: {
+        summary: 'Email de venta rechazada',
+        value: {
+          to: 'admin@example.com'
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 200, description: 'Email de venta rechazada enviado exitosamente' })
+  @ApiResponse({ status: 500, description: 'Error al enviar email' })
+  async testRejectedEmail(@Body() body: { to: string }) {
+    try {
+      const argentinaDate = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Argentina/Buenos_Aires"}));
+      const day = argentinaDate.getDate().toString().padStart(2, '0');
+      const month = (argentinaDate.getMonth() + 1).toString().padStart(2, '0');
+      const year = argentinaDate.getFullYear();
+      const hours = argentinaDate.getHours().toString().padStart(2, '0');
+      const minutes = argentinaDate.getMinutes().toString().padStart(2, '0');
+      const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
+
+      const mockSaleData = {
+        id: 'sale-rejected-123',
+        saleCode: 'V-2024-000002',
+        date: formattedDate,
+        user: {
+          id: 'guest_550e8400-e29b-41d4-a716-446655440000',
+          name: 'Juan',
+          lastname: 'Pérez',
+          email: 'juan.perez@example.com',
+          phone: '+1234567890',
+          address: 'Calle Principal 123, Ciudad, País'
+        },
+        details: [
+          {
+            productId: '507f1f77bcf86cd799439013',
+            variantId: '507f1f77bcf86cd799439014',
+            quantity: 1,
+            prices: { retail: 1500, reseller: 0, wholesale: 0 },
+            variantData: {
+              productName: 'Camiseta Deportiva',
+              productCode: 'CAM001',
+              variantAttributes: [
+                { name: 'color', keyLabel: 'Color', value: 'red', label: 'Rojo' },
+                { name: 'size', keyLabel: 'Talle', value: 'L', label: 'Grande' }
+              ]
+            }
+          }
+        ],
+        total: 1500
+      };
+
+      await this.emailService.sendEmail(
+        body.to,
+        'Tu venta ha sido rechazada',
+        'sale-rejected-template',
+        mockSaleData
+      );
+
+      return {
+        success: true,
+        message: 'Email de venta rechazada enviado exitosamente',
+        to: body.to,
+        template: 'sale-rejected-template',
+        userType: 'guest',
+        date: formattedDate
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Error al enviar email de venta rechazada',
         error: error.message
       };
     }

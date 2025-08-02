@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Venta Aprobada</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .container {
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .header h1 {
+      color: #28a745;
+      margin: 0;
+      font-size: 28px;
+    }
+    .content {
+      background-color: white;
+      padding: 25px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .status-approved {
+      background-color: #d4edda;
+      color: #155724;
+      padding: 15px;
+      border-radius: 5px;
+      text-align: center;
+      margin: 20px 0;
+      border: 1px solid #c3e6cb;
+    }
+    .customer-info {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
+      border-left: 4px solid #28a745;
+    }
+    .details {
+      margin: 20px 0;
+    }
+    .details h2 {
+      color: #333;
+      border-bottom: 2px solid #28a745;
+      padding-bottom: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #f8f9fa;
+      font-weight: bold;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>✅ Venta Aprobada</h1>
+    </div>
+    <div class="content">
+      <p>Hola <strong>{{user.name}} {{user.lastname}}</strong>,</p>
+      <p>¡Excelente noticia! Tu venta ha sido <strong>APROBADA</strong>.</p>
+      
+      <div class="status-approved">
+        <strong>✅ Estado: APROBADA</strong><br>
+        Tu pedido está siendo procesado y será enviado pronto.
+      </div>
+      
+      <div class="customer-info">
+        <h3>Información de tu Compra</h3>
+        <p><strong>Código de Venta:</strong> {{saleCode}}</p>
+        <p><strong>Fecha de Aprobación:</strong> {{date}}</p>
+        {{#if user.email}}
+        <p><strong>Email:</strong> {{user.email}}</p>
+        {{/if}}
+        {{#if user.phone}}
+        <p><strong>Teléfono:</strong> {{user.phone}}</p>
+        {{/if}}
+        {{#if user.address}}
+        <p><strong>Dirección de Entrega:</strong> {{user.address}}</p>
+        {{/if}}
+      </div>
+      
+      <div class="details">
+        <h2>Detalles de tu Compra Aprobada:</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Variante</th>
+              <th>Cantidad</th>
+              <th>Precio</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each details}}
+            <tr>
+              {{#if variantData}}
+              <!-- Producto normal -->
+              <td>{{variantData.productName}} ({{variantData.productCode}})</td>
+              {{else}}
+              <!-- Producto mayorista - usar nombre de la primera variante -->
+              <td>{{wholesaleVariants.0.variant.productName}} ({{wholesaleVariants.0.variant.productCode}}) - Paquete Mayorista</td>
+              {{/if}}
+              <td>
+                {{#if variantData}}
+                <!-- Producto normal -->
+                {{#each variantData.variantAttributes}}
+                <span>{{keyLabel}}: {{value}}</span><br>
+                {{/each}}
+                {{else}}
+                <!-- Producto mayorista -->
+                <div style="margin-top: 10px; padding: 5px; background-color: #f5f5f5; border-radius: 3px;">
+                  <strong>Variantes incluidas:</strong><br>
+                  {{#each wholesaleVariants}}
+                  <div style="margin: 5px 0; padding: 5px; border: 1px solid #ddd; border-radius: 3px; background-color: white;">
+                    <strong>Color:</strong> {{variant.variantAttributes.0.label}}<br>
+                    <strong>Talle:</strong> {{variant.variantAttributes.1.label}}<br>
+                    <strong>Cantidad:</strong> {{quantity}} unidades
+                  </div>
+                  {{/each}}
+                </div>
+                {{/if}}
+              </td>
+              <td>{{quantity}}</td>
+              {{#if variantData}}
+              <!-- Producto normal -->
+              <td>${{prices.retail}}</td>
+              {{else}}
+              <!-- Producto mayorista -->
+              <td>${{prices.wholesale}}</td>
+              {{/if}}
+              {{#if variantData}}
+              <!-- Producto normal -->
+              <td>${{multiply prices.retail quantity}}</td>
+              {{else}}
+              <!-- Producto mayorista -->
+              <td>${{multiply prices.wholesale quantity}}</td>
+              {{/if}}
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+      
+      <p><strong>Total Aprobado:</strong> ${{total}}</p>
+      
+      <p>Nos pondremos en contacto contigo pronto para coordinar la entrega.</p>
+      <p>¡Gracias por tu compra!</p>
+    </div>
+    <div class="footer">
+      <p>© 2025 Stocky. Todos los derechos reservados.</p>
+    </div>
+  </div>
+</body>
+</html> 

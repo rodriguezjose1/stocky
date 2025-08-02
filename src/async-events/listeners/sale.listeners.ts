@@ -8,6 +8,8 @@ import { SaleCreatedEvent, SaleUpdatedEvent } from '../events/sale.events';
 import { ErrorNotificationService } from 'src/infrastructure/adapters/email-service/error-notification.service';
 import { MovementSource, StockMovementStatus, StockMovementType } from 'src/infrastructure/models/stock-movement.model';
 import { StockMovementUseCases } from 'src/application/use-cases/stock-movement.use-cases';
+import { NotificationUseCases } from 'src/application/use-cases/notification.use-cases';
+
 @Injectable()
 export class SaleListener {
   constructor(
@@ -16,6 +18,7 @@ export class SaleListener {
     private cartUseCases: CartUseCases,
     private stockMovementUseCases: StockMovementUseCases,
     private readonly errorNotificationService: ErrorNotificationService,
+    private notificationUseCases: NotificationUseCases,
   ) { }
 
   @OnEvent('sale.created')
@@ -118,14 +121,21 @@ export class SaleListener {
       }
 
       if (sale.status === SaleStatus.REJECTED) {
+        // Restaurar stock cuando se rechaza la venta
         for (const stockUpdated of sale.stocksUpdated) {
           await this.stockUseCases.incrementStock(stockUpdated.stock, {
             quantity: stockUpdated.quantity,
           }, { type: StockMovementType.IN, source: MovementSource.SALE, status: StockMovementStatus.REJECTED, saleId: sale.id, clientId: sale.user.id, appliedPriceType: stockUpdated.appliedPriceType });
         }
+        
+        // Enviar email de rechazo
+        await this.notificationUseCases.handleSaleRejected(event.saleId);
       } else if (sale.status === SaleStatus.APPROVED) {
-        // change status movement to approved
+        // Cambiar estado del movimiento de stock a aprobado
         await this.stockMovementUseCases.udpateStockMovementStatusBySaleId(sale.id, StockMovementStatus.CONFIRMED);
+        
+        // Enviar email de aprobación
+        await this.notificationUseCases.handleSaleApproved(event.saleId);
       }
     } catch (error) {
       console.error('Error in SaleListener.handleSaleUpdatedStatus:', error);
