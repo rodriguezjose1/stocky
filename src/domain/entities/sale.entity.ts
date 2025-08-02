@@ -117,6 +117,7 @@ export class Sale {
     public cartId?: string,
     public weekCode?: string,
     public saleCode?: string,
+    public comment?: string,
   ) {}
 }
 

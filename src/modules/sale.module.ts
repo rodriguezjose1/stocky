@@ -14,6 +14,11 @@ import { UserModule } from './user.module';
 import { VariantModule } from './variant.module';
 import { GuestSaleUseCases } from 'src/application/use-cases/guest-sale.use-cases';
 import { MongooseCartRepositoryAdapter } from 'src/infrastructure/adapters/mongoose/mongoose-cart-repository.adapter';
+import { CartValidationService } from 'src/application/services/cart-validation.service';
+import { GuestUserService } from 'src/application/services/guest-user.service';
+import { SaleDetailProcessorService } from 'src/application/services/sale-detail-processor.service';
+import { SaleCodeGeneratorService } from 'src/application/services/sale-code-generator.service';
+
 @Module({
   imports: [StockModule, ProductModule, CartModule, UserModule, VariantModule, ProductAttributeModule, ProductAttributeSubtypeModule],
   providers: [
@@ -35,6 +40,10 @@ import { MongooseCartRepositoryAdapter } from 'src/infrastructure/adapters/mongo
     },
     SalesUseCase,
     GuestSaleUseCases,
+    CartValidationService,
+    GuestUserService,
+    SaleDetailProcessorService,
+    SaleCodeGeneratorService,
   ],
   controllers: [SaleController],
   exports: [SalesUseCase, GuestSaleUseCases],

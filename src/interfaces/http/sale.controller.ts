@@ -91,6 +91,8 @@ export class SaleController {
   }
 
   @Put(':id')
+  @UseGuards(BasicAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   async updateSale(@Param('id') id: string, @Body() saleData: Partial<Sale>) {
     const updatedSale = await this.saleUseCases.updateSale(id, saleData);
 

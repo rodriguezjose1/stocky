@@ -507,7 +507,8 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
       },
       saleModel.cart ? saleModel.cart.toString() : null,
       saleModel.weekCode,
-      saleModel.saleCode
+      saleModel.saleCode,
+      saleModel.comment
     );
   }
 
@@ -556,6 +557,7 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
     if (sale.weekCode) mappedSale.weekCode = sale.weekCode;
     if (sale.cartId) mappedSale.cart = new Types.ObjectId(sale.cartId);
     if (sale.user) mappedSale.user = sale.user;
+    if (sale.comment) mappedSale.comment = sale.comment;
 
     if (sale.details?.length) {
       mappedSale.details = sale.details.map((detail) => ({

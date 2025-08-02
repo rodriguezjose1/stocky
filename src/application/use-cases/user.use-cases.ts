@@ -40,6 +40,10 @@ export class UserUseCases {
     return user;
   }
 
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userRepository.findByEmail(email);
+  }
+
   async updatePassword(id: string, newPassword: string): Promise<void> {
     const hashedPassword = await this.encrypter.hash(newPassword);
     await this.userRepository.update(id, { password: hashedPassword });

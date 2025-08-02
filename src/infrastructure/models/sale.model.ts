@@ -226,6 +226,9 @@ export class SaleModel extends Document {
 
   @Prop({ required: true })
   weekCode: string;
+
+  @Prop({ type: String, required: false })
+  comment?: string;
 }
 
 export const SaleSchema = SchemaFactory.createForClass(SaleModel);
