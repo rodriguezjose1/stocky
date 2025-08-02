@@ -6,6 +6,7 @@ import { StockUseCases } from './stock.use-cases';
 import { VariantUseCases } from './variant.use-cases';
 import { AppliedPriceTypeEnum } from 'src/domain/entities/sale.entity';
 import { packageTypes } from '../constants.use-cases';
+import { productErrors } from '../error.constants';
 
 @Injectable()
 export class GuestCartUseCases {
@@ -151,81 +152,42 @@ export class GuestCartUseCases {
     }
 
     if (!product.wholesaleData.isWholesaler) {
-      throw new BadRequestException('Wholesale package not allowed for this product');
+      throw new BadRequestException(productErrors.wholesalePackageNotAllowed);
     }
 
     if (product.wholesaleData.packageType !== packageTypes.complex) {
-      throw new BadRequestException('Product is not a complex wholesale package');
+      throw new BadRequestException('This product is not a complex wholesale package');
     }
 
-    // Validar stock para todas las variantes
-    for (const variantData of variants) {
-      const quantityInStock = await this.stockUseCases.getQuantityByVariantId(productId, variantData.variantId);
-      if (variantData.quantity > quantityInStock) {
-        throw new BadRequestException(`Insufficient stock for variant ${variantData.variantId}`);
+    // Verificar que todas las variantes existan y tengan stock suficiente
+    for (const variant of variants) {
+      const variantExists = await this.variantUseCases.getVariantById(variant.variantId);
+      if (!variantExists) {
+        throw new BadRequestException(`Variant ${variant.variantId} not found`);
+      }
+
+      const quantityInStock = await this.stockUseCases.getQuantityByVariantId(productId, variant.variantId);
+      if (variant.quantity > quantityInStock) {
+        throw new BadRequestException(`Insufficient stock for variant ${variant.variantId}`);
       }
     }
 
-    // Buscar si el producto ya existe en el carrito como paquete mayorista complejo
-    let cartItem = cart.items.find((item) =>
-      item.product._id.toString() === product.id &&
-      item.is_wholesale_package &&
+    // Verificar que la suma de todas las cantidades no exceda la cantidad predefinida
+    const totalQuantity = variants.reduce((acc, v) => acc + v.quantity, 0);
+    if (totalQuantity > predefinedQuantity) {
+      throw new BadRequestException(`Total quantity (${totalQuantity}) exceeds predefined quantity (${predefinedQuantity})`);
+    }
+
+    // Buscar el item del paquete mayorista complejo
+    let cartItem = cart.items.find((item) => 
+      item.product._id.toString() === product.id && 
+      item.is_wholesale_package && 
       item.product.wholesale_data.package_type === packageTypes.complex
     );
 
-    if (cartItem) {
-      // Actualizar variantes existentes
-      for (const variantData of variants) {
-        const existingVariant = cartItem.wholesale_variants.find(
-          (v) => v.variant._id.toString() === variantData.variantId
-        );
-        
-        if (existingVariant) {
-          existingVariant.quantity = variantData.quantity;
-        } else {
-          const variant = await this.variantUseCases.getVariantById(variantData.variantId);
-          if (!variant) {
-            throw new BadRequestException(`Variant ${variantData.variantId} not found`);
-          }
-          
-          cartItem.wholesale_variants.push({
-            variant: {
-              _id: variant.id,
-              size: variant.size,
-              color: variant.color,
-              color_label: variant.colorLabel,
-              size_label: variant.sizeLabel,
-            },
-            quantity: variantData.quantity,
-          });
-        }
-      }
-      
-      cartItem.quantity = cartItem.wholesale_variants.reduce((acc, v) => acc + v.quantity, 0);
-      cartItem.predefined_quantity = predefinedQuantity;
-    } else {
-      // Crear nuevo item complejo
-      const wholesaleVariants = [];
-      
-      for (const variantData of variants) {
-        const variant = await this.variantUseCases.getVariantById(variantData.variantId);
-        if (!variant) {
-          throw new BadRequestException(`Variant ${variantData.variantId} not found`);
-        }
-        
-        wholesaleVariants.push({
-          variant: {
-            _id: variant.id,
-            size: variant.size,
-            color: variant.color,
-            color_label: variant.colorLabel,
-            size_label: variant.sizeLabel,
-          },
-          quantity: variantData.quantity,
-        });
-      }
-
-      const newItem: any = {
+    if (!cartItem) {
+      // Crear nuevo item si no existe
+      cartItem = {
         product: {
           _id: product.id,
           name: product.name,
@@ -241,16 +203,35 @@ export class GuestCartUseCases {
             package_type: product.wholesaleData.packageType,
           },
         },
-        variant: null, // Para paquetes complejos, variant es null
-        quantity: wholesaleVariants.reduce((acc, v) => acc + v.quantity, 0),
+        variant: null,
+        quantity: totalQuantity,
         is_wholesale_package: true,
         predefined_quantity: predefinedQuantity,
-        wholesale_variants: wholesaleVariants,
-        applied_price_type: (predefinedQuantity === 12) ? AppliedPriceTypeEnum.WHOLESALE_DOZEN : AppliedPriceTypeEnum.WHOLESALE_HALF_DOZEN
+        wholesale_variants: [],
+        applied_price_type: (predefinedQuantity > 6) ? AppliedPriceTypeEnum.WHOLESALE_DOZEN : AppliedPriceTypeEnum.WHOLESALE_HALF_DOZEN
       };
-
-      cart.items.push(newItem);
+      cart.items.push(cartItem);
     }
+
+    // Actualizar los wholesale_variants
+    cartItem.wholesale_variants = [];
+    for (const variant of variants) {
+      const variantData = await this.variantUseCases.getVariantById(variant.variantId);
+      cartItem.wholesale_variants.push({
+        variant: {
+          _id: variantData.id,
+          size: variantData.size,
+          color: variantData.color,
+          color_label: variantData.colorLabel,
+          size_label: variantData.sizeLabel,
+        },
+        quantity: variant.quantity
+      });
+    }
+
+    // Actualizar la cantidad total
+    cartItem.quantity = totalQuantity;
+    cartItem.predefined_quantity = predefinedQuantity;
 
     return this.cartRepository.addProduct(cart);
   }
