@@ -40,6 +40,10 @@ export class UserUseCases {
     return user;
   }
 
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userRepository.findByEmail(email);
+  }
+
   async updatePassword(id: string, newPassword: string): Promise<void> {
     const hashedPassword = await this.encrypter.hash(newPassword);
     await this.userRepository.update(id, { password: hashedPassword });
@@ -86,6 +90,10 @@ export class UserUseCases {
 
   async findResellers(filter): Promise<any> {
     return this.userRepository.findResellers(filter);
+  }
+
+  async findCustomers(filter): Promise<any> {
+    return this.userRepository.findCustomers(filter);
   }
 
   async findOnlyRoleAdmins(): Promise<User[]> {

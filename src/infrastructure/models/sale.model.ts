@@ -5,20 +5,32 @@ import { SaleStatus, AppliedPriceType, AppliedPriceTypeEnum } from '../../domain
 
 @Schema({ _id: false })
 export class UserDataSchema {
-  @Prop({ type: SchemaTypes.ObjectId, required: true })
-  id: Types.ObjectId;
+  @Prop({ type: String, required: false })
+  id: string;
 
   @Prop({ required: true })
   name: string;
 
   @Prop({ required: true })
   lastname: string;
+
+  @Prop({ type: String, required: false })
+  phone: string;
+
+  @Prop({ type: String, required: false })
+  address: string;
+
+  @Prop({ type: String, required: false })
+  email: string;
 }
 
 interface UserData {
   id: string;
   name: string;
   lastname: string;
+  phone: string;
+  address: string;
+  email: string;
 }
 
 export interface Prices {
@@ -194,6 +206,9 @@ export class SaleModel extends Document {
   @Prop({ required: true })
   date: Date;
 
+  @Prop({ required: true })
+  saleCode: string;
+
   @Prop({ required: true, enum: SaleStatus, default: SaleStatus.PENDING })
   status: SaleStatus;
 
@@ -211,6 +226,9 @@ export class SaleModel extends Document {
 
   @Prop({ required: true })
   weekCode: string;
+
+  @Prop({ type: String, required: false })
+  comment?: string;
 }
 
 export const SaleSchema = SchemaFactory.createForClass(SaleModel);

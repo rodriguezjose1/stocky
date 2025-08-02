@@ -58,6 +58,14 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
     return updatedSale ? this.mapToDomain(updatedSale) : null;
   }
 
+  async findLastSale(): Promise<Sale | null> {
+    const lastSale = await this.saleModel
+      .findOne()
+      .sort({ createdAt: -1 })
+      .exec();
+    return lastSale ? this.mapToDomain(lastSale) : null;
+  }
+
   async findSellersWithSalesInCurrentWeek(): Promise<Sale[]> {
     return this.saleModel.aggregate([
       {
@@ -493,9 +501,14 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
         id: saleModel.user.id,
         name: saleModel.user.name,
         lastname: saleModel.user.lastname,
+        phone: saleModel.user.phone,
+        address: saleModel.user.address,
+        email: saleModel.user.email,
       },
       saleModel.cart ? saleModel.cart.toString() : null,
       saleModel.weekCode,
+      saleModel.saleCode,
+      saleModel.comment
     );
   }
 
@@ -539,10 +552,12 @@ export class MongooseSaleRepositoryAdapter implements SaleRepositoryPort {
     const mappedSale: Partial<SaleModel> = {};
 
     if (sale.date) mappedSale.date = sale.date;
+    if (sale.saleCode) mappedSale.saleCode = sale.saleCode;
     if (sale.status) mappedSale.status = sale.status;
     if (sale.weekCode) mappedSale.weekCode = sale.weekCode;
     if (sale.cartId) mappedSale.cart = new Types.ObjectId(sale.cartId);
     if (sale.user) mappedSale.user = sale.user;
+    if (sale.comment) mappedSale.comment = sale.comment;
 
     if (sale.details?.length) {
       mappedSale.details = sale.details.map((detail) => ({

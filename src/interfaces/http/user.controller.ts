@@ -1,13 +1,14 @@
 // interfaces/http/user.controller.ts
 import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, Query, Req } from '@nestjs/common';
 import { UserUseCases } from '../../application/use-cases/user.use-cases';
-import { ChangePasswordDto, GetResellersFilterDto, User } from '../../domain/entities/user.entity';
+import { ChangePasswordDto, GetCustomersFilterDto, GetResellersFilterDto, User } from '../../domain/entities/user.entity';
 import { JwtAuthGuard } from 'src/infrastructure/auth/guards/jwt-auth.guard';
 import { Roles } from 'src/infrastructure/auth/decorators/roles.decorator';
 import { RolesGuard } from 'src/infrastructure/auth/guards/roles.guard';
 import { BasicAuthGuard } from 'src/infrastructure/auth/guards/basic-auth.guard';
 import { ChangePasswordUseCases } from 'src/application/use-cases/change-password.use-cases';
 import { Role } from 'src/domain/enums/role.enum';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @Controller('users')
 export class UserController {
@@ -30,10 +31,29 @@ export class UserController {
   @UseGuards(BasicAuthGuard, RolesGuard)
   @Roles('admin')
   @Get('resellers')
+  @ApiOperation({ summary: 'Obtener lista de revendedores con paginado' })
+  @ApiResponse({ status: 200, description: 'Lista de revendedores obtenida exitosamente' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 403, description: 'Acceso denegado' })
   async findResellers(@Query() filter: GetResellersFilterDto) {
     const { resellers, total } = await this.userUseCases.findResellers(filter);
     return {
       resellers,
+      total,
+    };
+  }
+
+  @UseGuards(BasicAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Get('customers')
+  @ApiOperation({ summary: 'Obtener lista de clientes con paginado optimizado' })
+  @ApiResponse({ status: 200, description: 'Lista de clientes obtenida exitosamente' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 403, description: 'Acceso denegado' })
+  async findCustomers(@Query() filter: GetCustomersFilterDto) {
+    const { customers, total } = await this.userUseCases.findCustomers(filter);
+    return {
+      customers,
       total,
     };
   }

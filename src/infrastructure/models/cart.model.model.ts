@@ -4,8 +4,11 @@ import { Document, SchemaTypes, Types } from 'mongoose';
 
 @Schema({ timestamps: true, collection: 'carts' })
 export class CartModel extends Document {
-  @Prop({ type: SchemaTypes.ObjectId })
+  @Prop({ type: SchemaTypes.ObjectId, required: false })
   userId: Types.ObjectId;
+
+  @Prop({ type: String, required: false })
+  sessionId: string;
 
   @Prop([CartItemSchema])
   items: CartItem[];

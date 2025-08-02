@@ -49,9 +49,9 @@ export class StockMovementUseCases {
 
   private validateBasicMovement(data: CreateStockMovementDto & { prices: Prices }): void {
     // Validar que la cantidad sea positiva
-    if (data.quantity <= 0) {
-      throw new BadRequestException('La cantidad debe ser mayor a 0');
-    }
+    // if (data.quantity <= 0) {
+    //   throw new BadRequestException('La cantidad debe ser mayor a 0');
+    // }
 
     // Validar consistencia entre stockBefore, stockAfter y quantity según el tipo
     const expectedStockAfter = data.type === StockMovementType.IN

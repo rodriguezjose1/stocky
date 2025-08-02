@@ -143,6 +143,9 @@ export class SalesUseCase {
           id: userReq.id,
           name: userReq.name,
           lastname: userReq.lastname,
+          phone: userReq.phone,
+          address: userReq.address,
+          email: userReq.email,
         };
       } else {
         const user = await this.userUseCases.getUserById(saleData.user as string);
@@ -151,6 +154,9 @@ export class SalesUseCase {
           id: user.id,
           name: user.name,
           lastname: user.lastname,
+          phone: user.phone,
+          address: user.address,
+          email: user.email,
         };
       }
 

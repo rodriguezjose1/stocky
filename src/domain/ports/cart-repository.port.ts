@@ -8,4 +8,8 @@ export interface ICartRepository {
   getCartById(cartId: string): Promise<Cart>;
   getCartByUser(userId: string): Promise<Cart>;
   updateCart(cart: any): Promise<Cart>;
+  
+  // Nuevos métodos para guest carts
+  createSessionCart(sessionId: string): Promise<Cart>;
+  getCartBySessionId(sessionId: string): Promise<Cart>;
 }

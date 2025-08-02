@@ -104,6 +104,57 @@ export class MongooseUserRepositoryAdapter implements UserRepositoryPort {
     };
   }
 
+  async findCustomers(filter): Promise<any> {
+    // Optimización 1: Cache del rol de customer
+    const customerRole = await this.roleModel.findOne({ name: Role.CUSTOMER }).select('_id').exec();
+    if (!customerRole) {
+      return { customers: [], total: 0 };
+    }
+
+    // Optimización 2: Query optimizada con proyección correcta
+    const users = await this.userModel.aggregate([
+      // Lookup optimizado con pipeline para solo traer el nombre del rol
+      {
+        $lookup: {
+          from: 'roles',
+          localField: 'roles',
+          foreignField: '_id',
+          as: 'roles',
+          pipeline: [
+            { $project: { name: 1 } }
+          ]
+        }
+      },
+      // Filtro por rol de customer
+      {
+        $match: {
+          'roles.name': Role.CUSTOMER
+        }
+      },
+      // Proyección después del filtro para reducir el tamaño de los documentos
+      {
+        $project: {
+          password: 0,
+        }
+      },
+      // Sort antes del paginado para mejor rendimiento
+      { $sort: { createdAt: -1 } },
+      // Paginado
+      { $skip: (filter.page - 1) * filter.limit },
+      { $limit: filter.limit }
+    ]);
+
+    // Optimización 3: Usar countDocuments en lugar de aggregate para el total
+    const total = await this.userModel.countDocuments({
+      roles: customerRole._id
+    });
+
+    return {
+      customers: users.map((user) => this.mapToDomain(user)),
+      total: total
+    };
+  }
+
   private mapToDomain(userModel: UserModel): User {
     return new User(
       userModel._id.toString(),

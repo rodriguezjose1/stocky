@@ -1,16 +1,66 @@
 // interfaces/http/sale.controller.ts
-import { Body, Controller, Get, Param, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
-import { CreateSaleDto, GetSalesFilterDto, Sale } from 'src/domain/entities/sale.entity';
+import { CreateGuestSaleDto, CreateSaleDto, GetSalesFilterDto, Sale } from 'src/domain/entities/sale.entity';
 import { Role } from 'src/domain/enums/role.enum';
 import { Roles } from 'src/infrastructure/auth/decorators/roles.decorator';
 import { BasicAuthGuard } from 'src/infrastructure/auth/guards/basic-auth.guard';
 import { RolesGuard } from 'src/infrastructure/auth/guards/roles.guard';
 import { SalesUseCase } from '../../application/use-cases/sale.use-cases';
-
+import { ApiResponse } from '@nestjs/swagger';
+import { ApiBody } from '@nestjs/swagger';
+import { ApiOperation } from '@nestjs/swagger';
+import { GuestSaleUseCases } from 'src/application/use-cases/guest-sale.use-cases';
 @Controller('sales')
 export class SaleController {
-  constructor(private saleUseCases: SalesUseCase) {}
+  constructor(private saleUseCases: SalesUseCase, private guestSaleUseCases: GuestSaleUseCases) {}
+
+  @Post('create-guest-sale')
+  @ApiOperation({ summary: 'Crear venta para usuario no autenticado' })
+  @ApiBody({
+    type: CreateGuestSaleDto,
+    description: 'Datos para crear una venta de usuario invitado',
+    examples: {
+      example1: {
+        summary: 'Crear venta con datos de contacto',
+        value: {
+          sessionId: '550e8400-e29b-41d4-a716-446655440000',
+          date: '2024-01-15T10:30:00.000Z',
+          customerData: {
+            name: 'Juan',
+            lastname: 'Pérez',
+            email: 'juan.perez@email.com',
+            phone: '+1234567890',
+            address: 'Calle Principal 123, Ciudad, País'
+          }
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 201, description: 'Venta creada exitosamente' })
+  @ApiResponse({ status: 400, description: 'Datos inválidos o carrito no encontrado' })
+  @ApiResponse({ status: 404, description: 'Carrito no encontrado para la sesión' })
+  async createGuestSale(@Body() body: CreateGuestSaleDto) {
+    // Validaciones básicas
+    if (!body.cartId || body.cartId.trim() === '') {
+      throw new BadRequestException('sessionId is required');
+    }
+
+    if (!body.customerData) {
+      throw new BadRequestException('customerData is required');
+    }
+
+    if (!body.customerData.name || !body.customerData.lastname || !body.customerData.email) {
+      throw new BadRequestException('name, lastname and email are required in customerData');
+    }
+
+    if (!body.date) {
+      body.date = new Date();
+    }
+
+    const sale = await this.guestSaleUseCases.createGuestSale(body);
+    return { sale };
+  }
 
   @Post()
   @Roles(Role.ADMIN, Role.SELLER, Role.CUSTOMER)
@@ -41,6 +91,8 @@ export class SaleController {
   }
 
   @Put(':id')
+  @UseGuards(BasicAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   async updateSale(@Param('id') id: string, @Body() saleData: Partial<Sale>) {
     const updatedSale = await this.saleUseCases.updateSale(id, saleData);
 

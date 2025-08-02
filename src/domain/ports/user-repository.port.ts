@@ -1,4 +1,4 @@
-import { User } from '../entities/user.entity';
+import { GetCustomersFilterDto, User } from '../entities/user.entity';
 
 export interface UserRepositoryPort {
   create(user: User): Promise<User>;
@@ -10,5 +10,6 @@ export interface UserRepositoryPort {
   findByEmail(email: string): Promise<User | null>;
   findByEmailAuth(email: string): Promise<User | null>;
   findResellers(filter): Promise<any>;
+  findCustomers(filterDto: GetCustomersFilterDto): Promise<any>;
   findOnlyRoleAdmins(): Promise<User[]>;
 }

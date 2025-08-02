@@ -18,9 +18,14 @@ export class NodemailerService implements IEmailService {
       },
     });
 
-    // Registrar el helper json para formatear objetos en el template
-    Handlebars.registerHelper('json', function(context) {
-      return JSON.stringify(context, null, 2);
+    // Registrar el helper startsWith para detectar usuarios invitados
+    Handlebars.registerHelper('startsWith', function(str, prefix) {
+      return str && str.startsWith(prefix);
+    });
+
+    // Registrar el helper multiply para calcular totales
+    Handlebars.registerHelper('multiply', function(a, b) {
+      return a * b;
     });
   }
 
