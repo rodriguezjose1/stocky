@@ -143,8 +143,8 @@
                   <strong>Variantes incluidas:</strong><br>
                   {{#each wholesaleVariants}}
                   <div style="margin: 5px 0; padding: 5px; border: 1px solid #ddd; border-radius: 3px; background-color: white;">
-                    <strong>Color:</strong> {{variant.variantAttributes.0.label}}<br>
-                    <strong>Talle:</strong> {{variant.variantAttributes.1.label}}<br>
+                    <strong>{{variant.variantAttributes.0.keyLabel}}:</strong> {{variant.variantAttributes.0.label}}<br>
+                    <strong>{{variant.variantAttributes.1.keyLabel}}:</strong> {{variant.variantAttributes.1.label}}<br>
                     <strong>Cantidad:</strong> {{quantity}} unidades
                   </div>
                   {{/each}}

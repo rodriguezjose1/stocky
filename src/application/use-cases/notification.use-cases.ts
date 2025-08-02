@@ -89,6 +89,12 @@ export class NotificationUseCases {
     // Enviar email al cliente
     const customerEmail = sale.user.email;
     await this.emailService.sendEmail(customerEmail, sbjApproved, 'sale-approved-template', dataSale);
+
+    // Enviar email a los admins para registro
+    const admins = await this.userUseCases.findOnlyRoleAdmins();
+    for (const admin of admins) {
+      await this.emailService.sendEmail(admin.email, 'Venta Aprobada - Registro Administrativo', 'admin-sale-approved-template', dataSale);
+    }
   }
 
   async handleSaleRejected(saleId: string) {
@@ -113,5 +119,11 @@ export class NotificationUseCases {
     // Enviar email al cliente
     const customerEmail = sale.user.email;
     await this.emailService.sendEmail(customerEmail, sbjRejected, 'sale-rejected-template', dataSale);
+
+    // Enviar email a los admins para registro
+    const admins = await this.userUseCases.findOnlyRoleAdmins();
+    for (const admin of admins) {
+      await this.emailService.sendEmail(admin.email, 'Venta Rechazada - Registro Administrativo', 'admin-sale-rejected-template', dataSale);
+    }
   }
 }

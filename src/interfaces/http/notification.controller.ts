@@ -6,6 +6,7 @@ import { BasicAuthGuard } from 'src/infrastructure/auth/guards/basic-auth.guard'
 import { RolesGuard } from 'src/infrastructure/auth/guards/roles.guard';
 import { Roles } from 'src/infrastructure/auth/decorators/roles.decorator';
 import { Role } from 'src/domain/enums/role.enum';
+import { InternalServerErrorException } from '@nestjs/common';
 
 @ApiTags('notifications')
 @Controller('notifications')
@@ -556,15 +557,15 @@ export class NotificationController {
     }
   }
 
-  @Post('test-rejected-email')
   @UseGuards(BasicAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
+  @Post('test-rejected-email')
   @ApiOperation({ summary: 'Probar email de venta rechazada' })
   @ApiBody({
     description: 'Datos para probar el email de venta rechazada',
     examples: {
       example1: {
-        summary: 'Email de venta rechazada',
+        summary: 'Email de venta rechazada con usuario invitado',
         value: {
           to: 'admin@example.com'
         }
@@ -577,66 +578,254 @@ export class NotificationController {
   @ApiResponse({ status: 403, description: 'Acceso denegado' })
   async testRejectedEmail(@Body() body: { to: string }) {
     try {
+      // Obtener fecha actual en zona horaria de Argentina
       const argentinaDate = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Argentina/Buenos_Aires"}));
+      
+      // Formatear con ceros a la izquierda para mejor legibilidad
       const day = argentinaDate.getDate().toString().padStart(2, '0');
       const month = (argentinaDate.getMonth() + 1).toString().padStart(2, '0');
       const year = argentinaDate.getFullYear();
       const hours = argentinaDate.getHours().toString().padStart(2, '0');
       const minutes = argentinaDate.getMinutes().toString().padStart(2, '0');
+      
       const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
 
+      // Datos hardcodeados para la prueba - siempre guest user
       const mockSaleData = {
-        id: 'sale-rejected-123',
-        saleCode: 'V-2024-000002',
+        id: 'sale-123',
+        saleCode: 'V-2025-000123',
         date: formattedDate,
+        status: 'REJECTED',
+        comment: 'Stock insuficiente para completar el pedido',
         user: {
           id: 'guest_550e8400-e29b-41d4-a716-446655440000',
-          name: 'Juan',
-          lastname: 'Pérez',
-          email: 'juan.perez@example.com',
+          name: 'María',
+          lastname: 'González',
+          email: 'maria.gonzalez@email.com',
           phone: '+1234567890',
-          address: 'Calle Principal 123, Ciudad, País'
+          address: 'Avenida Central 456, Ciudad, País'
         },
         details: [
           {
-            productId: '507f1f77bcf86cd799439013',
-            variantId: '507f1f77bcf86cd799439014',
-            quantity: 1,
-            prices: { retail: 1500, reseller: 0, wholesale: 0 },
+            productId: '507f1f77bcf86cd799439011',
+            variantId: '507f1f77bcf86cd799439012',
+            quantity: 3,
+            prices: {
+              retail: 100,
+              reseller: 80,
+              wholesale: 60
+            },
             variantData: {
               productName: 'Camiseta Deportiva',
               productCode: 'CAM001',
               variantAttributes: [
-                { name: 'color', keyLabel: 'Color', value: 'red', label: 'Rojo' },
-                { name: 'size', keyLabel: 'Talle', value: 'L', label: 'Grande' }
+                {
+                  name: 'color',
+                  keyLabel: 'Color',
+                  value: 'red',
+                  label: 'Rojo'
+                },
+                {
+                  name: 'size',
+                  keyLabel: 'Talle',
+                  value: 'M',
+                  label: 'Mediano'
+                }
               ]
             }
           }
         ],
-        total: 1500
+        total: 300
       };
 
-      await this.emailService.sendEmail(
-        body.to,
-        'Tu venta ha sido rechazada',
-        'sale-rejected-template',
-        mockSaleData
-      );
+      await this.emailService.sendEmail(body.to, 'Venta Rechazada - Registro Administrativo', 'admin-sale-rejected-template', mockSaleData);
 
-      return {
-        success: true,
-        message: 'Email de venta rechazada enviado exitosamente',
-        to: body.to,
-        template: 'sale-rejected-template',
-        userType: 'guest',
-        date: formattedDate
-      };
+      return { message: 'Email de venta rechazada enviado exitosamente' };
     } catch (error) {
-      return {
-        success: false,
-        message: 'Error al enviar email de venta rechazada',
-        error: error.message
+      throw new InternalServerErrorException('Error al enviar email de venta rechazada');
+    }
+  }
+
+  @UseGuards(BasicAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Post('test-admin-approved-email')
+  @ApiOperation({ summary: 'Probar email administrativo de venta aprobada' })
+  @ApiBody({
+    description: 'Datos para probar el email administrativo de venta aprobada',
+    examples: {
+      example1: {
+        summary: 'Email administrativo de venta aprobada',
+        value: {
+          to: 'admin@example.com'
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 200, description: 'Email administrativo de venta aprobada enviado exitosamente' })
+  @ApiResponse({ status: 500, description: 'Error al enviar email' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 403, description: 'Acceso denegado' })
+  async testAdminApprovedEmail(@Body() body: { to: string }) {
+    try {
+      // Obtener fecha actual en zona horaria de Argentina
+      const argentinaDate = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Argentina/Buenos_Aires"}));
+      
+      // Formatear con ceros a la izquierda para mejor legibilidad
+      const day = argentinaDate.getDate().toString().padStart(2, '0');
+      const month = (argentinaDate.getMonth() + 1).toString().padStart(2, '0');
+      const year = argentinaDate.getFullYear();
+      const hours = argentinaDate.getHours().toString().padStart(2, '0');
+      const minutes = argentinaDate.getMinutes().toString().padStart(2, '0');
+      
+      const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
+
+      // Datos hardcodeados para la prueba - siempre guest user
+      const mockSaleData = {
+        id: 'sale-456',
+        saleCode: 'V-2025-000456',
+        date: formattedDate,
+        status: 'APPROVED',
+        comment: 'Venta aprobada por administrador',
+        user: {
+          id: 'guest_550e8400-e29b-41d4-a716-446655440000',
+          name: 'Carlos',
+          lastname: 'Rodríguez',
+          email: 'carlos.rodriguez@email.com',
+          phone: '+1234567890',
+          address: 'Calle Secundaria 789, Ciudad, País'
+        },
+        details: [
+          {
+            productId: '507f1f77bcf86cd799439015',
+            variantId: '507f1f77bcf86cd799439016',
+            quantity: 1,
+            prices: {
+              retail: 200,
+              reseller: 160,
+              wholesale: 120
+            },
+            wholesaleVariants: [
+              {
+                variant: {
+                  productName: 'Paquete Mayorista',
+                  productCode: 'PKG001',
+                  variantAttributes: [
+                    {
+                      name: 'color',
+                      keyLabel: 'Color',
+                      value: 'amazonas',
+                      label: 'Amazonas'
+                    },
+                    {
+                      name: 'size',
+                      keyLabel: 'Talle',
+                      value: '100',
+                      label: '100'
+                    }
+                  ]
+                },
+                quantity: 12
+              }
+            ]
+          }
+        ],
+        total: 2400
       };
+
+      await this.emailService.sendEmail(body.to, 'Venta Aprobada - Registro Administrativo', 'admin-sale-approved-template', mockSaleData);
+
+      return { message: 'Email administrativo de venta aprobada enviado exitosamente' };
+    } catch (error) {
+      throw new InternalServerErrorException('Error al enviar email administrativo de venta aprobada');
+    }
+  }
+
+  @UseGuards(BasicAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Post('test-admin-rejected-email')
+  @ApiOperation({ summary: 'Probar email administrativo de venta rechazada' })
+  @ApiBody({
+    description: 'Datos para probar el email administrativo de venta rechazada',
+    examples: {
+      example1: {
+        summary: 'Email administrativo de venta rechazada',
+        value: {
+          to: 'admin@example.com'
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 200, description: 'Email administrativo de venta rechazada enviado exitosamente' })
+  @ApiResponse({ status: 500, description: 'Error al enviar email' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 403, description: 'Acceso denegado' })
+  async testAdminRejectedEmail(@Body() body: { to: string }) {
+    try {
+      // Obtener fecha actual en zona horaria de Argentina
+      const argentinaDate = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Argentina/Buenos_Aires"}));
+      
+      // Formatear con ceros a la izquierda para mejor legibilidad
+      const day = argentinaDate.getDate().toString().padStart(2, '0');
+      const month = (argentinaDate.getMonth() + 1).toString().padStart(2, '0');
+      const year = argentinaDate.getFullYear();
+      const hours = argentinaDate.getHours().toString().padStart(2, '0');
+      const minutes = argentinaDate.getMinutes().toString().padStart(2, '0');
+      
+      const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
+
+      // Datos hardcodeados para la prueba - siempre guest user
+      const mockSaleData = {
+        id: 'sale-789',
+        saleCode: 'V-2025-000789',
+        date: formattedDate,
+        status: 'REJECTED',
+        comment: 'Información de pago incompleta',
+        user: {
+          id: 'guest_550e8400-e29b-41d4-a716-446655440000',
+          name: 'Ana',
+          lastname: 'Martínez',
+          email: 'ana.martinez@email.com',
+          phone: '+1234567890',
+          address: 'Plaza Mayor 321, Ciudad, País'
+        },
+        details: [
+          {
+            productId: '507f1f77bcf86cd799439017',
+            variantId: '507f1f77bcf86cd799439018',
+            quantity: 2,
+            prices: {
+              retail: 150,
+              reseller: 120,
+              wholesale: 90
+            },
+            variantData: {
+              productName: 'Zapatillas Deportivas',
+              productCode: 'ZAP003',
+              variantAttributes: [
+                {
+                  name: 'color',
+                  keyLabel: 'Color',
+                  value: 'black',
+                  label: 'Negro'
+                },
+                {
+                  name: 'size',
+                  keyLabel: 'Talle',
+                  value: '42',
+                  label: '42'
+                }
+              ]
+            }
+          }
+        ],
+        total: 300
+      };
+
+      await this.emailService.sendEmail(body.to, 'Venta Rechazada - Registro Administrativo', 'admin-sale-rejected-template', mockSaleData);
+
+      return { message: 'Email administrativo de venta rechazada enviado exitosamente' };
+    } catch (error) {
+      throw new InternalServerErrorException('Error al enviar email administrativo de venta rechazada');
     }
   }
 }
