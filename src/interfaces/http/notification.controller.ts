@@ -1,7 +1,11 @@
-import { Body, Controller, Post, Inject, Param } from '@nestjs/common';
+import { Body, Controller, Post, Inject, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { IEmailService } from 'src/domain/ports/email-service.port';
 import { NotificationUseCases } from '../../application/use-cases/notification.use-cases';
+import { BasicAuthGuard } from 'src/infrastructure/auth/guards/basic-auth.guard';
+import { RolesGuard } from 'src/infrastructure/auth/guards/roles.guard';
+import { Roles } from 'src/infrastructure/auth/decorators/roles.decorator';
+import { Role } from 'src/domain/enums/role.enum';
 
 @ApiTags('notifications')
 @Controller('notifications')
@@ -17,6 +21,8 @@ export class NotificationController {
   }
 
   @Post('test-email')
+  @UseGuards(BasicAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Probar envío de email' })
   @ApiBody({
     description: 'Datos para probar el envío de email',
@@ -33,6 +39,8 @@ export class NotificationController {
   })
   @ApiResponse({ status: 200, description: 'Email enviado exitosamente' })
   @ApiResponse({ status: 500, description: 'Error al enviar email' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 403, description: 'Acceso denegado' })
   async testEmail(@Body() body: { to: string; subject: string; message: string }) {
     try {
       // Crear datos simples para el template
@@ -66,6 +74,8 @@ export class NotificationController {
   }
 
   @Post('test-sale-email')
+  @UseGuards(BasicAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Probar email de venta con datos hardcodeados de usuario invitado' })
   @ApiBody({
     description: 'Datos para probar el email de venta',
@@ -80,6 +90,8 @@ export class NotificationController {
   })
   @ApiResponse({ status: 200, description: 'Email de venta enviado exitosamente' })
   @ApiResponse({ status: 500, description: 'Error al enviar email' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 403, description: 'Acceso denegado' })
   async testSaleEmail(@Body() body: { to: string }) {
     try {
       // Obtener fecha actual en zona horaria de Argentina
@@ -193,6 +205,8 @@ export class NotificationController {
   }
 
   @Post('test-purchase-email')
+  @UseGuards(BasicAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Probar email de compra con datos hardcodeados de usuario invitado' })
   @ApiBody({
     description: 'Datos para probar el email de compra',
@@ -207,6 +221,8 @@ export class NotificationController {
   })
   @ApiResponse({ status: 200, description: 'Email de compra enviado exitosamente' })
   @ApiResponse({ status: 500, description: 'Error al enviar email' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 403, description: 'Acceso denegado' })
   async testPurchaseEmail(@Body() body: { to: string }) {
     try {
       const argentinaDate = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Argentina/Buenos_Aires"}));
@@ -272,6 +288,8 @@ export class NotificationController {
   }
 
   @Post('test-wholesale-email')
+  @UseGuards(BasicAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Probar email con producto mayorista complejo' })
   @ApiBody({
     description: 'Datos para probar el email con producto mayorista',
@@ -286,6 +304,8 @@ export class NotificationController {
   })
   @ApiResponse({ status: 200, description: 'Email con producto mayorista enviado exitosamente' })
   @ApiResponse({ status: 500, description: 'Error al enviar email' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 403, description: 'Acceso denegado' })
   async testWholesaleEmail(@Body() body: { to: string }) {
     try {
       const argentinaDate = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Argentina/Buenos_Aires"}));
@@ -390,6 +410,8 @@ export class NotificationController {
   }
 
   @Post('test-wholesale-structure')
+  @UseGuards(BasicAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Inspeccionar estructura de datos de variantes mayoristas' })
   @ApiBody({
     description: 'Datos para inspeccionar la estructura',
@@ -404,6 +426,8 @@ export class NotificationController {
   })
   @ApiResponse({ status: 200, description: 'Estructura inspeccionada exitosamente' })
   @ApiResponse({ status: 500, description: 'Error al inspeccionar estructura' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 403, description: 'Acceso denegado' })
   async testWholesaleStructure(@Body() body: { to: string }) {
     try {
       const mockData = {
@@ -449,6 +473,8 @@ export class NotificationController {
   }
 
   @Post('test-approved-email')
+  @UseGuards(BasicAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Probar email de venta aprobada' })
   @ApiBody({
     description: 'Datos para probar el email de venta aprobada',
@@ -463,6 +489,8 @@ export class NotificationController {
   })
   @ApiResponse({ status: 200, description: 'Email de venta aprobada enviado exitosamente' })
   @ApiResponse({ status: 500, description: 'Error al enviar email' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 403, description: 'Acceso denegado' })
   async testApprovedEmail(@Body() body: { to: string }) {
     try {
       const argentinaDate = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Argentina/Buenos_Aires"}));
@@ -529,6 +557,8 @@ export class NotificationController {
   }
 
   @Post('test-rejected-email')
+  @UseGuards(BasicAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Probar email de venta rechazada' })
   @ApiBody({
     description: 'Datos para probar el email de venta rechazada',
@@ -543,6 +573,8 @@ export class NotificationController {
   })
   @ApiResponse({ status: 200, description: 'Email de venta rechazada enviado exitosamente' })
   @ApiResponse({ status: 500, description: 'Error al enviar email' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 403, description: 'Acceso denegado' })
   async testRejectedEmail(@Body() body: { to: string }) {
     try {
       const argentinaDate = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Argentina/Buenos_Aires"}));
