@@ -302,7 +302,11 @@ export class StockUseCases {
         },
         appliedPriceType,
       });
+      // Guardamos los cambios en la base de datos
+      await this.stockRepository.update(stock.id, { quantity: stock.quantity });
     }
+
+    this.eventEmitter.emit('stock.decremented', new StockDecrementedEvent(product.id, decrementAmount));
 
     return decremented;
   }
