@@ -75,7 +75,12 @@ export class FilterProduct {
 
     // Filtro por productos mayoristas
     if (isWholesaler !== undefined) {
-      match['wholesale_data.is_wholesaler'] = isWholesaler;
+      // Si isWholesaler es true, solo productos mayoristas
+      // Si isWholesaler es false, todos los productos (mayoristas y no mayoristas)
+      if (isWholesaler === true) {
+        match['wholesale_data.is_wholesaler'] = true;
+      }
+      // Si isWholesaler es false, no aplicamos filtro (devuelve todos)
     }
 
     // Filtro por tipo de paquete mayorista
