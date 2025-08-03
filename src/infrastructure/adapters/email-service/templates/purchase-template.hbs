@@ -100,17 +100,15 @@
               {{#if variantData}}
               <!-- Producto normal -->
               <td>{{variantData.productName}} ({{variantData.productCode}})</td>
+              <td>
+                {{#each variantData.variantAttributes}}
+                <span>{{keyLabel}}: {{label}}</span><br>
+                {{/each}}
+              </td>
               {{else}}
               <!-- Producto mayorista - usar nombre de la primera variante -->
               <td>{{wholesaleVariants.0.variant.productName}} ({{wholesaleVariants.0.variant.productCode}}) - Paquete Mayorista</td>
-              {{/if}}
               <td>
-                {{#if variantData}}
-                <!-- Producto normal -->
-                {{#each variantData.variantAttributes}}
-                <span>{{keyLabel}}: {{value}}</span><br>
-                {{/each}}
-                {{else}}
                 <!-- Producto mayorista -->
                 <div style="margin-top: 10px; padding: 5px; background-color: #f5f5f5; border-radius: 3px;">
                   <strong>Variantes incluidas:</strong><br>
@@ -122,8 +120,8 @@
                   </div>
                   {{/each}}
                 </div>
-                {{/if}}
               </td>
+              {{/if}}
               <td>{{quantity}}</td>
               {{#if variantData}}
               <!-- Producto normal -->
